@@ -1091,7 +1091,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableZones, onUpdateZo
                 onClick={() => setSelectedProspect(null)}
                 className="absolute top-4 right-4 w-10 h-10 rounded-full bg-white/30 hover:bg-white/40 flex items-center justify-center transition-colors z-10 shadow-lg"
               >
-                <X size={14} className="text-white" />
+                <X size={10} className="text-white" />
               </button>
             </div>
 
