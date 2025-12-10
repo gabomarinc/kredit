@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { 
-  Users, DollarSign, LayoutDashboard, FileText, Download, Filter, Calendar, CheckCircle2, X, ChevronDown, MapPin, Briefcase, Settings, Plus, Trash2, Building, Image as ImageIcon, Shield, Save, Code, Copy, ExternalLink, Loader2
+  Users, DollarSign, LayoutDashboard, FileText, Download, Filter, Calendar, CheckCircle2, X, ChevronDown, MapPin, Briefcase, Settings, Plus, Trash2, Building, Image as ImageIcon, Shield, Save, Code, Copy, ExternalLink, Loader2, User, Target, MessageCircle, ShieldCheck, TrendingUp, Eye, FileText as FileTextIcon
 } from 'lucide-react';
 import { getProspectsFromDB, getCompanyById, updateCompanyZones, updateCompanyLogo, Company } from '../utils/db';
 import { Prospect } from '../types';
@@ -20,6 +20,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableZones, onUpdateZo
   const [activeTab, setActiveTab] = useState<Tab>('dashboard');
   const [showExportModal, setShowExportModal] = useState(false);
   const [showZonesModal, setShowZonesModal] = useState(false);
+  const [selectedProspect, setSelectedProspect] = useState<Prospect | null>(null);
   const [newZone, setNewZone] = useState('');
   const [copied, setCopied] = useState(false);
 
@@ -801,7 +802,11 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableZones, onUpdateZo
                   </thead>
                   <tbody className="divide-y divide-gray-50">
                     {prospects.map((prospect) => (
-                      <tr key={prospect.id} className="hover:bg-indigo-50/30 transition-colors group">
+                      <tr 
+                        key={prospect.id} 
+                        onClick={() => setSelectedProspect(prospect)}
+                        className="hover:bg-indigo-50/30 transition-colors group cursor-pointer"
+                      >
                         <td className="px-8 py-5">
                           <div className="flex flex-col">
                             <span className="font-bold text-gray-900 text-sm">{prospect.name}</span>
@@ -1066,6 +1071,248 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableZones, onUpdateZo
               >
                 Cerrar
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Prospect Detail Modal */}
+      {selectedProspect && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+          <div 
+            className="absolute inset-0 bg-gray-900/40 backdrop-blur-sm transition-opacity"
+            onClick={() => setSelectedProspect(null)}
+          ></div>
+          <div className="bg-white rounded-[2rem] w-full max-w-4xl max-h-[90vh] overflow-y-auto shadow-2xl relative animate-fade-in-up z-10">
+            {/* Header with gradient */}
+            <div className="bg-gradient-to-r from-indigo-600 to-purple-600 rounded-t-[2rem] p-6 relative">
+              <button 
+                onClick={() => setSelectedProspect(null)}
+                className="absolute top-6 right-6 w-8 h-8 rounded-full bg-white/20 hover:bg-white/30 flex items-center justify-center transition-colors"
+              >
+                <X size={18} className="text-white" />
+              </button>
+            </div>
+
+            {/* Content */}
+            <div className="p-8">
+              {/* Prospect Header */}
+              <div className="flex items-start gap-6 mb-8">
+                <div className="w-20 h-20 rounded-full bg-gray-100 flex items-center justify-center text-2xl font-bold text-gray-600 shrink-0">
+                  {selectedProspect.name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)}
+                </div>
+                <div className="flex-1">
+                  <div className="flex items-center gap-3 mb-2">
+                    <h2 className="text-3xl font-bold text-gray-900">{selectedProspect.name}</h2>
+                    <span className="px-3 py-1 bg-green-50 text-green-700 rounded-full text-xs font-semibold">
+                      ALTA PROBABILIDAD
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <span className="px-2 py-1 bg-indigo-50 text-indigo-700 rounded-full text-xs font-medium">VISITA</span>
+                    <div className="flex items-center gap-1 text-gray-500 text-sm">
+                      <MessageCircle size={14} />
+                      <span>WhatsApp</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Financial Cards */}
+              <div className="grid grid-cols-3 gap-4 mb-8">
+                <div className="bg-gray-50 p-4 rounded-2xl border border-gray-100">
+                  <div className="flex items-center gap-2 mb-2">
+                    <DollarSign size={18} className="text-indigo-600" />
+                    <span className="text-xs text-gray-500 font-semibold uppercase">Ingresos</span>
+                  </div>
+                  <p className="text-lg font-bold text-gray-900">
+                    {formatCurrency(selectedProspect.income)}/mes
+                  </p>
+                </div>
+                <div className="bg-gray-50 p-4 rounded-2xl border border-gray-100">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Target size={18} className="text-indigo-600" />
+                    <span className="text-xs text-gray-500 font-semibold uppercase">Busca</span>
+                  </div>
+                  <p className="text-lg font-bold text-gray-900">
+                    {selectedProspect.propertyType || 'N/A'}
+                  </p>
+                </div>
+                <div className="bg-gray-50 p-4 rounded-2xl border border-gray-100">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Briefcase size={18} className="text-indigo-600" />
+                    <span className="text-xs text-gray-500 font-semibold uppercase">Presupuesto</span>
+                  </div>
+                  <p className="text-lg font-bold text-gray-900">
+                    ~{formatCurrency(selectedProspect.result?.maxPropertyPrice || 0)}
+                  </p>
+                </div>
+              </div>
+
+              {/* Zone of Interest */}
+              <div className="bg-indigo-50/50 p-6 rounded-2xl border border-indigo-100 mb-8">
+                <h3 className="text-sm font-bold text-gray-700 mb-3">INTERESADO EN</h3>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-xl font-bold text-gray-900 mb-1">
+                      {Array.isArray(selectedProspect.zone) 
+                        ? selectedProspect.zone[0] || 'Sin zona'
+                        : (typeof selectedProspect.zone === 'string' ? selectedProspect.zone : 'Sin zona')}
+                    </p>
+                    <div className="flex items-center gap-1 text-gray-500 text-sm">
+                      <MapPin size={14} />
+                      <span>Panamá, Ciudad de Panamá</span>
+                    </div>
+                  </div>
+                  <ChevronDown size={20} className="text-gray-400" />
+                </div>
+              </div>
+
+              {/* Documents Section - MUY IMPORTANTE */}
+              <div className="mb-8">
+                <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
+                  <FileTextIcon size={20} className="text-indigo-600" />
+                  Documentación
+                </h3>
+                <div className="grid grid-cols-2 gap-4">
+                  {/* Foto de Cédula */}
+                  {selectedProspect.idFileBase64 && (
+                    <div className="bg-gray-50 p-4 rounded-xl border border-gray-200">
+                      <h4 className="text-sm font-semibold text-gray-700 mb-2">Foto de Cédula / ID</h4>
+                      {selectedProspect.idFileBase64.startsWith('data:image/') ? (
+                        <img 
+                          src={selectedProspect.idFileBase64} 
+                          alt="Cédula" 
+                          className="w-full h-48 object-contain rounded-lg border border-gray-200 bg-white"
+                        />
+                      ) : (
+                        <a 
+                          href={selectedProspect.idFileBase64} 
+                          target="_blank" 
+                          rel="noopener noreferrer"
+                          className="block p-4 bg-white rounded-lg border border-gray-200 hover:bg-gray-50 transition-colors"
+                        >
+                          <FileTextIcon size={32} className="text-indigo-600 mx-auto mb-2" />
+                          <p className="text-xs text-center text-gray-600">Ver PDF</p>
+                        </a>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Ficha de Seguro Social */}
+                  {selectedProspect.fichaFileBase64 && (
+                    <div className="bg-gray-50 p-4 rounded-xl border border-gray-200">
+                      <h4 className="text-sm font-semibold text-gray-700 mb-2">Ficha de Seguro Social</h4>
+                      {selectedProspect.fichaFileBase64.startsWith('data:image/') ? (
+                        <img 
+                          src={selectedProspect.fichaFileBase64} 
+                          alt="Ficha Seguro Social" 
+                          className="w-full h-48 object-contain rounded-lg border border-gray-200 bg-white"
+                        />
+                      ) : (
+                        <a 
+                          href={selectedProspect.fichaFileBase64} 
+                          target="_blank" 
+                          rel="noopener noreferrer"
+                          className="block p-4 bg-white rounded-lg border border-gray-200 hover:bg-gray-50 transition-colors"
+                        >
+                          <FileTextIcon size={32} className="text-indigo-600 mx-auto mb-2" />
+                          <p className="text-xs text-center text-gray-600">Ver PDF</p>
+                        </a>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Talonario de Pago */}
+                  {selectedProspect.talonarioFileBase64 && (
+                    <div className="bg-gray-50 p-4 rounded-xl border border-gray-200">
+                      <h4 className="text-sm font-semibold text-gray-700 mb-2">Talonario de Pago</h4>
+                      {selectedProspect.talonarioFileBase64.startsWith('data:image/') ? (
+                        <img 
+                          src={selectedProspect.talonarioFileBase64} 
+                          alt="Talonario" 
+                          className="w-full h-48 object-contain rounded-lg border border-gray-200 bg-white"
+                        />
+                      ) : (
+                        <a 
+                          href={selectedProspect.talonarioFileBase64} 
+                          target="_blank" 
+                          rel="noopener noreferrer"
+                          className="block p-4 bg-white rounded-lg border border-gray-200 hover:bg-gray-50 transition-colors"
+                        >
+                          <FileTextIcon size={32} className="text-indigo-600 mx-auto mb-2" />
+                          <p className="text-xs text-center text-gray-600">Ver PDF</p>
+                        </a>
+                      )}
+                    </div>
+                  )}
+
+                  {/* APC Firmada */}
+                  {selectedProspect.signedAcpFileBase64 && (
+                    <div className="bg-gray-50 p-4 rounded-xl border border-gray-200">
+                      <h4 className="text-sm font-semibold text-gray-700 mb-2">APC Firmada</h4>
+                      {selectedProspect.signedAcpFileBase64.startsWith('data:image/') ? (
+                        <img 
+                          src={selectedProspect.signedAcpFileBase64} 
+                          alt="APC Firmada" 
+                          className="w-full h-48 object-contain rounded-lg border border-gray-200 bg-white"
+                        />
+                      ) : (
+                        <a 
+                          href={selectedProspect.signedAcpFileBase64} 
+                          target="_blank" 
+                          rel="noopener noreferrer"
+                          className="block p-4 bg-white rounded-lg border border-gray-200 hover:bg-gray-50 transition-colors"
+                        >
+                          <FileTextIcon size={32} className="text-indigo-600 mx-auto mb-2" />
+                          <p className="text-xs text-center text-gray-600">Ver PDF</p>
+                        </a>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Mensaje si no hay documentos */}
+                  {!selectedProspect.idFileBase64 && !selectedProspect.fichaFileBase64 && 
+                   !selectedProspect.talonarioFileBase64 && !selectedProspect.signedAcpFileBase64 && (
+                    <div className="col-span-2 text-center py-8 text-gray-400">
+                      <FileTextIcon size={48} className="mx-auto mb-2 opacity-50" />
+                      <p className="text-sm">No hay documentos subidos</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* AI Strategy Section */}
+              <div className="bg-gradient-to-r from-indigo-50 to-purple-50 p-6 rounded-2xl border border-indigo-100 mb-8">
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="w-10 h-10 rounded-xl bg-indigo-600 text-white flex items-center justify-center font-bold">
+                    K
+                  </div>
+                  <h3 className="text-lg font-bold text-gray-900">KONSUL AI STRATEGY</h3>
+                </div>
+                <p className="text-gray-700 mb-4 leading-relaxed">
+                  El cliente muestra señales de cierre rápido. Su preocupación principal parece ser la seguridad y privacidad. 
+                  Enfócate en las amenidades exclusivas del edificio.
+                </p>
+                <div className="flex gap-2">
+                  <span className="px-3 py-1 bg-white/70 rounded-full text-xs font-semibold text-gray-700 flex items-center gap-1">
+                    <ShieldCheck size={12} /> Seguridad
+                  </span>
+                  <span className="px-3 py-1 bg-white/70 rounded-full text-xs font-semibold text-gray-700 flex items-center gap-1">
+                    <TrendingUp size={12} /> ROI a Largo Plazo
+                  </span>
+                </div>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="flex gap-4">
+                <button className="flex-1 bg-gray-900 text-white px-6 py-4 rounded-xl font-semibold hover:bg-gray-800 transition-all flex items-center justify-center gap-2">
+                  <User size={18} /> Ver Perfil Completo
+                </button>
+                <button className="flex-1 bg-white border-2 border-gray-200 text-gray-700 px-6 py-4 rounded-xl font-semibold hover:bg-gray-50 transition-all flex items-center justify-center gap-2">
+                  <MessageCircle size={18} /> Historial de Chats
+                </button>
+              </div>
             </div>
           </div>
         </div>
