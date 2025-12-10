@@ -6,6 +6,7 @@ import { Property, PlanType } from '../types';
 import { 
   Home, Building2, MapPin, User, Upload, FileCheck, ArrowRight, CheckCircle2, Download, HeartHandshake, ChevronLeft, Check, BedDouble, Bath, Star, TrendingDown, X
 } from 'lucide-react';
+import { NotificationModal, NotificationType } from './ui/NotificationModal';
 
 interface ProspectFlowProps {
   availableZones: string[];
@@ -83,6 +84,11 @@ export const ProspectFlow: React.FC<ProspectFlowProps> = ({ availableZones, comp
   const [selectedProperty, setSelectedProperty] = useState<Property | null>(null);
   const [companyPlan, setCompanyPlan] = useState<PlanType>('Freshie');
   const [isLoadingProperties, setIsLoadingProperties] = useState(false);
+  const [notification, setNotification] = useState<{ isOpen: boolean; type: NotificationType; message: string; title?: string }>({
+    isOpen: false,
+    type: 'success',
+    message: ''
+  });
 
   // Cargar logo y zonas de la empresa si hay company_id en la URL o localStorage
   useEffect(() => {
@@ -866,10 +872,15 @@ export const ProspectFlow: React.FC<ProspectFlowProps> = ({ availableZones, comp
                         type="checkbox"
                         onChange={async (e) => {
                           if (prospectId) {
-                            await savePropertyInterest(prospectId, selectedProperty.id, e.target.checked);
+                            const success = await savePropertyInterest(prospectId, selectedProperty.id, e.target.checked);
                             // Mostrar feedback visual
-                            if (e.target.checked) {
-                              alert('¡Gracias por tu interés! Un agente se pondrá en contacto contigo pronto.');
+                            if (e.target.checked && success) {
+                              setNotification({
+                                isOpen: true,
+                                type: 'success',
+                                message: '¡Gracias por tu interés! Un agente se pondrá en contacto contigo pronto.',
+                                title: '¡Interés registrado!'
+                              });
                             }
                           }
                         }}
@@ -886,6 +897,16 @@ export const ProspectFlow: React.FC<ProspectFlowProps> = ({ availableZones, comp
           </div>
         </div>
       )}
+
+      {/* Notification Modal */}
+      <NotificationModal
+        isOpen={notification.isOpen}
+        onClose={() => setNotification({ ...notification, isOpen: false })}
+        type={notification.type}
+        message={notification.message}
+        title={notification.title}
+        duration={4000}
+      />
     </div>
   );
 };
