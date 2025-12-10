@@ -39,9 +39,27 @@ const ensureTablesExist = async (client: any) => {
         company_id UUID REFERENCES companies(id) ON DELETE CASCADE,
         zone_name TEXT NOT NULL,
         created_at TIMESTAMP DEFAULT NOW(),
-        UNIQUE(company_id, zone_name)
+        CONSTRAINT company_zones_unique UNIQUE(company_id, zone_name)
       )
     `);
+    
+    // Asegurar que la restricción UNIQUE existe (por si la tabla ya existía sin ella)
+    try {
+      await client.query(`
+        DO $$ 
+        BEGIN
+          IF NOT EXISTS (
+            SELECT 1 FROM pg_constraint 
+            WHERE conname = 'company_zones_unique'
+          ) THEN
+            ALTER TABLE company_zones 
+            ADD CONSTRAINT company_zones_unique UNIQUE(company_id, zone_name);
+          END IF;
+        END $$;
+      `);
+    } catch (e) {
+      console.warn('Nota: No se pudo agregar la restricción UNIQUE (puede que ya exista):', e);
+    }
 
     // Tabla de prospectos
     await client.query(`
@@ -289,7 +307,7 @@ export const saveCompanyToDB = async (data: CompanyData): Promise<string | null>
           const zoneResult = await client.query(`
             INSERT INTO company_zones (company_id, zone_name)
             VALUES ($1, $2)
-            ON CONFLICT (company_id, zone_name) DO NOTHING
+            ON CONFLICT ON CONSTRAINT company_zones_unique DO NOTHING
             RETURNING id
           `, [companyId, zoneName.trim()]);
           
@@ -486,7 +504,7 @@ export const updateCompanyZones = async (companyId: string, zones: string[]): Pr
         await client.query(`
           INSERT INTO company_zones (company_id, zone_name)
           VALUES ($1, $2)
-          ON CONFLICT (company_id, zone_name) DO NOTHING
+          ON CONFLICT ON CONSTRAINT company_zones_unique DO NOTHING
         `, [companyId, zoneName]);
       }
     }
