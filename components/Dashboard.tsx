@@ -1322,12 +1322,57 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableZones, onUpdateZo
             {/* Header */}
             <div className="bg-gray-900 text-white p-6 flex items-center justify-between">
               <h3 className="text-lg font-bold">{selectedDocument.name}</h3>
-              <button 
-                onClick={() => setSelectedDocument(null)}
-                className="w-10 h-10 rounded-full bg-white/20 hover:bg-white/30 flex items-center justify-center transition-colors"
-              >
-                <X size={20} className="text-white" />
-              </button>
+              <div className="flex items-center gap-3">
+                <button
+                  onClick={() => {
+                    // Función para descargar
+                    const link = document.createElement('a');
+                    link.href = selectedDocument.url;
+                    
+                    // Determinar extensión y nombre del archivo
+                    let extension = '';
+                    let mimeType = '';
+                    
+                    if (selectedDocument.type === 'image') {
+                      // Extraer el tipo MIME de la data URL
+                      const mimeMatch = selectedDocument.url.match(/data:([^;]+);/);
+                      mimeType = mimeMatch ? mimeMatch[1] : 'image/png';
+                      
+                      if (mimeType.includes('jpeg') || mimeType.includes('jpg')) {
+                        extension = '.jpg';
+                      } else if (mimeType.includes('png')) {
+                        extension = '.png';
+                      } else if (mimeType.includes('gif')) {
+                        extension = '.gif';
+                      } else {
+                        extension = '.png';
+                      }
+                    } else {
+                      // PDF
+                      extension = '.pdf';
+                      mimeType = 'application/pdf';
+                    }
+                    
+                    // Crear nombre de archivo
+                    const fileName = `${selectedDocument.name.replace(/\s+/g, '_')}${extension}`;
+                    
+                    link.download = fileName;
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+                  }}
+                  className="px-4 py-2 rounded-lg bg-white/20 hover:bg-white/30 flex items-center gap-2 transition-colors text-sm font-semibold"
+                >
+                  <Download size={16} className="text-white" />
+                  <span>Descargar</span>
+                </button>
+                <button 
+                  onClick={() => setSelectedDocument(null)}
+                  className="w-10 h-10 rounded-full bg-white/20 hover:bg-white/30 flex items-center justify-center transition-colors"
+                >
+                  <X size={20} className="text-white" />
+                </button>
+              </div>
             </div>
 
             {/* Content */}
