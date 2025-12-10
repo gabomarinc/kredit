@@ -132,27 +132,29 @@ function App() {
     );
   }
 
+  const handleLogout = () => {
+    // Limpiar datos de sesión
+    localStorage.removeItem('companyId');
+    localStorage.removeItem('companyName');
+    localStorage.removeItem('zones');
+    // Volver a la pantalla de selección
+    setAuthState('selection');
+    setIsAdminView(true);
+  };
+
   // 4. Main Admin Interface (Authenticated)
   return (
     <Layout 
       isAdmin={isAdminView} 
-      // Only show toggle if we are not in admin view, or if we want to preview the flow
-      onToggleRole={() => setIsAdminView(!isAdminView)}
+      onLogout={handleLogout}
       companyName={companyName}
     >
-      {isAdminView ? (
-        <Dashboard 
-          availableZones={zones} 
-          onUpdateZones={setZones} 
-          companyName={companyName}
-          onUpdateCompanyName={setCompanyName}
-        />
-      ) : (
-        <ProspectFlow 
-          availableZones={zones} 
-          companyName={companyName}
-        />
-      )}
+      <Dashboard 
+        availableZones={zones} 
+        onUpdateZones={setZones} 
+        companyName={companyName}
+        onUpdateCompanyName={setCompanyName}
+      />
     </Layout>
   );
 }

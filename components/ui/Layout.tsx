@@ -1,15 +1,16 @@
 import React from 'react';
-import { LayoutDashboard, User } from 'lucide-react';
+import { LayoutDashboard, User, LogOut } from 'lucide-react';
 
 interface LayoutProps {
   children: React.ReactNode;
   isAdmin?: boolean;
   onToggleRole?: () => void;
+  onLogout?: () => void;
   isWelcomeScreen?: boolean;
   companyName?: string;
 }
 
-export const Layout: React.FC<LayoutProps> = ({ children, isAdmin, onToggleRole, isWelcomeScreen, companyName = "Krêdit" }) => {
+export const Layout: React.FC<LayoutProps> = ({ children, isAdmin, onToggleRole, onLogout, isWelcomeScreen, companyName = "Krêdit" }) => {
   return (
     <div className={`min-h-screen font-sans text-pastel-dark selection:bg-indigo-100 selection:text-indigo-900 ${isWelcomeScreen ? 'flex flex-col justify-center' : ''}`}>
       
@@ -29,21 +30,13 @@ export const Layout: React.FC<LayoutProps> = ({ children, isAdmin, onToggleRole,
             </div>
           </div>
 
-          {/* View Switcher Button */}
-          {onToggleRole && (
+          {/* Logout Button */}
+          {onLogout && (
             <button 
-              onClick={onToggleRole}
-              className="group flex items-center gap-2 bg-white/70 backdrop-blur-md hover:bg-white border border-white/50 px-4 py-2.5 rounded-xl shadow-sm hover:shadow-md transition-all text-xs font-semibold text-gray-600 hover:text-indigo-600"
+              onClick={onLogout}
+              className="group flex items-center gap-2 bg-white/70 backdrop-blur-md hover:bg-white border border-white/50 px-4 py-2.5 rounded-xl shadow-sm hover:shadow-md transition-all text-xs font-semibold text-gray-600 hover:text-red-600"
             >
-              {isAdmin ? (
-                <>
-                  <User size={14} /> Vista Cliente
-                </>
-              ) : (
-                <>
-                  <LayoutDashboard size={14} /> Acceso Agentes
-                </>
-              )}
+              <LogOut size={14} /> Cerrar Sesión
             </button>
           )}
         </div>
