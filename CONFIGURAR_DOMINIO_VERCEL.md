@@ -1,67 +1,65 @@
-# Configurar Dominio Personalizado en Vercel
+# Configurar Subdominio en Vercel: kredit.konsul.digital
+
+## 🎯 Tu Caso Específico
+Quieres configurar el subdominio: **`kredit.konsul.digital`**
 
 ## ⚠️ Problema Actual
-Estás intentando agregar un registro **CNAME** para "kredit", pero ya tienes registros **A** y **AAAA** para el mismo nombre. 
+Estás intentando agregar un registro **CNAME** para "kredit", pero ya tienes registros **A** y **AAAA** para el mismo nombre en el dominio `konsul.digital`. 
 
-**No puedes tener CNAME y A/AAAA al mismo tiempo** para el mismo nombre de dominio.
+**No puedes tener CNAME y A/AAAA al mismo tiempo** para el mismo nombre.
 
-## ✅ Soluciones
+## ✅ Solución para Subdominio
 
-### Opción 1: Usar Registros A/AAAA (Recomendado para dominio raíz)
-Si quieres usar `kredit.com` (sin www):
+Para `kredit.konsul.digital`, necesitas un registro **CNAME**:
 
-1. **NO agregues el CNAME** - elimina ese intento
-2. **Mantén los registros A y AAAA** que ya tienes
-3. En Vercel:
-   - Ve a tu proyecto → **Settings** → **Domains**
-   - Agrega el dominio: `kredit.com`
-   - Vercel te mostrará las IPs específicas que debes usar
-4. **Actualiza tus registros A y AAAA** con las IPs que Vercel te proporcione:
-   - **Tipo A**: `kredit` → IP de Vercel (ej: `76.76.21.21`)
-   - **Tipo AAAA**: `kredit` → IPv6 de Vercel (si está disponible)
+### Pasos en tu Proveedor DNS:
 
-### Opción 2: Usar CNAME para Subdominio www
-Si prefieres usar `www.kredit.com`:
+1. **Elimina los registros A y AAAA** que tienes para "kredit" (si existen)
+2. **Agrega un registro CNAME**:
+   - **Tipo**: `CNAME`
+   - **Nombre**: `kredit` (solo "kredit", sin el dominio completo)
+   - **Objetivo**: El que Vercel te proporcione (generalmente `cname.vercel-dns.com.` o similar)
+   - **TTL**: `14400` o el que prefieras
 
-1. **NO toques los registros A/AAAA** existentes para "kredit"
-2. **Agrega un nuevo registro CNAME**:
-   - **Tipo**: CNAME
-   - **Nombre**: `www` (NO "kredit")
-   - **Objetivo**: `cname.vercel-dns.com.` (o el que Vercel te indique)
-   - **TTL**: 14400
-3. En Vercel, agrega el dominio `www.kredit.com`
-
-### Opción 3: Configurar Ambos (Recomendado)
-Puedes tener ambos:
-- `kredit.com` → Registros A/AAAA
-- `www.kredit.com` → Registro CNAME
-
-## 📋 Pasos Detallados en Vercel
+### Pasos en Vercel:
 
 1. Ve a tu proyecto en Vercel Dashboard
 2. Click en **Settings** → **Domains**
 3. Click en **Add Domain**
-4. Ingresa tu dominio (`kredit.com` o `www.kredit.com`)
-5. Vercel te mostrará **exactamente** qué registros DNS necesitas
-6. Copia esos valores y úsalos en tu proveedor DNS
+4. Ingresa: `kredit.konsul.digital`
+5. Vercel te mostrará **exactamente** qué registro CNAME necesitas
+6. Copia el valor del "Target" o "Objetivo" que Vercel te muestre
+7. Úsalo en tu proveedor DNS
 
-## 🔍 Valores Típicos de Vercel
+## 📋 Ejemplo de Registro CNAME
 
-**Para dominio raíz (A/AAAA):**
-- **A**: `76.76.21.21` o IPs que Vercel te indique
-- **AAAA**: IPv6 que Vercel te proporcione
+```
+Tipo: CNAME
+Nombre: kredit
+Objetivo: cname.vercel-dns.com.  (o el que Vercel te indique)
+TTL: 14400
+```
 
-**Para subdominio (CNAME):**
-- **CNAME**: `cname.vercel-dns.com.` o similar
+**Nota importante**: El objetivo debe terminar con un punto (`.`) al final.
 
 ## ⏱️ Verificación
-- Vercel verificará automáticamente después de agregar los registros
+
+- Vercel verificará automáticamente después de agregar el registro
 - La propagación DNS puede tardar desde minutos hasta 48 horas
-- Verás el estado en la sección Domains de Vercel
+- Verás el estado en la sección **Domains** de Vercel:
+  - ⏳ "Pending" = Esperando verificación
+  - ✅ "Valid" = Configurado correctamente
+  - ❌ "Invalid" = Revisa el registro DNS
 
-## 💡 Recomendación
-**Usa la Opción 3**: Configura ambos dominios para que funcionen:
-- `kredit.com` (con A/AAAA)
-- `www.kredit.com` (con CNAME)
+## 🔍 Si Sigue Dando Error
 
-Esto es lo más común y profesional.
+Si después de agregar el CNAME correcto sigue dando error:
+
+1. **Verifica que no existan otros registros** para "kredit" (A, AAAA, o CNAME duplicados)
+2. **Espera unos minutos** - a veces hay caché DNS
+3. **Verifica el formato**: El objetivo debe terminar con punto (`.`)
+4. **Revisa en Vercel** qué valor exacto te está pidiendo
+
+## 💡 Tip
+
+Vercel te mostrará el valor exacto del CNAME cuando agregues el dominio. **Siempre usa ese valor**, no uno genérico.
