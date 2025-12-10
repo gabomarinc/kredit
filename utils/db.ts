@@ -7,9 +7,12 @@ import { MOCK_PROSPECTS } from '../constants';
 // Nota: En Vite, solo las variables con prefijo VITE_ son accesibles en el cliente
 const CONNECTION_STRING = import.meta.env.VITE_DATABASE_URL;
 
-// Solo mostrar warning en desarrollo, no en producción para evitar ruido en consola
-if (!CONNECTION_STRING && import.meta.env.DEV) {
-  console.warn('VITE_DATABASE_URL no está configurada. Las operaciones de base de datos usarán datos mockeados.');
+// Debug: Verificar si la variable está disponible (solo primeros caracteres por seguridad)
+if (CONNECTION_STRING) {
+  console.log('✅ DATABASE_URL configurada:', CONNECTION_STRING.substring(0, 30) + '...');
+} else {
+  console.error('❌ VITE_DATABASE_URL NO está configurada. Verifica las variables de entorno en Vercel.');
+  console.log('Variables disponibles:', Object.keys(import.meta.env).filter(k => k.startsWith('VITE_')));
 }
 
 const pool = CONNECTION_STRING ? new Pool({ connectionString: CONNECTION_STRING }) : null;
@@ -45,12 +48,19 @@ export const saveProspectToDB = async (
   result: CalculationResult
 ) => {
   if (!pool) {
-    console.warn('Pool de base de datos no inicializado. Retornando ID temporal.');
+    console.error('❌ Pool de base de datos no inicializado. Verifica VITE_DATABASE_URL en Vercel.');
+    console.log('Datos que se intentaron guardar:', { 
+      name: personal.fullName, 
+      email: personal.email,
+      income: financial.familyIncome 
+    });
     return 'temp-id-' + Date.now();
   }
   
   try {
+    console.log('🔄 Intentando conectar a la base de datos...');
     const client = await pool.connect();
+    console.log('✅ Conexión establecida');
     
     // Aseguramos que la tabla exista (Auto-migración simple)
     await ensureTableExists(client);
@@ -87,11 +97,17 @@ export const saveProspectToDB = async (
 
     const res = await client.query(query, values);
     client.release();
-    console.log("Prospect saved with ID:", res.rows[0].id);
+    console.log("✅ Prospect saved with ID:", res.rows[0].id);
+    console.log("✅ Datos guardados correctamente en Neon");
     return res.rows[0].id;
 
   } catch (error) {
-    console.error('CRITICAL Error saving prospect:', error);
+    console.error('❌ CRITICAL Error saving prospect:', error);
+    console.error('Error details:', {
+      message: error instanceof Error ? error.message : String(error),
+      stack: error instanceof Error ? error.stack : undefined,
+      connectionString: CONNECTION_STRING ? 'Configurada' : 'NO CONFIGURADA'
+    });
     // No lanzamos error para no interrumpir la experiencia de usuario (Emotional Design)
     // El usuario verá la pantalla de éxito aunque la DB fallé.
     return 'temp-id-' + Date.now();
