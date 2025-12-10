@@ -267,34 +267,69 @@ export const saveCompanyToDB = async (data: CompanyData): Promise<string | null>
 
     const companyId = companyResult.rows[0].id;
     console.log('✅ Empresa guardada con ID:', companyId);
+    console.log('📋 Zonas recibidas:', data.zones);
+    console.log('📋 Tipo de zonas:', typeof data.zones, Array.isArray(data.zones));
 
-    // Insertar zonas
-    if (data.zones && data.zones.length > 0) {
-      console.log(`🔄 Guardando ${data.zones.length} zonas...`, data.zones);
+    // Insertar zonas - CRÍTICO: Hacer esto ANTES de liberar el client
+    if (data.zones && Array.isArray(data.zones) && data.zones.length > 0) {
+      console.log(`🔄 Guardando ${data.zones.length} zonas para company_id: ${companyId}...`);
+      console.log('📋 Lista completa de zonas:', JSON.stringify(data.zones));
+      
       let zonesSaved = 0;
+      let zonesErrors = 0;
+      
       for (const zoneName of data.zones) {
+        if (!zoneName || typeof zoneName !== 'string') {
+          console.warn(`⚠️ Zona inválida omitida:`, zoneName);
+          continue;
+        }
+        
         try {
+          console.log(`🔄 Intentando guardar zona: "${zoneName}"`);
           const zoneResult = await client.query(`
             INSERT INTO company_zones (company_id, zone_name)
             VALUES ($1, $2)
             ON CONFLICT (company_id, zone_name) DO NOTHING
             RETURNING id
-          `, [companyId, zoneName]);
+          `, [companyId, zoneName.trim()]);
           
           if (zoneResult.rows.length > 0) {
             zonesSaved++;
-            console.log(`✅ Zona guardada: ${zoneName}`);
+            console.log(`✅ Zona guardada exitosamente: "${zoneName}" (ID: ${zoneResult.rows[0].id})`);
           } else {
-            console.log(`ℹ️ Zona ya existía: ${zoneName}`);
+            console.log(`ℹ️ Zona ya existía (conflicto): "${zoneName}"`);
+            zonesSaved++; // Contamos como guardada porque ya existe
           }
         } catch (zoneError) {
-          console.error(`❌ Error guardando zona ${zoneName}:`, zoneError);
-          // Continuamos con las demás zonas aunque una falle
+          zonesErrors++;
+          console.error(`❌ ERROR guardando zona "${zoneName}":`, zoneError);
+          console.error('Detalles del error:', {
+            message: zoneError instanceof Error ? zoneError.message : String(zoneError),
+            code: (zoneError as any)?.code,
+            detail: (zoneError as any)?.detail
+          });
         }
       }
-      console.log(`✅ ${zonesSaved} de ${data.zones.length} zonas guardadas exitosamente`);
+      
+      console.log(`📊 Resumen: ${zonesSaved} zonas guardadas, ${zonesErrors} errores`);
+      
+      // Verificar que realmente se guardaron
+      const verifyResult = await client.query(
+        'SELECT COUNT(*) as count FROM company_zones WHERE company_id = $1',
+        [companyId]
+      );
+      const actualCount = parseInt(verifyResult.rows[0].count);
+      console.log(`🔍 Verificación: ${actualCount} zonas encontradas en DB para company_id ${companyId}`);
+      
+      if (actualCount === 0 && zonesSaved > 0) {
+        console.error('❌ CRÍTICO: Se reportaron zonas guardadas pero no se encuentran en la DB');
+      }
     } else {
-      console.warn('⚠️ No hay zonas para guardar o el array está vacío');
+      console.warn('⚠️ No hay zonas para guardar:', {
+        zones: data.zones,
+        isArray: Array.isArray(data.zones),
+        length: data.zones?.length
+      });
     }
 
     client.release();
