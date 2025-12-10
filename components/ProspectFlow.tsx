@@ -76,10 +76,11 @@ export const ProspectFlow: React.FC<ProspectFlowProps> = ({ availableZones, comp
   const [result, setResult] = useState<CalculationResult | null>(null);
   const [isCalculating, setIsCalculating] = useState(false);
   const [companyLogo, setCompanyLogo] = useState<string | null>(null);
+  const [zones, setZones] = useState<string[]>(availableZones);
 
-  // Cargar logo de la empresa si hay company_id en la URL o localStorage
+  // Cargar logo y zonas de la empresa si hay company_id en la URL o localStorage
   useEffect(() => {
-    const loadCompanyLogo = async () => {
+    const loadCompanyData = async () => {
       // Buscar company_id en la URL (para embed)
       const urlParams = new URLSearchParams(window.location.search);
       const companyIdFromUrl = urlParams.get('company_id');
@@ -100,26 +101,42 @@ export const ProspectFlow: React.FC<ProspectFlowProps> = ({ availableZones, comp
           console.log('📋 Datos de empresa obtenidos:', {
             hasCompany: !!company,
             hasLogo: !!company?.logoUrl,
+            hasZones: !!company?.zones,
+            zonesCount: company?.zones?.length || 0,
+            zones: company?.zones,
             logoUrlType: company?.logoUrl ? (company.logoUrl.startsWith('data:') ? 'base64' : company.logoUrl.startsWith('blob:') ? 'blob' : 'url') : 'none',
             logoUrlPreview: company?.logoUrl ? company.logoUrl.substring(0, 80) + '...' : 'none'
           });
           
+          // Cargar logo
           if (company && company.logoUrl && company.logoUrl.trim() !== '' && company.logoUrl !== 'null') {
             setCompanyLogo(company.logoUrl);
             console.log('✅ Logo de empresa cargado y establecido');
           } else {
             console.warn('⚠️ Empresa encontrada pero sin logo válido');
           }
+
+          // Cargar zonas
+          if (company && company.zones && company.zones.length > 0) {
+            setZones(company.zones);
+            console.log('✅ Zonas de empresa cargadas:', company.zones);
+          } else {
+            console.warn('⚠️ Empresa encontrada pero sin zonas, usando zonas por defecto');
+            setZones(availableZones);
+          }
         } catch (error) {
-          console.error('❌ Error cargando logo de la empresa:', error);
+          console.error('❌ Error cargando datos de la empresa:', error);
+          // En caso de error, usar las zonas por defecto
+          setZones(availableZones);
         }
       } else {
-        console.warn('⚠️ No se encontró company_id en URL ni localStorage');
+        console.warn('⚠️ No se encontró company_id en URL ni localStorage, usando zonas por defecto');
+        setZones(availableZones);
       }
     };
     
-    loadCompanyLogo();
-  }, [isEmbed]);
+    loadCompanyData();
+  }, [isEmbed, availableZones]);
 
   // Smooth scroll to top on step change
   useEffect(() => {
@@ -263,7 +280,7 @@ export const ProspectFlow: React.FC<ProspectFlowProps> = ({ availableZones, comp
                     <span className="text-xs text-gray-400 font-normal bg-gray-100 px-2 py-0.5 rounded-full">Selección múltiple</span>
                   </label>
                   <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
-                    {availableZones.map(zone => {
+                    {zones.map(zone => {
                       const isSelected = preferences.zone.includes(zone);
                       return (
                          <button
