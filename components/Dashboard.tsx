@@ -360,37 +360,37 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableZones, onUpdateZo
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 animate-fade-in-up">
         
         {/* Top Menu Tabs */}
-        <div className="flex justify-center mb-10">
-          <div className="bg-white p-1.5 rounded-2xl shadow-sm border border-gray-100 inline-flex gap-1">
+        <div className="flex justify-center mb-6 sm:mb-10">
+          <div className="bg-white p-1 sm:p-1.5 rounded-2xl shadow-sm border border-gray-100 inline-flex gap-1 overflow-x-auto">
             <button
               onClick={() => setActiveTab('dashboard')}
-              className={`px-6 py-2.5 rounded-xl text-sm font-semibold transition-all flex items-center gap-2 ${
+              className={`px-3 sm:px-6 py-2 sm:py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition-all flex items-center gap-1 sm:gap-2 shrink-0 ${
                 activeTab === 'dashboard' 
                   ? 'bg-indigo-50 text-indigo-600 shadow-sm' 
                   : 'text-gray-400 hover:text-gray-600 hover:bg-gray-50'
               }`}
             >
-              <LayoutDashboard size={16} /> Dashboard
+              <LayoutDashboard size={14} className="sm:w-4 sm:h-4" /> <span>Dashboard</span>
             </button>
             <button
               onClick={() => setActiveTab('prospects')}
-              className={`px-6 py-2.5 rounded-xl text-sm font-semibold transition-all flex items-center gap-2 ${
+              className={`px-3 sm:px-6 py-2 sm:py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition-all flex items-center gap-1 sm:gap-2 shrink-0 ${
                 activeTab === 'prospects' 
                   ? 'bg-indigo-50 text-indigo-600 shadow-sm' 
                   : 'text-gray-400 hover:text-gray-600 hover:bg-gray-50'
               }`}
             >
-              <Users size={16} /> Prospectos
+              <Users size={14} className="sm:w-4 sm:h-4" /> <span>Prospectos</span>
             </button>
             <button
               onClick={() => setActiveTab('settings')}
-              className={`px-6 py-2.5 rounded-xl text-sm font-semibold transition-all flex items-center gap-2 ${
+              className={`px-3 sm:px-6 py-2 sm:py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition-all flex items-center gap-1 sm:gap-2 shrink-0 ${
                 activeTab === 'settings' 
                   ? 'bg-indigo-50 text-indigo-600 shadow-sm' 
                   : 'text-gray-400 hover:text-gray-600 hover:bg-gray-50'
               }`}
             >
-              <Settings size={16} /> Configuración
+              <Settings size={14} className="sm:w-4 sm:h-4" /> <span>Configuración</span>
             </button>
           </div>
         </div>
