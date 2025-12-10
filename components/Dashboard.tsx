@@ -1089,7 +1089,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableZones, onUpdateZo
             <div className="bg-gradient-to-r from-indigo-400 to-purple-400 rounded-t-[2rem] p-6 pr-20 relative">
               <button 
                 onClick={() => setSelectedProspect(null)}
-                className="absolute top-4 right-4 w-10 h-10 rounded-full bg-white/30 hover:bg-white/40 flex items-center justify-center transition-colors z-10 shadow-lg"
+                className="absolute top-4 right-4 w-8 h-8 flex items-center justify-center transition-colors z-10 hover:opacity-70"
               >
                 <X size={10} className="text-white" />
               </button>
