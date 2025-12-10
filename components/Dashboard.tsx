@@ -1301,37 +1301,6 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableZones, onUpdateZo
                 </div>
               </div>
 
-              {/* AI Strategy Section */}
-              <div className="bg-gradient-to-r from-indigo-50 to-purple-50 p-6 rounded-2xl border border-indigo-100 mb-8">
-                <div className="flex items-center gap-3 mb-4">
-                  <div className="w-10 h-10 rounded-xl bg-indigo-600 text-white flex items-center justify-center font-bold">
-                    K
-                  </div>
-                  <h3 className="text-lg font-bold text-gray-900">KONSUL AI STRATEGY</h3>
-                </div>
-                <p className="text-gray-700 mb-4 leading-relaxed">
-                  El cliente muestra señales de cierre rápido. Su preocupación principal parece ser la seguridad y privacidad. 
-                  Enfócate en las amenidades exclusivas del edificio.
-                </p>
-                <div className="flex gap-2">
-                  <span className="px-3 py-1 bg-white/70 rounded-full text-xs font-semibold text-gray-700 flex items-center gap-1">
-                    <ShieldCheck size={12} /> Seguridad
-                  </span>
-                  <span className="px-3 py-1 bg-white/70 rounded-full text-xs font-semibold text-gray-700 flex items-center gap-1">
-                    <TrendingUp size={12} /> ROI a Largo Plazo
-                  </span>
-                </div>
-              </div>
-
-              {/* Action Buttons */}
-              <div className="flex gap-4">
-                <button className="flex-1 bg-gray-900 text-white px-6 py-4 rounded-xl font-semibold hover:bg-gray-800 transition-all flex items-center justify-center gap-2">
-                  <User size={18} /> Ver Perfil Completo
-                </button>
-                <button className="flex-1 bg-white border-2 border-gray-200 text-gray-700 px-6 py-4 rounded-xl font-semibold hover:bg-gray-50 transition-all flex items-center justify-center gap-2">
-                  <MessageCircle size={18} /> Historial de Chats
-                </button>
-              </div>
             </div>
           </div>
         </div>
