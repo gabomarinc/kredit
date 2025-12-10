@@ -1086,12 +1086,12 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableZones, onUpdateZo
           ></div>
           <div className="bg-white rounded-[2rem] w-full max-w-4xl max-h-[90vh] overflow-y-auto shadow-2xl relative animate-fade-in-up z-10">
             {/* Header with gradient */}
-            <div className="bg-gradient-to-r from-indigo-600 to-purple-600 rounded-t-[2rem] p-6 relative">
+            <div className="bg-gradient-to-r from-indigo-600 to-purple-600 rounded-t-[2rem] p-6 pr-20 relative">
               <button 
                 onClick={() => setSelectedProspect(null)}
-                className="absolute top-4 right-4 w-10 h-10 rounded-full bg-white/20 hover:bg-white/30 flex items-center justify-center transition-colors z-10"
+                className="absolute top-4 right-4 w-10 h-10 rounded-full bg-white/20 hover:bg-white/30 flex items-center justify-center transition-colors z-10 shadow-lg"
               >
-                <X size={20} className="text-white" />
+                <X size={18} className="text-white" />
               </button>
             </div>
 
