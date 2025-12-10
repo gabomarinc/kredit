@@ -787,7 +787,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableZones, onUpdateZo
                           </div>
                         </td>
                         <td className="px-6 py-5">
-                          <span className="text-sm text-gray-500">{prospect.date}</span>
+                          <span className="text-sm text-gray-500">{prospect.dateDisplay || new Date(prospect.date).toLocaleDateString('es-PA')}</span>
                         </td>
                       </tr>
                     ))}
