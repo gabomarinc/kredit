@@ -75,12 +75,57 @@ const ensureTablesExist = async (client: any) => {
         interested_zones TEXT[],
         calculation_result JSONB,
         status TEXT DEFAULT 'Nuevo',
+        id_file_base64 TEXT,
+        ficha_file_base64 TEXT,
+        talonario_file_base64 TEXT,
+        signed_acp_file_base64 TEXT,
         created_at TIMESTAMP DEFAULT NOW()
       )
     `);
+    
+    // Agregar columnas de archivos si no existen (para tablas ya creadas)
+    try {
+      await client.query(`
+        DO $$
+        BEGIN
+          IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'prospects' AND column_name = 'id_file_base64') THEN
+            ALTER TABLE prospects ADD COLUMN id_file_base64 TEXT;
+          END IF;
+          IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'prospects' AND column_name = 'ficha_file_base64') THEN
+            ALTER TABLE prospects ADD COLUMN ficha_file_base64 TEXT;
+          END IF;
+          IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'prospects' AND column_name = 'talonario_file_base64') THEN
+            ALTER TABLE prospects ADD COLUMN talonario_file_base64 TEXT;
+          END IF;
+          IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'prospects' AND column_name = 'signed_acp_file_base64') THEN
+            ALTER TABLE prospects ADD COLUMN signed_acp_file_base64 TEXT;
+          END IF;
+        END $$;
+      `);
+    } catch (e) {
+      console.warn('Nota: No se pudieron agregar las columnas de archivos (puede que ya existan):', e);
+    }
   } catch (e) {
     console.warn("Nota: Verificación de tablas omitida o fallida (puede que ya existan o falten permisos DDL).", e);
   }
+};
+
+// Función helper para convertir File a Base64
+const fileToBase64 = (file: File | null): Promise<string | null> => {
+  return new Promise((resolve, reject) => {
+    if (!file) {
+      resolve(null);
+      return;
+    }
+    
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      const result = reader.result as string;
+      resolve(result);
+    };
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
 };
 
 export const saveProspectToDB = async (
@@ -107,6 +152,22 @@ export const saveProspectToDB = async (
     // Aseguramos que las tablas existan (Auto-migración simple)
     await ensureTablesExist(client);
     
+    // Convertir archivos a Base64
+    console.log('🔄 Convirtiendo archivos a Base64...');
+    const [idFileBase64, fichaFileBase64, talonarioFileBase64, signedAcpFileBase64] = await Promise.all([
+      fileToBase64(personal.idFile),
+      fileToBase64(personal.fichaFile),
+      fileToBase64(personal.talonarioFile),
+      fileToBase64(personal.signedAcpFile)
+    ]);
+    
+    console.log('✅ Archivos convertidos:', {
+      hasIdFile: !!idFileBase64,
+      hasFichaFile: !!fichaFileBase64,
+      hasTalonarioFile: !!talonarioFileBase64,
+      hasSignedAcpFile: !!signedAcpFileBase64
+    });
+    
     // Insertamos en la tabla prospects
     const query = `
       INSERT INTO prospects (
@@ -120,8 +181,12 @@ export const saveProspectToDB = async (
         interested_zones, 
         calculation_result,
         status,
+        id_file_base64,
+        ficha_file_base64,
+        talonario_file_base64,
+        signed_acp_file_base64,
         created_at
-      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, 'Nuevo', NOW())
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, 'Nuevo', $10, $11, $12, $13, NOW())
       RETURNING id
     `;
 
@@ -134,7 +199,11 @@ export const saveProspectToDB = async (
       preferences.bedrooms,
       preferences.bathrooms,
       preferences.zone, // Postgres lo guardará como Array text[]
-      JSON.stringify(result) // Guardamos el resultado como JSON
+      JSON.stringify(result), // Guardamos el resultado como JSON
+      idFileBase64,
+      fichaFileBase64,
+      talonarioFileBase64,
+      signedAcpFileBase64
     ];
 
     const res = await client.query(query, values);
