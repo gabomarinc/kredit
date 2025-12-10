@@ -1153,18 +1153,37 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableZones, onUpdateZo
               <div className="bg-indigo-50/50 p-6 rounded-2xl border border-indigo-100 mb-8">
                 <h3 className="text-sm font-bold text-gray-700 mb-3">INTERESADO EN</h3>
                 <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-xl font-bold text-gray-900 mb-1">
-                      {Array.isArray(selectedProspect.zone) 
-                        ? selectedProspect.zone[0] || 'Sin zona'
-                        : (typeof selectedProspect.zone === 'string' ? selectedProspect.zone : 'Sin zona')}
-                    </p>
-                    <div className="flex items-center gap-1 text-gray-500 text-sm">
-                      <MapPin size={14} />
-                      <span>Panamá, Ciudad de Panamá</span>
-                    </div>
+                  <div className="flex-1">
+                    {(() => {
+                      const zones = Array.isArray(selectedProspect.zone) 
+                        ? selectedProspect.zone 
+                        : (typeof selectedProspect.zone === 'string' ? [selectedProspect.zone] : []);
+                      
+                      if (zones.length === 0) {
+                        return (
+                          <>
+                            <p className="text-xl font-bold text-gray-900 mb-1">Sin zona</p>
+                            <div className="flex items-center gap-1 text-gray-500 text-sm">
+                              <MapPin size={14} />
+                              <span>Panamá, Ciudad de Panamá</span>
+                            </div>
+                          </>
+                        );
+                      }
+                      
+                      return (
+                        <>
+                          <p className="text-xl font-bold text-gray-900 mb-1">
+                            {zones.join(', ')}
+                          </p>
+                          <div className="flex items-center gap-1 text-gray-500 text-sm">
+                            <MapPin size={14} />
+                            <span>Panamá, Ciudad de Panamá</span>
+                          </div>
+                        </>
+                      );
+                    })()}
                   </div>
-                  <ChevronDown size={20} className="text-gray-400" />
                 </div>
               </div>
 
