@@ -489,9 +489,11 @@ export const ProspectFlow: React.FC<ProspectFlowProps> = ({ availableZones, comp
                         Autorización APC
                       </h3>
                       <a 
-                         href="#" 
-                         onClick={(e) => { e.preventDefault(); alert("En un entorno real, esto descargaría el PDF proporcionado."); }}
-                         className="text-xs font-semibold text-indigo-500 hover:text-indigo-700 flex items-center gap-1"
+                         href="/apc.pdf"
+                         download="apc.pdf"
+                         target="_blank"
+                         rel="noopener noreferrer"
+                         className="text-xs font-semibold text-indigo-500 hover:text-indigo-700 flex items-center gap-1 transition-colors"
                        >
                          <Download size={12} /> Descargar PDF
                        </a>
