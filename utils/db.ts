@@ -201,18 +201,28 @@ export const getProspectsFromDB = async (): Promise<Prospect[]> => {
 
     // Mapeamos los resultados de la DB (snake_case) a nuestro tipo TypeScript (camelCase)
     return res.rows.map((row: any) => ({
-      id: row.id,
-      name: row.full_name,
-      email: row.email,
-      income: parseFloat(row.monthly_income),
-      date: new Date(row.created_at).toLocaleDateString('es-PA', { year: 'numeric', month: 'short', day: 'numeric' }),
-      status: row.status as 'Nuevo' | 'Contactado' | 'En Proceso',
-      // Ensure zone is treated safely
+      id: String(row.id),
+      name: row.full_name || '',
+      email: row.email || '',
+      phone: row.phone || '',
+      income: parseFloat(row.monthly_income || 0),
+      date: new Date(row.created_at).toISOString(), // Guardar como ISO para filtros de fecha
+      dateDisplay: new Date(row.created_at).toLocaleDateString('es-PA', { year: 'numeric', month: 'short', day: 'numeric' }),
+      status: (row.status || 'Nuevo') as 'Nuevo' | 'Contactado' | 'En Proceso',
+      propertyType: row.property_type || '',
+      bedrooms: row.bedrooms || null,
+      bathrooms: row.bathrooms || null,
+      // Ensure zone is treated safely - puede ser array o string
       zone: Array.isArray(row.interested_zones) && row.interested_zones.length > 0 
-            ? row.interested_zones[0] 
-            : (typeof row.interested_zones === 'string' ? row.interested_zones.replace(/[{}"\\]/g, '') : 'Sin zona'),
+            ? row.interested_zones 
+            : (typeof row.interested_zones === 'string' ? [row.interested_zones.replace(/[{}"\\]/g, '')] : []),
       // Ensure result is an object
-      result: safeParseJSON(row.calculation_result)
+      result: safeParseJSON(row.calculation_result) || {
+        maxPropertyPrice: 0,
+        monthlyPayment: 0,
+        downPaymentPercent: 0,
+        downPaymentAmount: 0
+      }
     }));
 
   } catch (error) {

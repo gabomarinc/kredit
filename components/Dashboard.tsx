@@ -5,6 +5,7 @@ import {
 import { getProspectsFromDB, getCompanyById, updateCompanyZones, updateCompanyLogo, Company } from '../utils/db';
 import { Prospect } from '../types';
 import { formatCurrency } from '../utils/calculator';
+import * as XLSX from 'xlsx';
 
 type Tab = 'dashboard' | 'prospects' | 'settings';
 
@@ -20,6 +21,13 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableZones, onUpdateZo
   const [showExportModal, setShowExportModal] = useState(false);
   const [newZone, setNewZone] = useState('');
   const [copied, setCopied] = useState(false);
+
+  // Export Modal State
+  const [exportFilterType, setExportFilterType] = useState<'all' | 'dateRange'>('all');
+  const [exportSalaryRange, setExportSalaryRange] = useState<string>('');
+  const [exportFormat, setExportFormat] = useState<'excel' | 'csv'>('excel');
+  const [dateRangeStart, setDateRangeStart] = useState<string>('');
+  const [dateRangeEnd, setDateRangeEnd] = useState<string>('');
 
   // DB Data State
   const [prospects, setProspects] = useState<Prospect[]>([]);
@@ -125,6 +133,179 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableZones, onUpdateZo
       } else {
         console.error('❌ Error al actualizar zonas en la base de datos');
       }
+    }
+  };
+
+  // Funciones de exportación
+  const filterProspectsForExport = (): Prospect[] => {
+    let filtered = [...prospects];
+
+    // Filtrar por rango de fechas si está seleccionado
+    if (exportFilterType === 'dateRange' && dateRangeStart && dateRangeEnd) {
+      const startDate = new Date(dateRangeStart);
+      startDate.setHours(0, 0, 0, 0);
+      const endDate = new Date(dateRangeEnd);
+      endDate.setHours(23, 59, 59, 999); // Incluir todo el día final
+      
+      filtered = filtered.filter(p => {
+        const prospectDate = new Date(p.date);
+        return prospectDate >= startDate && prospectDate <= endDate;
+      });
+    }
+
+    // Filtrar por rango salarial
+    if (exportSalaryRange) {
+      filtered = filtered.filter(p => {
+        const income = p.income;
+        switch (exportSalaryRange) {
+          case '0-3000':
+            return income < 3000;
+          case '3000-5000':
+            return income >= 3000 && income < 5000;
+          case '5000-8000':
+            return income >= 5000 && income < 8000;
+          case '8000-12000':
+            return income >= 8000 && income < 12000;
+          case '12000+':
+            return income >= 12000;
+          default:
+            return true;
+        }
+      });
+    }
+
+    return filtered;
+  };
+
+  const exportToCSV = () => {
+    const filteredData = filterProspectsForExport();
+    
+    if (filteredData.length === 0) {
+      alert('No hay datos para exportar con los filtros seleccionados.');
+      return;
+    }
+
+    // Preparar datos para CSV
+    const headers = [
+      'ID',
+      'Nombre Completo',
+      'Email',
+      'Teléfono',
+      'Ingreso Mensual',
+      'Tipo de Propiedad',
+      'Habitaciones',
+      'Baños',
+      'Zonas de Interés',
+      'Precio Máximo',
+      'Pago Mensual',
+      'Enganche (%)',
+      'Enganche ($)',
+      'Estado',
+      'Fecha de Registro'
+    ];
+
+    const rows = filteredData.map(p => [
+      p.id,
+      p.name || 'N/A',
+      p.email || 'N/A',
+      p.phone || 'N/A',
+      p.income.toFixed(2), // Sin formato de moneda para CSV (mejor para Excel)
+      p.propertyType || 'N/A',
+      p.bedrooms?.toString() || 'N/A',
+      p.bathrooms?.toString() || 'N/A',
+      Array.isArray(p.zone) ? p.zone.join(', ') : (typeof p.zone === 'string' ? p.zone : 'N/A'),
+      (p.result?.maxPropertyPrice || 0).toFixed(2),
+      (p.result?.monthlyPayment || 0).toFixed(2),
+      `${p.result?.downPaymentPercent || 0}%`,
+      (p.result?.downPaymentAmount || 0).toFixed(2),
+      p.status || 'Nuevo',
+      p.dateDisplay || new Date(p.date).toLocaleDateString('es-PA')
+    ]);
+
+    // Crear contenido CSV
+    const csvContent = [
+      headers.join(','),
+      ...rows.map(row => row.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(','))
+    ].join('\n');
+
+    // Crear BOM para Excel (UTF-8)
+    const BOM = '\uFEFF';
+    const blob = new Blob([BOM + csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `prospectos_${new Date().toISOString().split('T')[0]}.csv`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+
+    setShowExportModal(false);
+  };
+
+  const exportToExcel = () => {
+    const filteredData = filterProspectsForExport();
+    
+    if (filteredData.length === 0) {
+      alert('No hay datos para exportar con los filtros seleccionados.');
+      return;
+    }
+
+    // Preparar datos para Excel
+    const worksheetData = filteredData.map(p => ({
+      'ID': p.id,
+      'Nombre Completo': p.name || 'N/A',
+      'Email': p.email || 'N/A',
+      'Teléfono': p.phone || 'N/A',
+      'Ingreso Mensual': p.income,
+      'Tipo de Propiedad': p.propertyType || 'N/A',
+      'Habitaciones': p.bedrooms ?? 'N/A',
+      'Baños': p.bathrooms ?? 'N/A',
+      'Zonas de Interés': Array.isArray(p.zone) ? p.zone.join(', ') : (typeof p.zone === 'string' ? p.zone : 'N/A'),
+      'Precio Máximo': p.result?.maxPropertyPrice || 0,
+      'Pago Mensual': p.result?.monthlyPayment || 0,
+      'Enganche (%)': p.result?.downPaymentPercent || 0,
+      'Enganche ($)': p.result?.downPaymentAmount || 0,
+      'Estado': p.status || 'Nuevo',
+      'Fecha de Registro': p.dateDisplay || new Date(p.date).toLocaleDateString('es-PA')
+    }));
+
+    // Crear workbook y worksheet
+    const worksheet = XLSX.utils.json_to_sheet(worksheetData);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, 'Prospectos');
+
+    // Ajustar ancho de columnas
+    const columnWidths = [
+      { wch: 10 }, // ID
+      { wch: 25 }, // Nombre
+      { wch: 30 }, // Email
+      { wch: 15 }, // Teléfono
+      { wch: 15 }, // Ingreso
+      { wch: 18 }, // Tipo Propiedad
+      { wch: 12 }, // Habitaciones
+      { wch: 10 }, // Baños
+      { wch: 30 }, // Zonas
+      { wch: 15 }, // Precio Máximo
+      { wch: 15 }, // Pago Mensual
+      { wch: 12 }, // Enganche %
+      { wch: 15 }, // Enganche $
+      { wch: 15 }, // Estado
+      { wch: 18 }  // Fecha
+    ];
+    worksheet['!cols'] = columnWidths;
+
+    // Descargar archivo
+    XLSX.writeFile(workbook, `prospectos_${new Date().toISOString().split('T')[0]}.xlsx`);
+    
+    setShowExportModal(false);
+  };
+
+  const handleExport = () => {
+    if (exportFormat === 'csv') {
+      exportToCSV();
+    } else {
+      exportToExcel();
     }
   };
 
@@ -642,27 +823,116 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableZones, onUpdateZo
             </div>
 
             <div className="space-y-6">
+              {/* Format Selection */}
+              <div>
+                <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Formato de Exportación</label>
+                <div className="grid grid-cols-2 gap-3">
+                  <button
+                    onClick={() => setExportFormat('excel')}
+                    className={`p-4 rounded-xl border-2 transition-all font-semibold text-sm ${
+                      exportFormat === 'excel'
+                        ? 'border-indigo-500 bg-indigo-50 text-indigo-700'
+                        : 'border-gray-200 bg-gray-50 text-gray-600 hover:border-gray-300'
+                    }`}
+                  >
+                    Excel (.xlsx)
+                  </button>
+                  <button
+                    onClick={() => setExportFormat('csv')}
+                    className={`p-4 rounded-xl border-2 transition-all font-semibold text-sm ${
+                      exportFormat === 'csv'
+                        ? 'border-indigo-500 bg-indigo-50 text-indigo-700'
+                        : 'border-gray-200 bg-gray-50 text-gray-600 hover:border-gray-300'
+                    }`}
+                  >
+                    CSV (.csv)
+                  </button>
+                </div>
+              </div>
+
               {/* Filter: Range Type */}
               <div className="space-y-3">
-                <label className="flex items-center gap-3 p-4 border border-indigo-100 bg-indigo-50/30 rounded-xl cursor-pointer transition-colors hover:border-indigo-300">
-                  <div className="w-5 h-5 rounded-full border-2 border-indigo-600 flex items-center justify-center">
-                    <div className="w-2.5 h-2.5 bg-indigo-600 rounded-full"></div>
+                <label 
+                  onClick={() => setExportFilterType('all')}
+                  className={`flex items-center gap-3 p-4 border rounded-xl cursor-pointer transition-colors ${
+                    exportFilterType === 'all'
+                      ? 'border-indigo-500 bg-indigo-50/30'
+                      : 'border-gray-200 hover:bg-gray-50'
+                  }`}
+                >
+                  <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
+                    exportFilterType === 'all' ? 'border-indigo-600' : 'border-gray-300'
+                  }`}>
+                    {exportFilterType === 'all' && (
+                      <div className="w-2.5 h-2.5 bg-indigo-600 rounded-full"></div>
+                    )}
                   </div>
-                  <span className="font-semibold text-gray-900 text-sm">Toda la base de datos</span>
+                  <span className={`font-semibold text-sm ${
+                    exportFilterType === 'all' ? 'text-gray-900' : 'text-gray-600'
+                  }`}>Toda la base de datos</span>
                 </label>
                 
-                <label className="flex items-center gap-3 p-4 border border-gray-200 rounded-xl cursor-pointer hover:bg-gray-50 transition-colors opacity-60">
-                  <div className="w-5 h-5 rounded-full border-2 border-gray-300"></div>
-                  <span className="font-medium text-gray-600 text-sm">Filtrar por rango de fechas</span>
+                <label 
+                  onClick={() => setExportFilterType('dateRange')}
+                  className={`flex items-center gap-3 p-4 border rounded-xl cursor-pointer transition-colors ${
+                    exportFilterType === 'dateRange'
+                      ? 'border-indigo-500 bg-indigo-50/30'
+                      : 'border-gray-200 hover:bg-gray-50'
+                  }`}
+                >
+                  <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
+                    exportFilterType === 'dateRange' ? 'border-indigo-600' : 'border-gray-300'
+                  }`}>
+                    {exportFilterType === 'dateRange' && (
+                      <div className="w-2.5 h-2.5 bg-indigo-600 rounded-full"></div>
+                    )}
+                  </div>
+                  <span className={`font-medium text-sm ${
+                    exportFilterType === 'dateRange' ? 'text-gray-900' : 'text-gray-600'
+                  }`}>Filtrar por rango de fechas</span>
                 </label>
               </div>
+
+              {/* Date Range Filter */}
+              {exportFilterType === 'dateRange' && (
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Fecha Inicio</label>
+                    <div className="relative">
+                      <Calendar className="absolute left-3 top-3.5 text-gray-400" size={16} />
+                      <input
+                        type="date"
+                        value={dateRangeStart}
+                        onChange={(e) => setDateRangeStart(e.target.value)}
+                        className="w-full pl-10 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm outline-none focus:border-indigo-500 text-gray-700 font-medium"
+                      />
+                    </div>
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Fecha Fin</label>
+                    <div className="relative">
+                      <Calendar className="absolute left-3 top-3.5 text-gray-400" size={16} />
+                      <input
+                        type="date"
+                        value={dateRangeEnd}
+                        onChange={(e) => setDateRangeEnd(e.target.value)}
+                        className="w-full pl-10 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm outline-none focus:border-indigo-500 text-gray-700 font-medium"
+                      />
+                    </div>
+                  </div>
+                </div>
+              )}
 
               {/* Filter: Salary Range */}
               <div>
                 <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Rango Salarial (Opcional)</label>
                 <div className="relative">
                   <DollarSign className="absolute left-4 top-3.5 text-gray-400" size={18} />
-                  <select className="w-full pl-12 pr-10 py-3.5 bg-gray-50 border border-gray-200 rounded-xl text-sm outline-none focus:border-indigo-500 appearance-none cursor-pointer hover:bg-white transition-colors text-gray-700 font-medium">
+                  <select 
+                    value={exportSalaryRange}
+                    onChange={(e) => setExportSalaryRange(e.target.value)}
+                    className="w-full pl-12 pr-10 py-3.5 bg-gray-50 border border-gray-200 rounded-xl text-sm outline-none focus:border-indigo-500 appearance-none cursor-pointer hover:bg-white transition-colors text-gray-700 font-medium"
+                  >
                     <option value="">Cualquier Salario</option>
                     <option value="0-3000">Menos de $3,000</option>
                     <option value="3000-5000">$3,000 - $5,000</option>
@@ -675,13 +945,10 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableZones, onUpdateZo
               </div>
 
               <button 
-                onClick={() => {
-                  alert("Descargando reporte CSV...");
-                  setShowExportModal(false);
-                }}
+                onClick={handleExport}
                 className="w-full bg-gray-900 text-white py-4 rounded-xl font-bold hover:bg-gray-800 transition-all shadow-lg shadow-gray-200 flex justify-center items-center gap-2"
               >
-                <Download size={18} /> Descargar Reporte
+                <Download size={18} /> Descargar Reporte {exportFormat === 'excel' ? 'Excel' : 'CSV'}
               </button>
             </div>
 

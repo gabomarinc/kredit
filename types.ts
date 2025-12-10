@@ -35,9 +35,14 @@ export interface Prospect {
   id: string;
   name: string;
   email: string;
+  phone?: string;
   income: number;
-  date: string;
+  date: string; // ISO string para filtros
+  dateDisplay?: string; // Formato legible para mostrar
   status: 'Nuevo' | 'Contactado' | 'En Proceso';
-  zone: string;
+  propertyType?: string;
+  bedrooms?: number | null;
+  bathrooms?: number | null;
+  zone: string | string[]; // Puede ser string o array
   result: CalculationResult;
 }
