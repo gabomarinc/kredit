@@ -21,6 +21,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableZones, onUpdateZo
   const [showExportModal, setShowExportModal] = useState(false);
   const [showZonesModal, setShowZonesModal] = useState(false);
   const [selectedProspect, setSelectedProspect] = useState<Prospect | null>(null);
+  const [selectedDocument, setSelectedDocument] = useState<{ type: string; url: string; name: string } | null>(null);
   const [newZone, setNewZone] = useState('');
   const [copied, setCopied] = useState(false);
 
@@ -1088,9 +1089,9 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableZones, onUpdateZo
             <div className="bg-gradient-to-r from-indigo-600 to-purple-600 rounded-t-[2rem] p-6 relative">
               <button 
                 onClick={() => setSelectedProspect(null)}
-                className="absolute top-6 right-6 w-8 h-8 rounded-full bg-white/20 hover:bg-white/30 flex items-center justify-center transition-colors"
+                className="absolute top-4 right-4 w-10 h-10 rounded-full bg-white/20 hover:bg-white/30 flex items-center justify-center transition-colors z-10"
               >
-                <X size={18} className="text-white" />
+                <X size={20} className="text-white" />
               </button>
             </div>
 
@@ -1186,23 +1187,27 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableZones, onUpdateZo
                   {selectedProspect.idFileBase64 && (
                     <div className="bg-gray-50 p-4 rounded-xl border border-gray-200">
                       <h4 className="text-sm font-semibold text-gray-700 mb-2">Foto de Cédula / ID</h4>
-                      {selectedProspect.idFileBase64.startsWith('data:image/') ? (
-                        <img 
-                          src={selectedProspect.idFileBase64} 
-                          alt="Cédula" 
-                          className="w-full h-48 object-contain rounded-lg border border-gray-200 bg-white"
-                        />
-                      ) : (
-                        <a 
-                          href={selectedProspect.idFileBase64} 
-                          target="_blank" 
-                          rel="noopener noreferrer"
-                          className="block p-4 bg-white rounded-lg border border-gray-200 hover:bg-gray-50 transition-colors"
-                        >
-                          <FileTextIcon size={32} className="text-indigo-600 mx-auto mb-2" />
-                          <p className="text-xs text-center text-gray-600">Ver PDF</p>
-                        </a>
-                      )}
+                      <div 
+                        onClick={() => setSelectedDocument({ 
+                          type: selectedProspect.idFileBase64!.startsWith('data:image/') ? 'image' : 'pdf',
+                          url: selectedProspect.idFileBase64!,
+                          name: 'Foto de Cédula / ID'
+                        })}
+                        className="cursor-pointer hover:opacity-80 transition-opacity"
+                      >
+                        {selectedProspect.idFileBase64.startsWith('data:image/') ? (
+                          <img 
+                            src={selectedProspect.idFileBase64} 
+                            alt="Cédula" 
+                            className="w-full h-48 object-contain rounded-lg border border-gray-200 bg-white"
+                          />
+                        ) : (
+                          <div className="p-4 bg-white rounded-lg border border-gray-200 hover:bg-gray-50 transition-colors">
+                            <FileTextIcon size={32} className="text-indigo-600 mx-auto mb-2" />
+                            <p className="text-xs text-center text-gray-600">Click para ver PDF</p>
+                          </div>
+                        )}
+                      </div>
                     </div>
                   )}
 
@@ -1210,23 +1215,27 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableZones, onUpdateZo
                   {selectedProspect.fichaFileBase64 && (
                     <div className="bg-gray-50 p-4 rounded-xl border border-gray-200">
                       <h4 className="text-sm font-semibold text-gray-700 mb-2">Ficha de Seguro Social</h4>
-                      {selectedProspect.fichaFileBase64.startsWith('data:image/') ? (
-                        <img 
-                          src={selectedProspect.fichaFileBase64} 
-                          alt="Ficha Seguro Social" 
-                          className="w-full h-48 object-contain rounded-lg border border-gray-200 bg-white"
-                        />
-                      ) : (
-                        <a 
-                          href={selectedProspect.fichaFileBase64} 
-                          target="_blank" 
-                          rel="noopener noreferrer"
-                          className="block p-4 bg-white rounded-lg border border-gray-200 hover:bg-gray-50 transition-colors"
-                        >
-                          <FileTextIcon size={32} className="text-indigo-600 mx-auto mb-2" />
-                          <p className="text-xs text-center text-gray-600">Ver PDF</p>
-                        </a>
-                      )}
+                      <div 
+                        onClick={() => setSelectedDocument({ 
+                          type: selectedProspect.fichaFileBase64!.startsWith('data:image/') ? 'image' : 'pdf',
+                          url: selectedProspect.fichaFileBase64!,
+                          name: 'Ficha de Seguro Social'
+                        })}
+                        className="cursor-pointer hover:opacity-80 transition-opacity"
+                      >
+                        {selectedProspect.fichaFileBase64.startsWith('data:image/') ? (
+                          <img 
+                            src={selectedProspect.fichaFileBase64} 
+                            alt="Ficha Seguro Social" 
+                            className="w-full h-48 object-contain rounded-lg border border-gray-200 bg-white"
+                          />
+                        ) : (
+                          <div className="p-4 bg-white rounded-lg border border-gray-200 hover:bg-gray-50 transition-colors">
+                            <FileTextIcon size={32} className="text-indigo-600 mx-auto mb-2" />
+                            <p className="text-xs text-center text-gray-600">Click para ver PDF</p>
+                          </div>
+                        )}
+                      </div>
                     </div>
                   )}
 
@@ -1234,23 +1243,27 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableZones, onUpdateZo
                   {selectedProspect.talonarioFileBase64 && (
                     <div className="bg-gray-50 p-4 rounded-xl border border-gray-200">
                       <h4 className="text-sm font-semibold text-gray-700 mb-2">Talonario de Pago</h4>
-                      {selectedProspect.talonarioFileBase64.startsWith('data:image/') ? (
-                        <img 
-                          src={selectedProspect.talonarioFileBase64} 
-                          alt="Talonario" 
-                          className="w-full h-48 object-contain rounded-lg border border-gray-200 bg-white"
-                        />
-                      ) : (
-                        <a 
-                          href={selectedProspect.talonarioFileBase64} 
-                          target="_blank" 
-                          rel="noopener noreferrer"
-                          className="block p-4 bg-white rounded-lg border border-gray-200 hover:bg-gray-50 transition-colors"
-                        >
-                          <FileTextIcon size={32} className="text-indigo-600 mx-auto mb-2" />
-                          <p className="text-xs text-center text-gray-600">Ver PDF</p>
-                        </a>
-                      )}
+                      <div 
+                        onClick={() => setSelectedDocument({ 
+                          type: selectedProspect.talonarioFileBase64!.startsWith('data:image/') ? 'image' : 'pdf',
+                          url: selectedProspect.talonarioFileBase64!,
+                          name: 'Talonario de Pago'
+                        })}
+                        className="cursor-pointer hover:opacity-80 transition-opacity"
+                      >
+                        {selectedProspect.talonarioFileBase64.startsWith('data:image/') ? (
+                          <img 
+                            src={selectedProspect.talonarioFileBase64} 
+                            alt="Talonario" 
+                            className="w-full h-48 object-contain rounded-lg border border-gray-200 bg-white"
+                          />
+                        ) : (
+                          <div className="p-4 bg-white rounded-lg border border-gray-200 hover:bg-gray-50 transition-colors">
+                            <FileTextIcon size={32} className="text-indigo-600 mx-auto mb-2" />
+                            <p className="text-xs text-center text-gray-600">Click para ver PDF</p>
+                          </div>
+                        )}
+                      </div>
                     </div>
                   )}
 
@@ -1258,23 +1271,27 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableZones, onUpdateZo
                   {selectedProspect.signedAcpFileBase64 && (
                     <div className="bg-gray-50 p-4 rounded-xl border border-gray-200">
                       <h4 className="text-sm font-semibold text-gray-700 mb-2">APC Firmada</h4>
-                      {selectedProspect.signedAcpFileBase64.startsWith('data:image/') ? (
-                        <img 
-                          src={selectedProspect.signedAcpFileBase64} 
-                          alt="APC Firmada" 
-                          className="w-full h-48 object-contain rounded-lg border border-gray-200 bg-white"
-                        />
-                      ) : (
-                        <a 
-                          href={selectedProspect.signedAcpFileBase64} 
-                          target="_blank" 
-                          rel="noopener noreferrer"
-                          className="block p-4 bg-white rounded-lg border border-gray-200 hover:bg-gray-50 transition-colors"
-                        >
-                          <FileTextIcon size={32} className="text-indigo-600 mx-auto mb-2" />
-                          <p className="text-xs text-center text-gray-600">Ver PDF</p>
-                        </a>
-                      )}
+                      <div 
+                        onClick={() => setSelectedDocument({ 
+                          type: selectedProspect.signedAcpFileBase64!.startsWith('data:image/') ? 'image' : 'pdf',
+                          url: selectedProspect.signedAcpFileBase64!,
+                          name: 'APC Firmada'
+                        })}
+                        className="cursor-pointer hover:opacity-80 transition-opacity"
+                      >
+                        {selectedProspect.signedAcpFileBase64.startsWith('data:image/') ? (
+                          <img 
+                            src={selectedProspect.signedAcpFileBase64} 
+                            alt="APC Firmada" 
+                            className="w-full h-48 object-contain rounded-lg border border-gray-200 bg-white"
+                          />
+                        ) : (
+                          <div className="p-4 bg-white rounded-lg border border-gray-200 hover:bg-gray-50 transition-colors">
+                            <FileTextIcon size={32} className="text-indigo-600 mx-auto mb-2" />
+                            <p className="text-xs text-center text-gray-600">Click para ver PDF</p>
+                          </div>
+                        )}
+                      </div>
                     </div>
                   )}
 
