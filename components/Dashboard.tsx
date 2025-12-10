@@ -104,7 +104,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableZones, onUpdateZo
       });
     } else {
       const z = curr.zone || 'Sin zona';
-      acc[z] = (acc[z] || 0) + 1;
+    acc[z] = (acc[z] || 0) + 1;
     }
     return acc;
   }, {} as Record<string, number>);
@@ -112,7 +112,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableZones, onUpdateZo
   const sortedZones = Object.entries(zoneCounts).sort((a, b) => (b[1] as number) - (a[1] as number));
   const topZone = sortedZones[0]?.[0] || 'Aún no tenemos datos';
   const topZoneCount = sortedZones[0]?.[1] || 0;
-  
+
   // Preparar las primeras 2 zonas para mostrar
   const topTwoZones = sortedZones.slice(0, 2).map(([zone]) => zone);
   const hasMoreZones = sortedZones.length > 2;
@@ -625,11 +625,11 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableZones, onUpdateZo
                              <Loader2 className="animate-spin text-indigo-600" size={32} />
                            ) : (
                              <>
-                               <ImageIcon size={32} strokeWidth={1} />
-                               <span className="text-xs font-semibold mt-2">Cambiar Logo</span>
+                        <ImageIcon size={32} strokeWidth={1} />
+                        <span className="text-xs font-semibold mt-2">Cambiar Logo</span>
                              </>
                            )}
-                         </div>
+                     </div>
                        )}
                        <input 
                          type="file" 
@@ -870,7 +870,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableZones, onUpdateZo
               {/* Format Selection */}
               <div>
                 <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Formato de Exportación</label>
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <button
                     onClick={() => setExportFormat('excel')}
                     className={`p-4 rounded-xl border-2 transition-all font-semibold text-sm ${
@@ -898,40 +898,40 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableZones, onUpdateZo
               <div className="space-y-3">
                 <label 
                   onClick={() => setExportFilterType('all')}
-                  className={`flex items-center gap-3 p-4 border rounded-xl cursor-pointer transition-colors ${
+                  className={`flex items-center gap-3 p-3 sm:p-4 border rounded-xl cursor-pointer transition-colors ${
                     exportFilterType === 'all'
                       ? 'border-indigo-500 bg-indigo-50/30'
                       : 'border-gray-200 hover:bg-gray-50'
                   }`}
                 >
-                  <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
+                  <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 ${
                     exportFilterType === 'all' ? 'border-indigo-600' : 'border-gray-300'
                   }`}>
                     {exportFilterType === 'all' && (
-                      <div className="w-2.5 h-2.5 bg-indigo-600 rounded-full"></div>
+                    <div className="w-2.5 h-2.5 bg-indigo-600 rounded-full"></div>
                     )}
                   </div>
-                  <span className={`font-semibold text-sm ${
+                  <span className={`font-semibold text-xs sm:text-sm ${
                     exportFilterType === 'all' ? 'text-gray-900' : 'text-gray-600'
                   }`}>Toda la base de datos</span>
                 </label>
                 
                 <label 
                   onClick={() => setExportFilterType('dateRange')}
-                  className={`flex items-center gap-3 p-4 border rounded-xl cursor-pointer transition-colors ${
+                  className={`flex items-center gap-3 p-3 sm:p-4 border rounded-xl cursor-pointer transition-colors ${
                     exportFilterType === 'dateRange'
                       ? 'border-indigo-500 bg-indigo-50/30'
                       : 'border-gray-200 hover:bg-gray-50'
                   }`}
                 >
-                  <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
+                  <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 ${
                     exportFilterType === 'dateRange' ? 'border-indigo-600' : 'border-gray-300'
                   }`}>
                     {exportFilterType === 'dateRange' && (
                       <div className="w-2.5 h-2.5 bg-indigo-600 rounded-full"></div>
                     )}
                   </div>
-                  <span className={`font-medium text-sm ${
+                  <span className={`font-medium text-xs sm:text-sm ${
                     exportFilterType === 'dateRange' ? 'text-gray-900' : 'text-gray-600'
                   }`}>Filtrar por rango de fechas</span>
                 </label>
@@ -939,7 +939,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableZones, onUpdateZo
 
               {/* Date Range Filter */}
               {exportFilterType === 'dateRange' && (
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div>
                     <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Fecha Inicio</label>
                     <div className="relative">
@@ -1084,9 +1084,9 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableZones, onUpdateZo
             className="absolute inset-0 bg-gray-900/40 backdrop-blur-sm transition-opacity"
             onClick={() => setSelectedProspect(null)}
           ></div>
-          <div className="bg-white rounded-[2rem] w-full max-w-4xl max-h-[90vh] overflow-y-auto shadow-2xl relative animate-fade-in-up z-10">
+          <div className="bg-white rounded-[2rem] w-full max-w-4xl max-h-[90vh] overflow-y-auto shadow-2xl relative animate-fade-in-up z-10 m-4">
             {/* Header with gradient */}
-            <div className="bg-gradient-to-r from-indigo-400 to-purple-400 rounded-t-[2rem] p-6 pr-20 relative">
+            <div className="bg-gradient-to-r from-indigo-400 to-purple-400 rounded-t-[2rem] p-4 sm:p-6 pr-16 sm:pr-20 relative">
               <button 
                 onClick={() => setSelectedProspect(null)}
                 className="absolute top-4 right-4 w-8 h-8 flex items-center justify-center transition-colors z-10 hover:opacity-70"
@@ -1096,19 +1096,19 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableZones, onUpdateZo
             </div>
 
             {/* Content */}
-            <div className="p-8">
+            <div className="p-4 sm:p-8">
               {/* Prospect Header */}
-              <div className="flex items-start gap-6 mb-8">
-                <div className="w-20 h-20 rounded-full bg-gray-100 flex items-center justify-center text-2xl font-bold text-gray-600 shrink-0">
+              <div className="flex flex-col sm:flex-row items-start gap-4 sm:gap-6 mb-8">
+                <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-gray-100 flex items-center justify-center text-xl sm:text-2xl font-bold text-gray-600 shrink-0 mx-auto sm:mx-0">
                   {selectedProspect.name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)}
                 </div>
-                <div className="flex-1">
-                  <h2 className="text-3xl font-bold text-gray-900">{selectedProspect.name}</h2>
+                <div className="flex-1 text-center sm:text-left">
+                  <h2 className="text-2xl sm:text-3xl font-bold text-gray-900">{selectedProspect.name}</h2>
                 </div>
               </div>
 
               {/* Financial Cards */}
-              <div className="grid grid-cols-3 gap-4 mb-8">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
                 <div className="bg-gray-50 p-4 rounded-2xl border border-gray-100">
                   <div className="flex items-center gap-2 mb-2">
                     <DollarSign size={18} className="text-indigo-600" />
@@ -1182,7 +1182,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableZones, onUpdateZo
                   <FileTextIcon size={20} className="text-indigo-600" />
                   Documentación
                 </h3>
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   {/* Foto de Cédula */}
                   {selectedProspect.idFileBase64 && (
                     <div className="bg-gray-50 p-4 rounded-xl border border-gray-200">
@@ -1318,13 +1318,13 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableZones, onUpdateZo
             className="absolute inset-0 bg-black/80 backdrop-blur-sm transition-opacity"
             onClick={() => setSelectedDocument(null)}
           ></div>
-          <div className="bg-white rounded-[2rem] w-full max-w-6xl max-h-[90vh] overflow-hidden shadow-2xl relative z-10 flex flex-col">
+          <div className="bg-white rounded-[2rem] w-full max-w-6xl max-h-[90vh] overflow-hidden shadow-2xl relative z-10 flex flex-col m-4">
             {/* Header */}
-            <div className="bg-gray-900 text-white p-6 flex items-center justify-between">
-              <h3 className="text-lg font-bold">{selectedDocument.name}</h3>
-              <div className="flex items-center gap-3">
-                <button
-                  onClick={() => {
+            <div className="bg-gray-900 text-white p-4 sm:p-6 flex items-center justify-between gap-4">
+              <h3 className="text-sm sm:text-lg font-bold truncate">{selectedDocument.name}</h3>
+              <div className="flex items-center gap-2 sm:gap-3 shrink-0">
+              <button 
+                onClick={() => {
                     // Función para descargar
                     const link = document.createElement('a');
                     link.href = selectedDocument.url;
@@ -1361,17 +1361,17 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableZones, onUpdateZo
                     link.click();
                     document.body.removeChild(link);
                   }}
-                  className="px-4 py-2 rounded-lg bg-white/20 hover:bg-white/30 flex items-center gap-2 transition-colors text-sm font-semibold"
+                  className="px-3 sm:px-4 py-2 rounded-lg bg-white/20 hover:bg-white/30 flex items-center gap-2 transition-colors text-xs sm:text-sm font-semibold"
                 >
-                  <Download size={16} className="text-white" />
-                  <span>Descargar</span>
+                  <Download size={14} className="sm:w-4 sm:h-4" />
+                  <span className="hidden sm:inline">Descargar</span>
                 </button>
                 <button 
                   onClick={() => setSelectedDocument(null)}
                   className="w-10 h-10 rounded-full bg-white/20 hover:bg-white/30 flex items-center justify-center transition-colors"
                 >
                   <X size={20} className="text-white" />
-                </button>
+              </button>
               </div>
             </div>
 
