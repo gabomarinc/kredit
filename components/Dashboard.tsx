@@ -19,6 +19,7 @@ interface DashboardProps {
 export const Dashboard: React.FC<DashboardProps> = ({ availableZones, onUpdateZones, companyName, onUpdateCompanyName }) => {
   const [activeTab, setActiveTab] = useState<Tab>('dashboard');
   const [showExportModal, setShowExportModal] = useState(false);
+  const [showZonesModal, setShowZonesModal] = useState(false);
   const [newZone, setNewZone] = useState('');
   const [copied, setCopied] = useState(false);
 
@@ -92,14 +93,28 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableZones, onUpdateZo
   const avgCapacity = totalForms > 0 ? totalCapacity / totalForms : 0;
 
   // Calculate most popular zone
+  // Calcular conteo de zonas (soporta arrays y strings)
   const zoneCounts = prospects.reduce((acc, curr) => {
-    const z = curr.zone || 'Sin zona';
-    acc[z] = (acc[z] || 0) + 1;
+    if (Array.isArray(curr.zone)) {
+      curr.zone.forEach(z => {
+        const zoneName = z || 'Sin zona';
+        acc[zoneName] = (acc[zoneName] || 0) + 1;
+      });
+    } else {
+      const z = curr.zone || 'Sin zona';
+      acc[z] = (acc[z] || 0) + 1;
+    }
     return acc;
   }, {} as Record<string, number>);
+  
   const sortedZones = Object.entries(zoneCounts).sort((a, b) => (b[1] as number) - (a[1] as number));
   const topZone = sortedZones[0]?.[0] || 'Aún no tenemos datos';
   const topZoneCount = sortedZones[0]?.[1] || 0;
+  
+  // Preparar las primeras 2 zonas para mostrar
+  const topTwoZones = sortedZones.slice(0, 2).map(([zone]) => zone);
+  const hasMoreZones = sortedZones.length > 2;
+  const totalZones = sortedZones.length;
 
   const handleAddZone = async () => {
     if (newZone.trim() && !availableZones.includes(newZone.trim())) {
@@ -417,16 +432,37 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableZones, onUpdateZo
                <span className="mt-4 text-gray-400 text-[10px] font-medium">Potencial de cierre</span>
             </div>
 
-            {/* Card 4: Top Zone */}
-            <div className="bg-white rounded-[2.5rem] p-8 shadow-[0_10px_40px_-10px_rgba(0,0,0,0.05)] border border-gray-100 flex flex-col items-center justify-center text-center group hover:shadow-lg transition-all duration-500">
+            {/* Card 4: Top Zones */}
+            <div className="bg-white rounded-[2.5rem] p-8 shadow-[0_10px_40px_-10px_rgba(0,0,0,0.05)] border border-gray-100 flex flex-col items-center justify-center text-center group hover:shadow-lg transition-all duration-500 cursor-pointer" onClick={() => hasMoreZones && setShowZonesModal(true)}>
                <div className="w-16 h-16 rounded-3xl bg-orange-50 text-orange-600 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-500">
                  <MapPin size={32} strokeWidth={1.5} />
                </div>
-               <h3 className="text-gray-400 font-semibold uppercase tracking-wider text-xs mb-2">Zona Más Buscada</h3>
-               <p className="text-3xl font-bold text-gray-900 tracking-tight px-4">
-                 {isLoading ? <Loader2 className="animate-spin" /> : topZone}
+               <h3 className="text-gray-400 font-semibold uppercase tracking-wider text-xs mb-2">Zonas Más Buscadas</h3>
+               <p className="text-2xl font-bold text-gray-900 tracking-tight px-4 leading-tight">
+                 {isLoading ? (
+                   <Loader2 className="animate-spin mx-auto" />
+                 ) : sortedZones.length === 0 ? (
+                   'Aún no tenemos datos'
+                 ) : (
+                   <>
+                     {topTwoZones.join(', ')}
+                     {hasMoreZones && (
+                       <span 
+                         className="text-orange-600 hover:text-orange-700 cursor-pointer ml-1"
+                         onClick={(e) => {
+                           e.stopPropagation();
+                           setShowZonesModal(true);
+                         }}
+                       >
+                         y ...
+                       </span>
+                     )}
+                   </>
+                 )}
                </p>
-               <span className="mt-4 px-3 py-1 bg-orange-50 text-orange-600 text-[10px] font-bold rounded-full">{topZoneCount} interesados</span>
+               <span className="mt-4 px-3 py-1 bg-orange-50 text-orange-600 text-[10px] font-bold rounded-full">
+                 {totalZones > 0 ? `${totalZones} ${totalZones === 1 ? 'zona' : 'zonas'}` : '0 zonas'}
+               </span>
             </div>
           </div>
         ) : activeTab === 'settings' ? (
@@ -954,6 +990,83 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableZones, onUpdateZo
               </button>
             </div>
 
+          </div>
+        </div>
+      )}
+
+      {/* Zones Analysis Modal */}
+      {showZonesModal && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+          <div 
+            className="absolute inset-0 bg-gray-900/40 backdrop-blur-sm transition-opacity"
+            onClick={() => setShowZonesModal(false)}
+          ></div>
+          <div className="bg-white rounded-[2rem] p-8 w-full max-w-2xl shadow-2xl relative animate-fade-in-up z-10 max-h-[90vh] overflow-y-auto">
+            <button 
+              onClick={() => setShowZonesModal(false)}
+              className="absolute top-6 right-6 text-gray-400 hover:text-gray-600 transition-colors"
+            >
+              <X size={20} />
+            </button>
+
+            <div className="mb-6">
+              <div className="w-12 h-12 bg-emerald-50 text-emerald-600 rounded-2xl flex items-center justify-center mb-4">
+                <MapPin size={24} />
+              </div>
+              <h3 className="text-2xl font-bold text-gray-900">Análisis de Cobertura</h3>
+              <p className="text-gray-500 text-sm mt-1">Distribución geográfica de tu cartera.</p>
+            </div>
+
+            <div className="space-y-4">
+              {sortedZones.length === 0 ? (
+                <div className="text-center py-12 text-gray-400">
+                  <MapPin size={48} className="mx-auto mb-4 opacity-50" />
+                  <p className="font-medium">Aún no hay datos de zonas</p>
+                  <p className="text-sm mt-1">Los prospectos aparecerán aquí cuando completen el formulario.</p>
+                </div>
+              ) : (
+                sortedZones.map(([zoneName, count], index) => {
+                  const maxCount = sortedZones[0]?.[1] as number || 1;
+                  const percentage = ((count as number) / maxCount) * 100;
+                  
+                  // Colores alternados para las barras
+                  const colors = [
+                    { bg: 'bg-emerald-500', text: 'text-emerald-600' },
+                    { bg: 'bg-purple-500', text: 'text-purple-600' },
+                    { bg: 'bg-blue-500', text: 'text-blue-600' },
+                    { bg: 'bg-orange-500', text: 'text-orange-600' },
+                    { bg: 'bg-gray-400', text: 'text-gray-500' }
+                  ];
+                  const color = colors[index % colors.length];
+                  
+                  return (
+                    <div key={zoneName} className="space-y-2">
+                      <div className="flex items-center justify-between">
+                        <span className="font-semibold text-gray-900">{zoneName}</span>
+                        <span className="text-sm text-gray-500">
+                          {count} {count === 1 ? 'interesado' : 'interesados'}
+                        </span>
+                      </div>
+                      <div className="w-full bg-gray-100 rounded-full h-3 overflow-hidden">
+                        <div 
+                          className={`h-full ${color.bg} rounded-full transition-all duration-500`}
+                          style={{ width: `${percentage}%` }}
+                        />
+                      </div>
+                    </div>
+                  );
+                })
+              )}
+            </div>
+
+            <div className="mt-8 pt-6 border-t border-gray-100">
+              <button
+                onClick={() => setShowZonesModal(false)}
+                className="w-full bg-gray-900 text-white py-3 rounded-xl font-semibold hover:bg-gray-800 transition-all flex justify-center items-center gap-2"
+              >
+                Cerrar
+              </button>
+            </div>
           </div>
         </div>
       )}
