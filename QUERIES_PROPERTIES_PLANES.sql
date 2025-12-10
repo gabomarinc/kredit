@@ -38,7 +38,7 @@ CREATE TABLE IF NOT EXISTS property_interests (
   property_id UUID REFERENCES properties(id) ON DELETE CASCADE NOT NULL,
   interested BOOLEAN DEFAULT true,
   created_at TIMESTAMP DEFAULT NOW(),
-  UNIQUE(prospect_id, property_id) -- Un prospecto solo puede estar interesado una vez por propiedad
+  CONSTRAINT property_interests_unique UNIQUE(prospect_id, property_id) -- Un prospecto solo puede estar interesado una vez por propiedad
 );
 
 -- 4. Crear índices para mejor rendimiento

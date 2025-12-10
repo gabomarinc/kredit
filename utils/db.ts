@@ -154,9 +154,27 @@ const ensureTablesExist = async (client: any) => {
         property_id UUID REFERENCES properties(id) ON DELETE CASCADE NOT NULL,
         interested BOOLEAN DEFAULT true,
         created_at TIMESTAMP DEFAULT NOW(),
-        UNIQUE(prospect_id, property_id)
+        CONSTRAINT property_interests_unique UNIQUE(prospect_id, property_id)
       )
     `);
+
+    // Asegurar que la restricción UNIQUE existe (por si la tabla ya existía sin ella)
+    try {
+      await client.query(`
+        DO $$ 
+        BEGIN
+          IF NOT EXISTS (
+            SELECT 1 FROM pg_constraint 
+            WHERE conname = 'property_interests_unique'
+          ) THEN
+            ALTER TABLE property_interests 
+            ADD CONSTRAINT property_interests_unique UNIQUE(prospect_id, property_id);
+          END IF;
+        END $$;
+      `);
+    } catch (e) {
+      console.warn('Nota: No se pudo agregar la restricción UNIQUE (puede que ya exista):', e);
+    }
 
     // Crear índices si no existen
     try {
