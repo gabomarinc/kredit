@@ -16,11 +16,13 @@ export const Register: React.FC<RegisterProps> = ({ onRegisterComplete, onGoToLo
     name: '',
     email: '',
     password: '',
+    confirmPassword: '',
     companyName: '',
     logo: null as File | null,
     zones: [...ZONES_PANAMA] // Start with default zones
   });
   const [newZone, setNewZone] = useState('');
+  const [passwordError, setPasswordError] = useState('');
 
   const handleNext = () => setStep(prev => prev + 1);
   const handleBack = () => setStep(prev => prev - 1);
@@ -133,17 +135,53 @@ export const Register: React.FC<RegisterProps> = ({ onRegisterComplete, onGoToLo
                   type="password"
                   placeholder="Crear Contraseña"
                   value={formData.password}
-                  onChange={(e) => setFormData({...formData, password: e.target.value})}
+                  onChange={(e) => {
+                    setFormData({...formData, password: e.target.value});
+                    // Validar cuando cambia la contraseña
+                    if (formData.confirmPassword && e.target.value !== formData.confirmPassword) {
+                      setPasswordError('Las contraseñas no coinciden');
+                    } else {
+                      setPasswordError('');
+                    }
+                  }}
                   className="w-full pl-12 pr-4 py-3.5 rounded-xl border border-gray-200 outline-none focus:border-indigo-500 focus:bg-indigo-50/10 transition-all text-gray-700 font-medium"
                 />
               </div>
+              <div className="relative group">
+                <Lock className="absolute left-4 top-3.5 text-gray-400 group-focus-within:text-indigo-500 transition-colors" size={20} />
+                <input
+                  type="password"
+                  placeholder="Confirmar Contraseña"
+                  value={formData.confirmPassword}
+                  onChange={(e) => {
+                    setFormData({...formData, confirmPassword: e.target.value});
+                    // Validar cuando cambia la confirmación
+                    if (formData.password && e.target.value !== formData.password) {
+                      setPasswordError('Las contraseñas no coinciden');
+                    } else {
+                      setPasswordError('');
+                    }
+                  }}
+                  className={`w-full pl-12 pr-4 py-3.5 rounded-xl border outline-none transition-all text-gray-700 font-medium ${
+                    passwordError 
+                      ? 'border-red-300 focus:border-red-500 focus:bg-red-50/10' 
+                      : 'border-gray-200 focus:border-indigo-500 focus:bg-indigo-50/10'
+                  }`}
+                />
+              </div>
+              {passwordError && (
+                <div className="text-red-500 text-sm font-medium flex items-center gap-2 animate-fade-in-up">
+                  <X size={16} />
+                  {passwordError}
+                </div>
+              )}
             </div>
 
             <button
               onClick={handleNext}
-              disabled={!formData.name || !formData.email || !formData.password}
+              disabled={!formData.name || !formData.email || !formData.password || !formData.confirmPassword || passwordError !== '' || formData.password !== formData.confirmPassword}
               className={`w-full py-4 rounded-xl font-bold transition-all flex justify-center items-center gap-2 ${
-                 !formData.name || !formData.email || !formData.password 
+                 !formData.name || !formData.email || !formData.password || !formData.confirmPassword || passwordError !== '' || formData.password !== formData.confirmPassword
                  ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
                  : 'bg-gray-900 text-white hover:bg-gray-800 shadow-lg shadow-gray-200'
               }`}
