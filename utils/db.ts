@@ -210,7 +210,7 @@ export const getProspectsFromDB = async (): Promise<Prospect[]> => {
       // Ensure zone is treated safely
       zone: Array.isArray(row.interested_zones) && row.interested_zones.length > 0 
             ? row.interested_zones[0] 
-            : (typeof row.interested_zones === 'string' ? row.interested_zones.replace(/[{}"\\]/g, '') : 'N/A'),
+            : (typeof row.interested_zones === 'string' ? row.interested_zones.replace(/[{}"\\]/g, '') : 'Sin zona'),
       // Ensure result is an object
       result: safeParseJSON(row.calculation_result)
     }));

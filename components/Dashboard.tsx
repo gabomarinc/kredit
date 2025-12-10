@@ -74,12 +74,12 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableZones, onUpdateZo
 
   // Calculate most popular zone
   const zoneCounts = prospects.reduce((acc, curr) => {
-    const z = curr.zone || 'N/A';
+    const z = curr.zone || 'Sin zona';
     acc[z] = (acc[z] || 0) + 1;
     return acc;
   }, {} as Record<string, number>);
   const sortedZones = Object.entries(zoneCounts).sort((a, b) => (b[1] as number) - (a[1] as number));
-  const topZone = sortedZones[0]?.[0] || 'N/A';
+  const topZone = sortedZones[0]?.[0] || 'Aún no tenemos datos';
   const topZoneCount = sortedZones[0]?.[1] || 0;
 
   const handleAddZone = async () => {
