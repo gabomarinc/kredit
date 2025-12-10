@@ -783,7 +783,9 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableZones, onUpdateZo
                         <td className="px-6 py-5">
                           <div className="flex items-center gap-2">
                             <MapPin size={14} className="text-gray-400" />
-                            <span className="text-sm text-gray-600 font-medium">{prospect.zone}</span>
+                            <span className="text-sm text-gray-600 font-medium">
+                              {Array.isArray(prospect.zone) ? prospect.zone.join(', ') : (typeof prospect.zone === 'string' ? prospect.zone : 'Sin zona')}
+                            </span>
                           </div>
                         </td>
                         <td className="px-6 py-5">
