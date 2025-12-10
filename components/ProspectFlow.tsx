@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { PropertyType, UserPreferences, FinancialData, PersonalData, CalculationResult } from '../types';
 import { calculateAffordability, formatCurrency } from '../utils/calculator';
-import { saveProspectToDB } from '../utils/db';
+import { saveProspectToDB, getCompanyById } from '../utils/db';
 import { 
   Home, Building2, MapPin, User, Upload, FileCheck, ArrowRight, CheckCircle2, Download, HeartHandshake, ChevronLeft, Check, BedDouble, Bath
 } from 'lucide-react';
@@ -75,6 +75,33 @@ export const ProspectFlow: React.FC<ProspectFlowProps> = ({ availableZones, comp
   });
   const [result, setResult] = useState<CalculationResult | null>(null);
   const [isCalculating, setIsCalculating] = useState(false);
+  const [companyLogo, setCompanyLogo] = useState<string | null>(null);
+
+  // Cargar logo de la empresa si hay company_id en la URL o localStorage
+  useEffect(() => {
+    const loadCompanyLogo = async () => {
+      // Buscar company_id en la URL (para embed)
+      const urlParams = new URLSearchParams(window.location.search);
+      const companyIdFromUrl = urlParams.get('company_id');
+      
+      // O usar el de localStorage (si está en modo embed desde el mismo dominio)
+      const companyId = companyIdFromUrl || localStorage.getItem('companyId');
+      
+      if (companyId) {
+        try {
+          const company = await getCompanyById(companyId);
+          if (company && company.logoUrl) {
+            setCompanyLogo(company.logoUrl);
+            console.log('✅ Logo de empresa cargado');
+          }
+        } catch (error) {
+          console.warn('⚠️ No se pudo cargar el logo de la empresa:', error);
+        }
+      }
+    };
+    
+    loadCompanyLogo();
+  }, []);
 
   // Smooth scroll to top on step change
   useEffect(() => {
@@ -140,8 +167,21 @@ export const ProspectFlow: React.FC<ProspectFlowProps> = ({ availableZones, comp
         {step === 1 && (
             <div className="animate-fade-in-up">
               <div className="text-center mb-10">
-                <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-3 tracking-tight">Comencemos tu viaje</h1>
-                <p className="text-gray-500 text-lg font-light">Cuéntanos qué estás buscando para tu nuevo hogar.</p>
+                {companyLogo && (
+                  <div className="mb-6 flex justify-center">
+                    <img 
+                      src={companyLogo} 
+                      alt={`Logo de ${companyName}`}
+                      className="h-16 w-auto object-contain"
+                      onError={() => {
+                        console.warn('⚠️ Error cargando logo, ocultando');
+                        setCompanyLogo(null);
+                      }}
+                    />
+                  </div>
+                )}
+                <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-3 tracking-tight">Calcula tu hogar ideal</h1>
+                <p className="text-gray-500 text-lg font-light">Descubre qué propiedad puedes adquirir según tu capacidad de pago.</p>
               </div>
 
               <div className="grid md:grid-cols-2 gap-6 mb-10">

@@ -130,8 +130,13 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableZones, onUpdateZo
 
   // Generate Embed Code with ROUNDED CORNERS and SHADOW enforced on the iframe
   const appUrl = window.location.href.split('?')[0];
+  const companyId = localStorage.getItem('companyId');
+  const embedUrl = companyId 
+    ? `${appUrl}?mode=embed&company_id=${companyId}`
+    : `${appUrl}?mode=embed`;
+  
   const embedCode = `<iframe 
-  src="${appUrl}?mode=embed" 
+  src="${embedUrl}" 
   width="100%" 
   height="750" 
   frameborder="0" 
@@ -145,7 +150,11 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableZones, onUpdateZo
   };
 
   const openPreview = () => {
-    window.open(`${appUrl}?mode=embed`, '_blank');
+    const companyId = localStorage.getItem('companyId');
+    const previewUrl = companyId 
+      ? `${appUrl}?mode=embed&company_id=${companyId}`
+      : `${appUrl}?mode=embed`;
+    window.open(previewUrl, '_blank');
   };
 
   return (
