@@ -269,16 +269,32 @@ export const saveCompanyToDB = async (data: CompanyData): Promise<string | null>
     console.log('✅ Empresa guardada con ID:', companyId);
 
     // Insertar zonas
-    if (data.zones.length > 0) {
-      const zoneValues = data.zones.map(zone => [companyId, zone]);
-      for (const [companyId, zoneName] of zoneValues) {
-        await client.query(`
-          INSERT INTO company_zones (company_id, zone_name)
-          VALUES ($1, $2)
-          ON CONFLICT (company_id, zone_name) DO NOTHING
-        `, [companyId, zoneName]);
+    if (data.zones && data.zones.length > 0) {
+      console.log(`🔄 Guardando ${data.zones.length} zonas...`, data.zones);
+      let zonesSaved = 0;
+      for (const zoneName of data.zones) {
+        try {
+          const zoneResult = await client.query(`
+            INSERT INTO company_zones (company_id, zone_name)
+            VALUES ($1, $2)
+            ON CONFLICT (company_id, zone_name) DO NOTHING
+            RETURNING id
+          `, [companyId, zoneName]);
+          
+          if (zoneResult.rows.length > 0) {
+            zonesSaved++;
+            console.log(`✅ Zona guardada: ${zoneName}`);
+          } else {
+            console.log(`ℹ️ Zona ya existía: ${zoneName}`);
+          }
+        } catch (zoneError) {
+          console.error(`❌ Error guardando zona ${zoneName}:`, zoneError);
+          // Continuamos con las demás zonas aunque una falle
+        }
       }
-      console.log(`✅ ${data.zones.length} zonas guardadas`);
+      console.log(`✅ ${zonesSaved} de ${data.zones.length} zonas guardadas exitosamente`);
+    } else {
+      console.warn('⚠️ No hay zonas para guardar o el array está vacío');
     }
 
     client.release();
