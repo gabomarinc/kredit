@@ -3,6 +3,7 @@ import {
   User, Mail, Lock, Building, Image as ImageIcon, MapPin, ArrowRight, ChevronLeft, Check, Plus, X, Upload
 } from 'lucide-react';
 import { ZONES_PANAMA } from '../constants';
+import { saveCompanyToDB } from '../utils/db';
 
 interface RegisterProps {
   onRegisterComplete: (data: { companyName: string; zones: string[] }) => void;
@@ -35,12 +36,33 @@ export const Register: React.FC<RegisterProps> = ({ onRegisterComplete, onGoToLo
     setFormData({ ...formData, zones: formData.zones.filter(z => z !== zoneToDelete) });
   };
 
-  const handleFinish = () => {
-    // Pass essential data back up to App
-    onRegisterComplete({
-      companyName: formData.companyName || 'Tu Inmobiliaria',
-      zones: formData.zones
-    });
+  const handleFinish = async () => {
+    try {
+      // Guardar en la base de datos
+      const companyId = await saveCompanyToDB({
+        name: formData.name,
+        email: formData.email,
+        password: formData.password,
+        companyName: formData.companyName || 'Tu Inmobiliaria',
+        logoUrl: formData.logo ? URL.createObjectURL(formData.logo) : undefined,
+        zones: formData.zones
+      });
+
+      if (companyId) {
+        console.log('✅ Empresa registrada exitosamente');
+        // Pass essential data back up to App
+        onRegisterComplete({
+          companyName: formData.companyName || 'Tu Inmobiliaria',
+          zones: formData.zones
+        });
+      } else {
+        console.error('❌ Error al registrar empresa. El email puede estar en uso.');
+        alert('Error al registrar. El email puede estar en uso. Intenta con otro email.');
+      }
+    } catch (error) {
+      console.error('❌ Error en registro:', error);
+      alert('Error al registrar. Por favor intenta de nuevo.');
+    }
   };
 
   return (

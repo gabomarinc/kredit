@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Mail, Lock, ArrowRight, LayoutDashboard } from 'lucide-react';
+import { verifyLogin } from '../utils/db';
 
 interface LoginProps {
   onLogin: () => void;
@@ -10,11 +11,31 @@ export const Login: React.FC<LoginProps> = ({ onLogin, onGoToRegister }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Simulate login
-    if (email && password) {
-      onLogin();
+    
+    if (!email || !password) {
+      return;
+    }
+
+    try {
+      console.log('🔄 Verificando credenciales...');
+      const company = await verifyLogin(email, password);
+      
+      if (company) {
+        console.log('✅ Login exitoso');
+        // Aquí podrías guardar la información de la empresa en localStorage o estado global
+        localStorage.setItem('companyId', company.id);
+        localStorage.setItem('companyName', company.companyName);
+        localStorage.setItem('zones', JSON.stringify(company.zones));
+        onLogin();
+      } else {
+        console.error('❌ Credenciales incorrectas');
+        alert('Email o contraseña incorrectos. Por favor intenta de nuevo.');
+      }
+    } catch (error) {
+      console.error('❌ Error en login:', error);
+      alert('Error al iniciar sesión. Por favor intenta de nuevo.');
     }
   };
 

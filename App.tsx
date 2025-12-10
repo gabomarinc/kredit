@@ -6,6 +6,7 @@ import { Login } from './components/Login';
 import { Register } from './components/Register';
 import { AuthSelection } from './components/AuthSelection';
 import { ZONES_PANAMA } from './constants';
+import { getCompanyById } from './utils/db';
 
 type AuthState = 'selection' | 'login' | 'register' | 'authenticated';
 
@@ -31,14 +32,38 @@ function App() {
   const [zones, setZones] = useState<string[]>(ZONES_PANAMA);
   const [companyName, setCompanyName] = useState('Lumina Real Estate');
 
-  const handleLogin = () => {
+  const handleLogin = async () => {
+    // Cargar datos de la empresa desde localStorage o DB
+    const companyId = localStorage.getItem('companyId');
+    if (companyId) {
+      const company = await getCompanyById(companyId);
+      if (company) {
+        setCompanyName(company.companyName);
+        setZones(company.zones.length > 0 ? company.zones : ZONES_PANAMA);
+      }
+    } else {
+      // Si no hay companyId, usar valores por defecto
+      const savedZones = localStorage.getItem('zones');
+      if (savedZones) {
+        try {
+          setZones(JSON.parse(savedZones));
+        } catch (e) {
+          setZones(ZONES_PANAMA);
+        }
+      }
+      const savedCompanyName = localStorage.getItem('companyName');
+      if (savedCompanyName) {
+        setCompanyName(savedCompanyName);
+      }
+    }
+    
     setAuthState('authenticated');
     setIsAdminView(true); // Land on dashboard
   };
 
   const handleRegisterComplete = (data: { companyName: string; zones: string[] }) => {
     setCompanyName(data.companyName);
-    setZones(data.zones);
+    setZones(data.zones.length > 0 ? data.zones : ZONES_PANAMA);
     setAuthState('authenticated');
     setIsAdminView(true); // Land on dashboard
   };

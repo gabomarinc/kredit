@@ -17,9 +17,33 @@ if (CONNECTION_STRING) {
 
 const pool = CONNECTION_STRING ? new Pool({ connectionString: CONNECTION_STRING }) : null;
 
-// Helper para asegurar que la tabla exista antes de operar
-const ensureTableExists = async (client: any) => {
+// Helper para asegurar que las tablas existan antes de operar
+const ensureTablesExist = async (client: any) => {
   try {
+    // Tabla de empresas/usuarios
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS companies (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        name TEXT NOT NULL,
+        email TEXT UNIQUE NOT NULL,
+        password_hash TEXT NOT NULL,
+        logo_url TEXT,
+        created_at TIMESTAMP DEFAULT NOW()
+      )
+    `);
+
+    // Tabla de zonas por empresa
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS company_zones (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        company_id UUID REFERENCES companies(id) ON DELETE CASCADE,
+        zone_name TEXT NOT NULL,
+        created_at TIMESTAMP DEFAULT NOW(),
+        UNIQUE(company_id, zone_name)
+      )
+    `);
+
+    // Tabla de prospectos
     await client.query(`
       CREATE TABLE IF NOT EXISTS prospects (
         id SERIAL PRIMARY KEY,
@@ -37,7 +61,7 @@ const ensureTableExists = async (client: any) => {
       )
     `);
   } catch (e) {
-    console.warn("Nota: Verificación de tabla omitida o fallida (puede que ya exista o falten permisos DDL).", e);
+    console.warn("Nota: Verificación de tablas omitida o fallida (puede que ya existan o falten permisos DDL).", e);
   }
 };
 
@@ -62,8 +86,8 @@ export const saveProspectToDB = async (
     const client = await pool.connect();
     console.log('✅ Conexión establecida');
     
-    // Aseguramos que la tabla exista (Auto-migración simple)
-    await ensureTableExists(client);
+    // Aseguramos que las tablas existan (Auto-migración simple)
+    await ensureTablesExist(client);
     
     // Insertamos en la tabla prospects
     const query = `
@@ -136,8 +160,8 @@ export const getProspectsFromDB = async (): Promise<Prospect[]> => {
     console.log('🔄 Consultando base de datos...');
     const client = await pool.connect();
     
-    // Aseguramos que la tabla exista antes de consultar
-    await ensureTableExists(client);
+    // Aseguramos que las tablas existan antes de consultar
+    await ensureTablesExist(client);
     
     // Obtenemos los últimos 50 prospectos
     const res = await client.query(`
@@ -177,5 +201,199 @@ export const getProspectsFromDB = async (): Promise<Prospect[]> => {
     console.warn('Usando datos de demostración debido a error de conexión:', error);
     // FALLBACK: Si falla la DB, retornamos los datos mockeados para que la UI no se rompa
     return MOCK_PROSPECTS;
+  }
+};
+
+// ========== FUNCIONES PARA EMPRESAS/USUARIOS ==========
+
+export interface CompanyData {
+  name: string;
+  email: string;
+  password: string;
+  companyName: string;
+  logoUrl?: string;
+  zones: string[];
+}
+
+export interface Company {
+  id: string;
+  name: string;
+  email: string;
+  companyName: string;
+  logoUrl?: string;
+  zones: string[];
+}
+
+// Función simple para hash de contraseña (en producción usar bcrypt)
+const simpleHash = (password: string): string => {
+  // NOTA: Esto es solo para demo. En producción usar bcrypt o similar
+  return btoa(password).split('').reverse().join('');
+};
+
+// Guardar nueva empresa/usuario
+export const saveCompanyToDB = async (data: CompanyData): Promise<string | null> => {
+  if (!pool) {
+    console.error('❌ Pool de base de datos no inicializado. No se puede guardar la empresa.');
+    return null;
+  }
+
+  try {
+    console.log('🔄 Guardando nueva empresa en la base de datos...');
+    const client = await pool.connect();
+    
+    await ensureTablesExist(client);
+
+    // Verificar si el email ya existe
+    const checkEmail = await client.query(
+      'SELECT id FROM companies WHERE email = $1',
+      [data.email]
+    );
+
+    if (checkEmail.rows.length > 0) {
+      console.warn('⚠️ El email ya está registrado');
+      client.release();
+      return null;
+    }
+
+    // Hash de contraseña (simple, en producción usar bcrypt)
+    const passwordHash = simpleHash(data.password);
+
+    // Insertar empresa
+    const companyResult = await client.query(`
+      INSERT INTO companies (name, email, password_hash, logo_url)
+      VALUES ($1, $2, $3, $4)
+      RETURNING id
+    `, [data.name, data.email, passwordHash, data.logoUrl || null]);
+
+    const companyId = companyResult.rows[0].id;
+    console.log('✅ Empresa guardada con ID:', companyId);
+
+    // Insertar zonas
+    if (data.zones.length > 0) {
+      const zoneValues = data.zones.map(zone => [companyId, zone]);
+      for (const [companyId, zoneName] of zoneValues) {
+        await client.query(`
+          INSERT INTO company_zones (company_id, zone_name)
+          VALUES ($1, $2)
+          ON CONFLICT (company_id, zone_name) DO NOTHING
+        `, [companyId, zoneName]);
+      }
+      console.log(`✅ ${data.zones.length} zonas guardadas`);
+    }
+
+    client.release();
+    console.log('✅ Registro completado exitosamente');
+    return companyId;
+
+  } catch (error) {
+    console.error('❌ Error guardando empresa:', error);
+    return null;
+  }
+};
+
+// Verificar login
+export const verifyLogin = async (email: string, password: string): Promise<Company | null> => {
+  if (!pool) {
+    console.error('❌ Pool de base de datos no inicializado.');
+    return null;
+  }
+
+  try {
+    console.log('🔄 Verificando credenciales...');
+    const client = await pool.connect();
+    
+    await ensureTablesExist(client);
+
+    // Buscar empresa por email
+    const companyResult = await client.query(
+      'SELECT * FROM companies WHERE email = $1',
+      [email]
+    );
+
+    if (companyResult.rows.length === 0) {
+      console.warn('⚠️ Email no encontrado');
+      client.release();
+      return null;
+    }
+
+    const company = companyResult.rows[0];
+    const passwordHash = simpleHash(password);
+
+    // Verificar contraseña
+    if (company.password_hash !== passwordHash) {
+      console.warn('⚠️ Contraseña incorrecta');
+      client.release();
+      return null;
+    }
+
+    // Obtener zonas de la empresa
+    const zonesResult = await client.query(
+      'SELECT zone_name FROM company_zones WHERE company_id = $1 ORDER BY zone_name',
+      [company.id]
+    );
+
+    const zones = zonesResult.rows.map(row => row.zone_name);
+
+    client.release();
+
+    console.log('✅ Login exitoso');
+    return {
+      id: company.id,
+      name: company.name,
+      email: company.email,
+      companyName: company.name, // Asumiendo que name es el nombre de la empresa
+      logoUrl: company.logo_url,
+      zones: zones
+    };
+
+  } catch (error) {
+    console.error('❌ Error verificando login:', error);
+    return null;
+  }
+};
+
+// Obtener empresa por ID
+export const getCompanyById = async (companyId: string): Promise<Company | null> => {
+  if (!pool) {
+    return null;
+  }
+
+  try {
+    const client = await pool.connect();
+    
+    const companyResult = await client.query(
+      'SELECT * FROM companies WHERE id = $1',
+      [companyId]
+    );
+
+    if (companyResult.rows.length === 0) {
+      client.release();
+      return null;
+    }
+
+    const company = companyResult.rows[0];
+
+    // Obtener zonas
+    const zonesResult = await client.query(
+      'SELECT zone_name FROM company_zones WHERE company_id = $1 ORDER BY zone_name',
+      [companyId]
+    );
+
+    const zones = zonesResult.rows.map(row => row.zone_name);
+
+    client.release();
+
+    return {
+      id: company.id,
+      name: company.name,
+      email: company.email,
+      companyName: company.name,
+      logoUrl: company.logo_url,
+      zones: zones
+    };
+
+  } catch (error) {
+    console.error('❌ Error obteniendo empresa:', error);
+    return null;
   }
 };
