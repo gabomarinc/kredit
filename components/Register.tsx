@@ -38,6 +38,8 @@ export const Register: React.FC<RegisterProps> = ({ onRegisterComplete, onGoToLo
 
   const handleFinish = async () => {
     try {
+      console.log('🔄 Iniciando registro...', { email: formData.email, zones: formData.zones.length });
+      
       // Guardar en la base de datos
       const companyId = await saveCompanyToDB({
         name: formData.name,
@@ -48,20 +50,35 @@ export const Register: React.FC<RegisterProps> = ({ onRegisterComplete, onGoToLo
         zones: formData.zones
       });
 
+      console.log('📋 Resultado de saveCompanyToDB:', companyId);
+
       if (companyId) {
-        console.log('✅ Empresa registrada exitosamente');
+        console.log('✅ Empresa registrada exitosamente con ID:', companyId);
+        // Guardar en localStorage para persistencia
+        localStorage.setItem('companyId', companyId);
+        localStorage.setItem('companyName', formData.companyName || 'Tu Inmobiliaria');
+        localStorage.setItem('zones', JSON.stringify(formData.zones));
+        
         // Pass essential data back up to App
         onRegisterComplete({
           companyName: formData.companyName || 'Tu Inmobiliaria',
           zones: formData.zones
         });
       } else {
-        console.error('❌ Error al registrar empresa. El email puede estar en uso.');
-        alert('Error al registrar. El email puede estar en uso. Intenta con otro email.');
+        console.error('❌ saveCompanyToDB retornó null o undefined');
+        console.error('Esto puede significar:');
+        console.error('1. El email ya está en uso');
+        console.error('2. Error de conexión a la base de datos');
+        console.error('3. Error al insertar los datos');
+        alert('Error al registrar. El email puede estar en uso o hay un problema de conexión. Intenta con otro email o verifica la consola para más detalles.');
       }
     } catch (error) {
-      console.error('❌ Error en registro:', error);
-      alert('Error al registrar. Por favor intenta de nuevo.');
+      console.error('❌ Error en registro (catch):', error);
+      console.error('Error completo:', {
+        message: error instanceof Error ? error.message : String(error),
+        stack: error instanceof Error ? error.stack : undefined
+      });
+      alert('Error al registrar. Por favor intenta de nuevo. Revisa la consola para más detalles.');
     }
   };
 

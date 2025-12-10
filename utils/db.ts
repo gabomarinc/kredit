@@ -283,10 +283,27 @@ export const saveCompanyToDB = async (data: CompanyData): Promise<string | null>
 
     client.release();
     console.log('✅ Registro completado exitosamente');
+    console.log('✅ Retornando companyId:', companyId);
     return companyId;
 
   } catch (error) {
     console.error('❌ Error guardando empresa:', error);
+    console.error('Error details:', {
+      message: error instanceof Error ? error.message : String(error),
+      stack: error instanceof Error ? error.stack : undefined
+    });
+    // Si hay un error pero la empresa ya se creó, intentar obtener el ID
+    try {
+      const client = await pool!.connect();
+      const result = await client.query('SELECT id FROM companies WHERE email = $1', [data.email]);
+      client.release();
+      if (result.rows.length > 0) {
+        console.log('⚠️ Error después de crear, pero empresa existe. Retornando ID:', result.rows[0].id);
+        return result.rows[0].id;
+      }
+    } catch (e) {
+      console.error('Error al verificar empresa existente:', e);
+    }
     return null;
   }
 };
