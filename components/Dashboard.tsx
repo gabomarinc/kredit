@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { 
   Users, DollarSign, LayoutDashboard, FileText, Download, Filter, Calendar, CheckCircle2, X, ChevronDown, MapPin, Briefcase, Settings, Plus, Trash2, Building, Image as ImageIcon, Shield, Save, Code, Copy, ExternalLink, Loader2
 } from 'lucide-react';
-import { getProspectsFromDB } from '../utils/db';
+import { getProspectsFromDB, getCompanyById, updateCompanyZones, Company } from '../utils/db';
 import { Prospect } from '../types';
 import { formatCurrency } from '../utils/calculator';
 
@@ -25,17 +25,34 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableZones, onUpdateZo
   const [prospects, setProspects] = useState<Prospect[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Settings State (Mock)
+  // Settings State - Cargar desde DB
   const [adminName, setAdminName] = useState('Admin Gerente');
   const [adminEmail, setAdminEmail] = useState('gerencia@lumina.com');
+  const [companyData, setCompanyData] = useState<Company | null>(null);
 
   // Load Data from Neon
   useEffect(() => {
     const fetchData = async () => {
       setIsLoading(true);
       try {
+        // Cargar prospectos
         const data = await getProspectsFromDB();
         setProspects(data);
+
+        // Cargar datos de la empresa
+        const companyId = localStorage.getItem('companyId');
+        if (companyId) {
+          const company = await getCompanyById(companyId);
+          if (company) {
+            setCompanyData(company);
+            setAdminName(company.name);
+            setAdminEmail(company.email);
+            // Actualizar zonas si vienen de la DB
+            if (company.zones.length > 0) {
+              onUpdateZones(company.zones);
+            }
+          }
+        }
       } catch (e) {
         console.error("Error loading dashboard data", e);
       } finally {
@@ -65,15 +82,39 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableZones, onUpdateZo
   const topZone = sortedZones[0]?.[0] || 'N/A';
   const topZoneCount = sortedZones[0]?.[1] || 0;
 
-  const handleAddZone = () => {
+  const handleAddZone = async () => {
     if (newZone.trim() && !availableZones.includes(newZone.trim())) {
-      onUpdateZones([...availableZones, newZone.trim()]);
+      const updatedZones = [...availableZones, newZone.trim()];
+      onUpdateZones(updatedZones);
       setNewZone('');
+      
+      // Guardar en la base de datos
+      const companyId = localStorage.getItem('companyId');
+      if (companyId) {
+        const success = await updateCompanyZones(companyId, updatedZones);
+        if (success) {
+          console.log('✅ Zona agregada y guardada en la base de datos');
+        } else {
+          console.error('❌ Error al guardar zona en la base de datos');
+        }
+      }
     }
   };
 
-  const handleDeleteZone = (zoneToDelete: string) => {
-    onUpdateZones(availableZones.filter(z => z !== zoneToDelete));
+  const handleDeleteZone = async (zoneToDelete: string) => {
+    const updatedZones = availableZones.filter(z => z !== zoneToDelete);
+    onUpdateZones(updatedZones);
+    
+    // Guardar en la base de datos
+    const companyId = localStorage.getItem('companyId');
+    if (companyId) {
+      const success = await updateCompanyZones(companyId, updatedZones);
+      if (success) {
+        console.log('✅ Zona eliminada y actualizada en la base de datos');
+      } else {
+        console.error('❌ Error al actualizar zonas en la base de datos');
+      }
+    }
   };
 
   // Generate Embed Code with ROUNDED CORNERS and SHADOW enforced on the iframe
@@ -345,8 +386,9 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableZones, onUpdateZo
                         <input 
                           type="email" 
                           value={adminEmail}
-                          onChange={(e) => setAdminEmail(e.target.value)}
-                          className="w-full px-5 py-3 rounded-xl border border-gray-200 focus:border-indigo-500 outline-none bg-gray-50 focus:bg-white transition-colors text-gray-900 font-medium"
+                          readOnly
+                          className="w-full px-5 py-3 rounded-xl border border-gray-200 bg-gray-50 text-gray-600 font-medium cursor-not-allowed"
+                          title="Este es el correo con el que te registraste"
                         />
                       </div>
                    </div>
