@@ -791,52 +791,54 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableZones, onUpdateZo
                    <p>Aún no hay prospectos registrados.</p>
                 </div>
               ) : (
-                <table className="w-full text-left border-collapse">
-                  <thead>
-                    <tr className="bg-gray-50/50 text-gray-400 text-xs uppercase tracking-wider">
-                      <th className="px-8 py-6 font-semibold rounded-tl-[2rem]">Prospecto</th>
-                      <th className="px-6 py-6 font-semibold">Ingreso Mensual</th>
-                      <th className="px-6 py-6 font-semibold">Capacidad Compra</th>
-                      <th className="px-6 py-6 font-semibold">Zona de Interés</th>
-                      <th className="px-6 py-6 font-semibold">Fecha</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-gray-50">
-                    {prospects.map((prospect) => (
-                      <tr 
-                        key={prospect.id} 
-                        onClick={() => setSelectedProspect(prospect)}
-                        className="hover:bg-indigo-50/30 transition-colors group cursor-pointer"
-                      >
-                        <td className="px-8 py-5">
-                          <div className="flex flex-col">
-                            <span className="font-bold text-gray-900 text-sm">{prospect.name}</span>
-                            <span className="text-xs text-gray-400">{prospect.email}</span>
-                          </div>
-                        </td>
-                        <td className="px-6 py-5">
-                          <span className="font-medium text-gray-700">{formatCurrency(prospect.income)}</span>
-                        </td>
-                        <td className="px-6 py-5">
-                          <span className="font-bold text-indigo-600 bg-indigo-50 px-3 py-1 rounded-lg text-xs">
-                            {formatCurrency(prospect.result?.maxPropertyPrice || 0)}
-                          </span>
-                        </td>
-                        <td className="px-6 py-5">
-                          <div className="flex items-center gap-2">
-                            <MapPin size={14} className="text-gray-400" />
-                            <span className="text-sm text-gray-600 font-medium">
-                              {Array.isArray(prospect.zone) ? prospect.zone.join(', ') : (typeof prospect.zone === 'string' ? prospect.zone : 'Sin zona')}
-                            </span>
-                          </div>
-                        </td>
-                        <td className="px-6 py-5">
-                          <span className="text-sm text-gray-500">{prospect.dateDisplay || new Date(prospect.date).toLocaleDateString('es-PA')}</span>
-                        </td>
+                <div className="overflow-x-auto -mx-4 sm:mx-0">
+                  <table className="w-full text-left border-collapse min-w-[600px]">
+                    <thead>
+                      <tr className="bg-gray-50/50 text-gray-400 text-xs uppercase tracking-wider">
+                        <th className="px-4 sm:px-8 py-4 sm:py-6 font-semibold rounded-tl-[2rem]">Prospecto</th>
+                        <th className="px-3 sm:px-6 py-4 sm:py-6 font-semibold">Ingreso</th>
+                        <th className="px-3 sm:px-6 py-4 sm:py-6 font-semibold">Capacidad</th>
+                        <th className="px-3 sm:px-6 py-4 sm:py-6 font-semibold hidden md:table-cell">Zona</th>
+                        <th className="px-3 sm:px-6 py-4 sm:py-6 font-semibold hidden sm:table-cell">Fecha</th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
+                    </thead>
+                    <tbody className="divide-y divide-gray-50">
+                      {prospects.map((prospect) => (
+                        <tr 
+                          key={prospect.id} 
+                          onClick={() => setSelectedProspect(prospect)}
+                          className="hover:bg-indigo-50/30 transition-colors group cursor-pointer"
+                        >
+                          <td className="px-4 sm:px-8 py-4 sm:py-5">
+                            <div className="flex flex-col">
+                              <span className="font-bold text-gray-900 text-sm">{prospect.name}</span>
+                              <span className="text-xs text-gray-400 hidden sm:inline">{prospect.email}</span>
+                            </div>
+                          </td>
+                          <td className="px-3 sm:px-6 py-4 sm:py-5">
+                            <span className="font-medium text-gray-700 text-sm">{formatCurrency(prospect.income)}</span>
+                          </td>
+                          <td className="px-3 sm:px-6 py-4 sm:py-5">
+                            <span className="font-bold text-indigo-600 bg-indigo-50 px-2 sm:px-3 py-1 rounded-lg text-xs whitespace-nowrap">
+                              {formatCurrency(prospect.result?.maxPropertyPrice || 0)}
+                            </span>
+                          </td>
+                          <td className="px-3 sm:px-6 py-4 sm:py-5 hidden md:table-cell">
+                            <div className="flex items-center gap-2">
+                              <MapPin size={14} className="text-gray-400 shrink-0" />
+                              <span className="text-sm text-gray-600 font-medium truncate max-w-[150px]">
+                                {Array.isArray(prospect.zone) ? prospect.zone.join(', ') : (typeof prospect.zone === 'string' ? prospect.zone : 'Sin zona')}
+                              </span>
+                            </div>
+                          </td>
+                          <td className="px-3 sm:px-6 py-4 sm:py-5 hidden sm:table-cell">
+                            <span className="text-sm text-gray-500 whitespace-nowrap">{prospect.dateDisplay || new Date(prospect.date).toLocaleDateString('es-PA')}</span>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
               )}
             </div>
           </div>
