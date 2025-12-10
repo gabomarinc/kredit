@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { PropertyType, UserPreferences, FinancialData, PersonalData, CalculationResult } from '../types';
 import { calculateAffordability, formatCurrency } from '../utils/calculator';
-import { saveProspectToDB, getCompanyById } from '../utils/db';
+import { saveProspectToDB, getCompanyById, getAvailablePropertiesForProspect, savePropertyInterest, getCompanyById as getCompany } from '../utils/db';
+import { Property, PlanType } from '../types';
 import { 
-  Home, Building2, MapPin, User, Upload, FileCheck, ArrowRight, CheckCircle2, Download, HeartHandshake, ChevronLeft, Check, BedDouble, Bath
+  Home, Building2, MapPin, User, Upload, FileCheck, ArrowRight, CheckCircle2, Download, HeartHandshake, ChevronLeft, Check, BedDouble, Bath, Star, TrendingDown, X
 } from 'lucide-react';
 
 interface ProspectFlowProps {
@@ -77,6 +78,11 @@ export const ProspectFlow: React.FC<ProspectFlowProps> = ({ availableZones, comp
   const [isCalculating, setIsCalculating] = useState(false);
   const [companyLogo, setCompanyLogo] = useState<string | null>(null);
   const [zones, setZones] = useState<string[]>(availableZones);
+  const [prospectId, setProspectId] = useState<string | null>(null);
+  const [availableProperties, setAvailableProperties] = useState<Property[]>([]);
+  const [selectedProperty, setSelectedProperty] = useState<Property | null>(null);
+  const [companyPlan, setCompanyPlan] = useState<PlanType>('Freshie');
+  const [isLoadingProperties, setIsLoadingProperties] = useState(false);
 
   // Cargar logo y zonas de la empresa si hay company_id en la URL o localStorage
   useEffect(() => {
@@ -166,13 +172,40 @@ export const ProspectFlow: React.FC<ProspectFlowProps> = ({ availableZones, comp
 
     try {
         // 2. Save to Neon Database
-        await saveProspectToDB(personal, financial, preferences, res);
+        const savedId = await saveProspectToDB(personal, financial, preferences, res);
+        if (savedId) {
+          setProspectId(savedId.toString());
+          
+          // 3. Cargar propiedades disponibles si la empresa tiene plan Premium
+          const urlParams = new URLSearchParams(window.location.search);
+          const companyId = urlParams.get('company_id') || localStorage.getItem('companyId');
+          
+          if (companyId) {
+            try {
+              const company = await getCompanyById(companyId);
+              if (company && company.plan === 'Wolf of Wallstreet') {
+                setCompanyPlan('Wolf of Wallstreet');
+                setIsLoadingProperties(true);
+                const props = await getAvailablePropertiesForProspect(
+                  companyId,
+                  res.maxPropertyPrice,
+                  Array.isArray(preferences.zone) ? preferences.zone : [preferences.zone]
+                );
+                setAvailableProperties(props);
+                setIsLoadingProperties(false);
+              }
+            } catch (e) {
+              console.error("Error cargando propiedades:", e);
+              setIsLoadingProperties(false);
+            }
+          }
+        }
     } catch (e) {
         console.error("Failed to save to DB, but showing results anyway", e);
         // We continue even if DB fails so the user experience isn't broken
     }
     
-    // 3. Fake delay for emotional effect (reduced slightly since DB call takes time)
+    // 4. Fake delay for emotional effect (reduced slightly since DB call takes time)
     setTimeout(() => {
       setIsCalculating(false);
       handleNext();
@@ -579,20 +612,128 @@ export const ProspectFlow: React.FC<ProspectFlowProps> = ({ availableZones, comp
                     </div>
                   </div>
 
-                  <div className="bg-gray-900 text-white p-8 rounded-[2rem] shadow-xl relative overflow-hidden">
+                  <div className="bg-gray-900 text-white p-8 rounded-[2rem] shadow-xl relative overflow-hidden mb-10">
                     <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-500 rounded-full blur-3xl opacity-20 -mr-20 -mt-20 pointer-events-none"></div>
                     <div className="relative z-10">
                       <h4 className="text-xl font-bold mb-2">Próximos Pasos</h4>
                       <p className="text-gray-300 leading-relaxed mb-6 font-light text-sm">
                         Un agente especializado de <span className="text-white font-medium">{companyName}</span> en <span className="text-white font-medium">{preferences.zone.length > 0 ? preferences.zone[0] : 'tu zona'}</span> ya está analizando opciones para ti.
                       </p>
-                      <button 
-                        onClick={() => window.location.reload()}
-                        className="bg-white text-gray-900 px-6 py-3 rounded-full font-bold text-sm hover:bg-gray-100 transition-colors"
-                      >
-                        Finalizar
-                      </button>
                     </div>
+                  </div>
+
+                  {/* Propiedades Disponibles - Solo si hay plan Premium y propiedades */}
+                  {companyPlan === 'Wolf of Wallstreet' && (
+                    <div className="mb-10">
+                      {isLoadingProperties ? (
+                        <div className="text-center py-8">
+                          <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div>
+                          <p className="text-gray-500 mt-4 text-sm">Buscando propiedades disponibles...</p>
+                        </div>
+                      ) : availableProperties.length > 0 ? (
+                        <>
+                          <h3 className="text-2xl font-bold text-gray-900 mb-6 text-center">Propiedades que te pueden interesar</h3>
+                          <div className="grid md:grid-cols-2 gap-4 max-w-5xl mx-auto">
+                            {availableProperties.slice(0, 4).map((property) => (
+                              <div
+                                key={property.id}
+                                onClick={() => setSelectedProperty(property)}
+                                className="bg-white rounded-2xl overflow-hidden border border-gray-100 shadow-sm hover:shadow-lg transition-all cursor-pointer group"
+                              >
+                                {/* Imagen de la propiedad */}
+                                <div className="relative h-48 bg-gray-100 overflow-hidden">
+                                  {property.images && property.images.length > 0 ? (
+                                    <img
+                                      src={property.images[0]}
+                                      alt={property.title}
+                                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                                    />
+                                  ) : (
+                                    <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-indigo-50 to-purple-50">
+                                      <Home size={48} className="text-indigo-300" />
+                                    </div>
+                                  )}
+                                  
+                                  {/* Badge de tipo */}
+                                  <div className={`absolute top-3 left-3 px-3 py-1 rounded-lg text-xs font-bold text-white ${
+                                    property.type === 'Venta' ? 'bg-purple-600' : 'bg-green-600'
+                                  }`}>
+                                    {property.type}
+                                  </div>
+
+                                  {/* Overlays informativos */}
+                                  {property.highDemand && (
+                                    <div className="absolute top-3 right-3 bg-white/90 backdrop-blur-sm px-3 py-1.5 rounded-lg flex items-center gap-1.5 text-xs font-semibold text-purple-700">
+                                      <Star size={12} className="fill-purple-700 text-purple-700" />
+                                      Alta Demanda: {property.demandVisits || 0} visitas
+                                    </div>
+                                  )}
+                                  {property.priceAdjusted && (
+                                    <div className="absolute bottom-3 left-3 bg-white/90 backdrop-blur-sm px-3 py-1.5 rounded-lg flex items-center gap-1.5 text-xs font-semibold text-green-700">
+                                      <TrendingDown size={12} />
+                                      {property.priceAdjustmentPercent}% bajo mercado
+                                    </div>
+                                  )}
+                                </div>
+
+                                {/* Contenido */}
+                                <div className="p-5">
+                                  <h4 className="font-bold text-gray-900 mb-2 text-lg">{property.title}</h4>
+                                  <div className="flex items-center gap-1.5 text-gray-500 text-sm mb-4">
+                                    <MapPin size={14} />
+                                    <span>{property.zone}</span>
+                                  </div>
+                                  
+                                  <div className="flex items-center gap-4 text-sm text-gray-600 mb-4">
+                                    {property.bedrooms && (
+                                      <div className="flex items-center gap-1.5">
+                                        <BedDouble size={16} className="text-gray-400" />
+                                        <span>{property.bedrooms}</span>
+                                      </div>
+                                    )}
+                                    {property.bathrooms && (
+                                      <div className="flex items-center gap-1.5">
+                                        <Bath size={16} className="text-gray-400" />
+                                        <span>{property.bathrooms}</span>
+                                      </div>
+                                    )}
+                                    {property.areaM2 && (
+                                      <div className="text-gray-400">
+                                        {property.areaM2}m²
+                                      </div>
+                                    )}
+                                  </div>
+
+                                  <div className="pt-4 border-t border-gray-100">
+                                    <div className="text-xs text-gray-400 uppercase font-semibold mb-1">Precio</div>
+                                    <div className="text-2xl font-bold text-gray-900">{formatCurrency(property.price)}</div>
+                                  </div>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                          {availableProperties.length > 4 && (
+                            <p className="text-center text-gray-500 text-sm mt-4">
+                              Y {availableProperties.length - 4} propiedades más disponibles
+                            </p>
+                          )}
+                        </>
+                      ) : (
+                        <div className="text-center py-8 text-gray-400">
+                          <Home size={48} className="mx-auto mb-3 opacity-50" />
+                          <p className="text-sm">No hay propiedades disponibles en este momento</p>
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  <div className="text-center">
+                    <button 
+                      onClick={() => window.location.reload()}
+                      className="bg-indigo-600 text-white px-8 py-3 rounded-full font-bold text-sm hover:bg-indigo-700 transition-colors shadow-lg shadow-indigo-200"
+                    >
+                      Finalizar
+                    </button>
                   </div>
                 </div>
               )}
@@ -604,6 +745,146 @@ export const ProspectFlow: React.FC<ProspectFlowProps> = ({ availableZones, comp
         <p className="mt-8 text-xs text-gray-400 font-medium">
           Powered by Kônsul AI • Seguro & Encriptado
         </p>
+      )}
+
+      {/* Modal de Detalle de Propiedad */}
+      {selectedProperty && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+          <div className="bg-white rounded-[2rem] w-full max-w-4xl max-h-[90vh] overflow-y-auto shadow-2xl relative animate-fade-in-up">
+            {/* Header con botón cerrar */}
+            <div className="sticky top-0 bg-white border-b border-gray-100 p-6 flex items-center justify-between z-10">
+              <h3 className="text-2xl font-bold text-gray-900">{selectedProperty.title}</h3>
+              <button
+                onClick={() => setSelectedProperty(null)}
+                className="w-10 h-10 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center transition-colors"
+              >
+                <X size={20} className="text-gray-600" />
+              </button>
+            </div>
+
+            {/* Imágenes */}
+            {selectedProperty.images && selectedProperty.images.length > 0 && (
+              <div className="relative h-64 bg-gray-100">
+                <img
+                  src={selectedProperty.images[0]}
+                  alt={selectedProperty.title}
+                  className="w-full h-full object-cover"
+                />
+              </div>
+            )}
+
+            {/* Contenido */}
+            <div className="p-6 space-y-6">
+              {/* Badges */}
+              <div className="flex items-center gap-3 flex-wrap">
+                <span className={`px-4 py-1.5 rounded-lg text-sm font-bold text-white ${
+                  selectedProperty.type === 'Venta' ? 'bg-purple-600' : 'bg-green-600'
+                }`}>
+                  {selectedProperty.type}
+                </span>
+                {selectedProperty.highDemand && (
+                  <span className="px-4 py-1.5 rounded-lg text-sm font-semibold bg-purple-50 text-purple-700 flex items-center gap-1.5">
+                    <Star size={14} className="fill-purple-700 text-purple-700" />
+                    Alta Demanda
+                  </span>
+                )}
+                {selectedProperty.priceAdjusted && (
+                  <span className="px-4 py-1.5 rounded-lg text-sm font-semibold bg-green-50 text-green-700 flex items-center gap-1.5">
+                    <TrendingDown size={14} />
+                    {selectedProperty.priceAdjustmentPercent}% bajo mercado
+                  </span>
+                )}
+              </div>
+
+              {/* Ubicación */}
+              <div className="flex items-center gap-2 text-gray-600">
+                <MapPin size={18} className="text-indigo-500" />
+                <span className="font-medium">{selectedProperty.zone}</span>
+                {selectedProperty.address && (
+                  <span className="text-gray-400">• {selectedProperty.address}</span>
+                )}
+              </div>
+
+              {/* Especificaciones */}
+              <div className="grid grid-cols-3 gap-4 py-4 border-t border-b border-gray-100">
+                {selectedProperty.bedrooms && (
+                  <div className="text-center">
+                    <BedDouble size={24} className="text-gray-400 mx-auto mb-2" />
+                    <div className="text-sm text-gray-500">Habitaciones</div>
+                    <div className="text-lg font-bold text-gray-900">{selectedProperty.bedrooms}</div>
+                  </div>
+                )}
+                {selectedProperty.bathrooms && (
+                  <div className="text-center">
+                    <Bath size={24} className="text-gray-400 mx-auto mb-2" />
+                    <div className="text-sm text-gray-500">Baños</div>
+                    <div className="text-lg font-bold text-gray-900">{selectedProperty.bathrooms}</div>
+                  </div>
+                )}
+                {selectedProperty.areaM2 && (
+                  <div className="text-center">
+                    <div className="text-2xl mb-2">📐</div>
+                    <div className="text-sm text-gray-500">Área</div>
+                    <div className="text-lg font-bold text-gray-900">{selectedProperty.areaM2}m²</div>
+                  </div>
+                )}
+              </div>
+
+              {/* Descripción */}
+              {selectedProperty.description && (
+                <div>
+                  <h4 className="font-bold text-gray-900 mb-2">Descripción</h4>
+                  <p className="text-gray-600 leading-relaxed">{selectedProperty.description}</p>
+                </div>
+              )}
+
+              {/* Características */}
+              {selectedProperty.features && selectedProperty.features.length > 0 && (
+                <div>
+                  <h4 className="font-bold text-gray-900 mb-3">Características</h4>
+                  <div className="grid grid-cols-2 gap-2">
+                    {selectedProperty.features.map((feature, idx) => (
+                      <div key={idx} className="flex items-center gap-2 text-gray-600">
+                        <CheckCircle2 size={16} className="text-green-500 shrink-0" />
+                        <span className="text-sm">{feature}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Precio y Botón "Me interesa" */}
+              <div className="pt-6 border-t border-gray-200">
+                <div className="flex items-center justify-between flex-wrap gap-4">
+                  <div>
+                    <div className="text-xs text-gray-400 uppercase font-semibold mb-1">Precio</div>
+                    <div className="text-3xl font-bold text-gray-900">{formatCurrency(selectedProperty.price)}</div>
+                  </div>
+                  {prospectId && (
+                    <label className="flex items-center gap-3 cursor-pointer group">
+                      <input
+                        type="checkbox"
+                        onChange={async (e) => {
+                          if (prospectId) {
+                            await savePropertyInterest(prospectId, selectedProperty.id, e.target.checked);
+                            // Mostrar feedback visual
+                            if (e.target.checked) {
+                              alert('¡Gracias por tu interés! Un agente se pondrá en contacto contigo pronto.');
+                            }
+                          }
+                        }}
+                        className="w-5 h-5 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500 focus:ring-2 cursor-pointer"
+                      />
+                      <span className="text-lg font-semibold text-gray-700 group-hover:text-indigo-600 transition-colors">
+                        Me interesa
+                      </span>
+                    </label>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

@@ -1,13 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { 
-  Users, DollarSign, LayoutDashboard, FileText, Download, Filter, Calendar, CheckCircle2, X, ChevronDown, MapPin, Briefcase, Settings, Plus, Trash2, Building, Image as ImageIcon, Shield, Save, Code, Copy, ExternalLink, Loader2, User, Target, MessageCircle, ShieldCheck, TrendingUp, Eye, FileText as FileTextIcon
+  Users, DollarSign, LayoutDashboard, FileText, Download, Filter, Calendar, CheckCircle2, X, ChevronDown, MapPin, Briefcase, Settings, Plus, Trash2, Building, Image as ImageIcon, Shield, Save, Code, Copy, ExternalLink, Loader2, User, Target, MessageCircle, ShieldCheck, TrendingUp, Eye, FileText as FileTextIcon, BedDouble, Bath
 } from 'lucide-react';
-import { getProspectsFromDB, getCompanyById, updateCompanyZones, updateCompanyLogo, Company } from '../utils/db';
-import { Prospect } from '../types';
+import { getProspectsFromDB, getCompanyById, updateCompanyZones, updateCompanyLogo, Company, getPropertiesByCompany, saveProperty, updateProperty, deleteProperty, getPropertyInterestsByCompany, updateCompanyPlan } from '../utils/db';
+import { Prospect, Property, PropertyInterest, PlanType } from '../types';
 import { formatCurrency } from '../utils/calculator';
 import * as XLSX from 'xlsx';
 
-type Tab = 'dashboard' | 'prospects' | 'settings';
+type Tab = 'dashboard' | 'prospects' | 'properties' | 'settings';
 
 interface DashboardProps {
   availableZones: string[];
@@ -35,6 +35,13 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableZones, onUpdateZo
   // DB Data State
   const [prospects, setProspects] = useState<Prospect[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  
+  // Properties State
+  const [properties, setProperties] = useState<Property[]>([]);
+  const [propertyInterests, setPropertyInterests] = useState<PropertyInterest[]>([]);
+  const [isLoadingProperties, setIsLoadingProperties] = useState(false);
+  const [selectedPropertyForEdit, setSelectedPropertyForEdit] = useState<Property | null>(null);
+  const [showPropertyModal, setShowPropertyModal] = useState(false);
 
   // Settings State - Cargar desde DB
   const [adminName, setAdminName] = useState('Admin Gerente');
@@ -83,6 +90,31 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableZones, onUpdateZo
     };
     fetchData();
   }, []); // Run once on mount
+
+  // Load Properties when tab changes to properties
+  useEffect(() => {
+    const loadProperties = async () => {
+      if (activeTab === 'properties') {
+        setIsLoadingProperties(true);
+        try {
+          const companyId = localStorage.getItem('companyId');
+          if (companyId) {
+            const props = await getPropertiesByCompany(companyId);
+            setProperties(props);
+            
+            // Also load property interests
+            const interests = await getPropertyInterestsByCompany(companyId);
+            setPropertyInterests(interests);
+          }
+        } catch (e) {
+          console.error("Error loading properties:", e);
+        } finally {
+          setIsLoadingProperties(false);
+        }
+      }
+    };
+    loadProperties();
+  }, [activeTab]);
 
   // Calculate KPIs based on REAL prospects
   const totalForms = prospects.length;
@@ -383,6 +415,16 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableZones, onUpdateZo
               <Users size={14} className="sm:w-4 sm:h-4" /> <span>Prospectos</span>
             </button>
             <button
+              onClick={() => setActiveTab('properties')}
+              className={`px-3 sm:px-6 py-2 sm:py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition-all flex items-center gap-1 sm:gap-2 shrink-0 ${
+                activeTab === 'properties' 
+                  ? 'bg-indigo-50 text-indigo-600 shadow-sm' 
+                  : 'text-gray-400 hover:text-gray-600 hover:bg-gray-50'
+              }`}
+            >
+              <Building size={14} className="sm:w-4 sm:h-4" /> <span>Propiedades</span>
+            </button>
+            <button
               onClick={() => setActiveTab('settings')}
               className={`px-3 sm:px-6 py-2 sm:py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition-all flex items-center gap-1 sm:gap-2 shrink-0 ${
                 activeTab === 'settings' 
@@ -466,6 +508,179 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableZones, onUpdateZo
                  {totalZones > 0 ? `${totalZones} ${totalZones === 1 ? 'zona' : 'zonas'}` : '0 zonas'}
                </span>
             </div>
+          </div>
+        ) : activeTab === 'properties' ? (
+          <div className="space-y-6">
+            {/* Header */}
+            <div className="flex items-center justify-between flex-wrap gap-4">
+              <div>
+                <h2 className="text-2xl font-bold text-gray-900 mb-1">Gestión de Propiedades</h2>
+                <p className="text-gray-500 text-sm">Administra las propiedades que se mostrarán a tus prospectos</p>
+              </div>
+              {companyData?.plan === 'Wolf of Wallstreet' ? (
+                <button
+                  onClick={() => {
+                    setSelectedPropertyForEdit(null);
+                    setShowPropertyModal(true);
+                  }}
+                  className="bg-indigo-600 text-white px-6 py-3 rounded-xl font-semibold hover:bg-indigo-700 transition-colors flex items-center gap-2 shadow-lg shadow-indigo-200"
+                >
+                  <Plus size={18} /> Agregar Propiedad
+                </button>
+              ) : (
+                <div className="bg-yellow-50 border border-yellow-200 rounded-xl px-4 py-3">
+                  <p className="text-sm text-yellow-800 font-medium">
+                    ⚠️ Necesitas el plan <strong>"Wolf of Wallstreet"</strong> para gestionar propiedades
+                  </p>
+                </div>
+              )}
+            </div>
+
+            {/* Properties List */}
+            {isLoadingProperties ? (
+              <div className="text-center py-12">
+                <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div>
+                <p className="text-gray-500 mt-4">Cargando propiedades...</p>
+              </div>
+            ) : properties.length === 0 ? (
+              <div className="bg-white rounded-[2rem] p-12 text-center border border-gray-100">
+                <Building size={64} className="mx-auto mb-4 text-gray-300" />
+                <h3 className="text-xl font-bold text-gray-900 mb-2">No hay propiedades registradas</h3>
+                <p className="text-gray-500 mb-6">Comienza agregando tu primera propiedad para mostrarla a los prospectos</p>
+                {companyData?.plan === 'Wolf of Wallstreet' && (
+                  <button
+                    onClick={() => {
+                      setSelectedPropertyForEdit(null);
+                      setShowPropertyModal(true);
+                    }}
+                    className="bg-indigo-600 text-white px-6 py-3 rounded-xl font-semibold hover:bg-indigo-700 transition-colors"
+                  >
+                    Agregar Primera Propiedad
+                  </button>
+                )}
+              </div>
+            ) : (
+              <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {properties.map((property) => (
+                  <div
+                    key={property.id}
+                    className="bg-white rounded-2xl overflow-hidden border border-gray-100 shadow-sm hover:shadow-lg transition-all group"
+                  >
+                    {/* Imagen */}
+                    <div className="relative h-48 bg-gray-100 overflow-hidden">
+                      {property.images && property.images.length > 0 ? (
+                        <img
+                          src={property.images[0]}
+                          alt={property.title}
+                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                        />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-indigo-50 to-purple-50">
+                          <Building size={48} className="text-indigo-300" />
+                        </div>
+                      )}
+                      <div className={`absolute top-3 left-3 px-3 py-1 rounded-lg text-xs font-bold text-white ${
+                        property.type === 'Venta' ? 'bg-purple-600' : 'bg-green-600'
+                      }`}>
+                        {property.type}
+                      </div>
+                      <div className={`absolute top-3 right-3 px-2 py-1 rounded-lg text-xs font-semibold ${
+                        property.status === 'Activa' ? 'bg-green-50 text-green-700' :
+                        property.status === 'Vendida' ? 'bg-gray-100 text-gray-600' :
+                        property.status === 'Alquilada' ? 'bg-blue-50 text-blue-700' :
+                        'bg-gray-100 text-gray-500'
+                      }`}>
+                        {property.status}
+                      </div>
+                    </div>
+
+                    {/* Contenido */}
+                    <div className="p-5">
+                      <h4 className="font-bold text-gray-900 mb-2 text-lg">{property.title}</h4>
+                      <div className="flex items-center gap-1.5 text-gray-500 text-sm mb-4">
+                        <MapPin size={14} />
+                        <span>{property.zone}</span>
+                      </div>
+                      
+                      <div className="flex items-center gap-4 text-sm text-gray-600 mb-4">
+                        {property.bedrooms && (
+                          <div className="flex items-center gap-1.5">
+                            <BedDouble size={16} className="text-gray-400" />
+                            <span>{property.bedrooms}</span>
+                          </div>
+                        )}
+                        {property.bathrooms && (
+                          <div className="flex items-center gap-1.5">
+                            <Bath size={16} className="text-gray-400" />
+                            <span>{property.bathrooms}</span>
+                          </div>
+                        )}
+                        {property.areaM2 && (
+                          <div className="text-gray-400">
+                            {property.areaM2}m²
+                          </div>
+                        )}
+                      </div>
+
+                      <div className="pt-4 border-t border-gray-100 flex items-center justify-between">
+                        <div>
+                          <div className="text-xs text-gray-400 uppercase font-semibold mb-1">Precio</div>
+                          <div className="text-xl font-bold text-gray-900">{formatCurrency(property.price)}</div>
+                        </div>
+                        <div className="flex gap-2">
+                          <button
+                            onClick={() => {
+                              setSelectedPropertyForEdit(property);
+                              setShowPropertyModal(true);
+                            }}
+                            className="p-2 text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors"
+                            title="Editar"
+                          >
+                            <Settings size={18} />
+                          </button>
+                          <button
+                            onClick={async () => {
+                              if (confirm('¿Estás seguro de eliminar esta propiedad?')) {
+                                const success = await deleteProperty(property.id);
+                                if (success) {
+                                  setProperties(properties.filter(p => p.id !== property.id));
+                                }
+                              }
+                            }}
+                            className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                            title="Eliminar"
+                          >
+                            <Trash2 size={18} />
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* Property Interests Section */}
+            {propertyInterests.length > 0 && (
+              <div className="mt-12 bg-white rounded-[2rem] p-8 border border-gray-100">
+                <h3 className="text-xl font-bold text-gray-900 mb-6">Intereses de Prospectos</h3>
+                <div className="space-y-4">
+                  {propertyInterests.map((interest) => (
+                    <div key={interest.id} className="flex items-center justify-between p-4 bg-gray-50 rounded-xl">
+                      <div className="flex-1">
+                        <div className="font-semibold text-gray-900">{interest.prospect?.name}</div>
+                        <div className="text-sm text-gray-500">{interest.prospect?.email}</div>
+                        <div className="text-xs text-gray-400 mt-1">Interesado en: {interest.property?.title}</div>
+                      </div>
+                      <div className="text-right">
+                        <div className="text-sm font-semibold text-indigo-600">{formatCurrency(interest.property?.price || 0)}</div>
+                        <div className="text-xs text-gray-400">{new Date(interest.createdAt || '').toLocaleDateString('es-PA')}</div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
         ) : activeTab === 'settings' ? (
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -558,6 +773,115 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableZones, onUpdateZo
 
             {/* Profile & Branding Column */}
             <div className="lg:col-span-2 space-y-8">
+              
+              {/* Plan Selection */}
+              <div className="bg-white rounded-[2.5rem] shadow-[0_10px_40px_-10px_rgba(0,0,0,0.05)] border border-gray-100 overflow-hidden">
+                <div className="p-8 border-b border-gray-50 flex items-center gap-4">
+                  <div className="w-12 h-12 rounded-2xl bg-purple-50 text-purple-600 flex items-center justify-center">
+                    <ShieldCheck size={24} strokeWidth={1.5} />
+                  </div>
+                  <div>
+                    <h3 className="text-xl font-bold text-gray-900">Plan de Suscripción</h3>
+                    <p className="text-sm text-gray-500">Elige el plan que mejor se adapte a tus necesidades.</p>
+                  </div>
+                </div>
+
+                <div className="p-8">
+                  <div className="grid md:grid-cols-2 gap-4">
+                    <button
+                      onClick={async () => {
+                        const companyId = localStorage.getItem('companyId');
+                        if (companyId) {
+                          const success = await updateCompanyPlan(companyId, 'Freshie');
+                          if (success && companyData) {
+                            setCompanyData({ ...companyData, plan: 'Freshie' });
+                          }
+                        }
+                      }}
+                      className={`p-6 rounded-2xl border-2 transition-all text-left ${
+                        companyData?.plan === 'Freshie'
+                          ? 'border-indigo-500 bg-indigo-50/30 shadow-lg'
+                          : 'border-gray-200 hover:border-indigo-200 hover:bg-indigo-50/20'
+                      }`}
+                    >
+                      <div className="font-bold text-xl text-gray-900 mb-2">Plan Freshie</div>
+                      <div className="text-sm text-gray-600 mb-4">Plan gratuito con funciones básicas</div>
+                      <div className="space-y-2 text-sm text-gray-500">
+                        <div className="flex items-center gap-2">
+                          <CheckCircle2 size={16} className="text-green-500" />
+                          <span>Gestión de prospectos</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <CheckCircle2 size={16} className="text-green-500" />
+                          <span>Dashboard de análisis</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <X size={16} className="text-gray-300" />
+                          <span className="text-gray-400">Gestión de propiedades</span>
+                        </div>
+                      </div>
+                      {companyData?.plan === 'Freshie' && (
+                        <div className="mt-4 text-xs font-semibold text-indigo-600 bg-indigo-100 px-3 py-1 rounded-full inline-block">
+                          Plan Actual
+                        </div>
+                      )}
+                    </button>
+
+                    <button
+                      onClick={async () => {
+                        const companyId = localStorage.getItem('companyId');
+                        if (companyId) {
+                          const success = await updateCompanyPlan(companyId, 'Wolf of Wallstreet');
+                          if (success && companyData) {
+                            setCompanyData({ ...companyData, plan: 'Wolf of Wallstreet' });
+                            // Recargar propiedades si cambia a premium
+                            if (activeTab === 'properties') {
+                              const props = await getPropertiesByCompany(companyId);
+                              setProperties(props);
+                            }
+                          }
+                        }
+                      }}
+                      className={`p-6 rounded-2xl border-2 transition-all text-left relative overflow-hidden ${
+                        companyData?.plan === 'Wolf of Wallstreet'
+                          ? 'border-purple-500 bg-purple-50/30 shadow-lg'
+                          : 'border-gray-200 hover:border-purple-200 hover:bg-purple-50/20'
+                      }`}
+                    >
+                      {companyData?.plan === 'Wolf of Wallstreet' && (
+                        <div className="absolute top-3 right-3 bg-purple-600 text-white text-xs font-bold px-3 py-1 rounded-full">
+                          Premium
+                        </div>
+                      )}
+                      <div className="font-bold text-xl text-gray-900 mb-2">Plan Wolf of Wallstreet</div>
+                      <div className="text-sm text-gray-600 mb-4">Plan premium con todas las funciones</div>
+                      <div className="space-y-2 text-sm text-gray-500">
+                        <div className="flex items-center gap-2">
+                          <CheckCircle2 size={16} className="text-green-500" />
+                          <span>Todas las funciones del plan Freshie</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <CheckCircle2 size={16} className="text-purple-500" />
+                          <span className="font-semibold text-purple-600">Gestión de propiedades</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <CheckCircle2 size={16} className="text-purple-500" />
+                          <span className="font-semibold text-purple-600">Mostrar propiedades a prospectos</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <CheckCircle2 size={16} className="text-purple-500" />
+                          <span className="font-semibold text-purple-600">Seguimiento de intereses</span>
+                        </div>
+                      </div>
+                      {companyData?.plan === 'Wolf of Wallstreet' && (
+                        <div className="mt-4 text-xs font-semibold text-purple-600 bg-purple-100 px-3 py-1 rounded-full inline-block">
+                          Plan Actual
+                        </div>
+                      )}
+                    </button>
+                  </div>
+                </div>
+              </div>
               
               {/* Company Profile */}
               <div className="bg-white rounded-[2.5rem] shadow-[0_10px_40px_-10px_rgba(0,0,0,0.05)] border border-gray-100 overflow-hidden">
@@ -1443,6 +1767,338 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableZones, onUpdateZo
           </div>
         </div>
       )}
+
+      {/* Modal de Crear/Editar Propiedad */}
+      {showPropertyModal && (
+        <PropertyModal
+          property={selectedPropertyForEdit}
+          companyId={localStorage.getItem('companyId') || ''}
+          zones={availableZones}
+          onClose={() => {
+            setShowPropertyModal(false);
+            setSelectedPropertyForEdit(null);
+          }}
+          onSave={async (propertyData) => {
+            const companyId = localStorage.getItem('companyId');
+            if (!companyId) return;
+
+            if (selectedPropertyForEdit) {
+              // Actualizar
+              await updateProperty(selectedPropertyForEdit.id, propertyData);
+            } else {
+              // Crear
+              await saveProperty({ ...propertyData, companyId });
+            }
+            
+            // Recargar propiedades
+            const props = await getPropertiesByCompany(companyId);
+            setProperties(props);
+            setShowPropertyModal(false);
+            setSelectedPropertyForEdit(null);
+          }}
+        />
+      )}
     </>
+  );
+};
+
+// Componente Modal para Crear/Editar Propiedad
+interface PropertyModalProps {
+  property: Property | null;
+  companyId: string;
+  zones: string[];
+  onClose: () => void;
+  onSave: (property: Omit<Property, 'id' | 'companyId' | 'createdAt' | 'updatedAt'>) => void;
+}
+
+const PropertyModal: React.FC<PropertyModalProps> = ({ property, zones, onClose, onSave }) => {
+  const [title, setTitle] = useState(property?.title || '');
+  const [description, setDescription] = useState(property?.description || '');
+  const [type, setType] = useState<'Venta' | 'Alquiler'>(property?.type || 'Venta');
+  const [price, setPrice] = useState(property?.price?.toString() || '');
+  const [zone, setZone] = useState(property?.zone || zones[0] || '');
+  const [bedrooms, setBedrooms] = useState(property?.bedrooms?.toString() || '');
+  const [bathrooms, setBathrooms] = useState(property?.bathrooms?.toString() || '');
+  const [areaM2, setAreaM2] = useState(property?.areaM2?.toString() || '');
+  const [images, setImages] = useState<string[]>(property?.images || []);
+  const [address, setAddress] = useState(property?.address || '');
+  const [status, setStatus] = useState<'Activa' | 'Inactiva' | 'Vendida' | 'Alquilada'>(property?.status || 'Activa');
+  const [highDemand, setHighDemand] = useState(property?.highDemand || false);
+  const [demandVisits, setDemandVisits] = useState(property?.demandVisits?.toString() || '0');
+  const [priceAdjusted, setPriceAdjusted] = useState(property?.priceAdjusted || false);
+  const [priceAdjustmentPercent, setPriceAdjustmentPercent] = useState(property?.priceAdjustmentPercent?.toString() || '0');
+
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files) return;
+
+    const newImages: string[] = [];
+    for (let i = 0; i < files.length; i++) {
+      const file = files[i];
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        const base64 = reader.result as string;
+        newImages.push(base64);
+        if (newImages.length === files.length) {
+          setImages([...images, ...newImages]);
+        }
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const removeImage = (index: number) => {
+    setImages(images.filter((_, i) => i !== index));
+  };
+
+  const handleSave = () => {
+    onSave({
+      title,
+      description,
+      type,
+      price: parseFloat(price) || 0,
+      zone,
+      bedrooms: bedrooms ? parseInt(bedrooms) : null,
+      bathrooms: bathrooms ? parseFloat(bathrooms) : null,
+      areaM2: areaM2 ? parseFloat(areaM2) : null,
+      images,
+      address,
+      features: [],
+      status,
+      highDemand,
+      demandVisits: parseInt(demandVisits) || 0,
+      priceAdjusted,
+      priceAdjustmentPercent: parseFloat(priceAdjustmentPercent) || 0
+    });
+  };
+
+  return (
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+      <div className="bg-white rounded-[2rem] w-full max-w-4xl max-h-[90vh] overflow-y-auto shadow-2xl relative">
+        <div className="sticky top-0 bg-white border-b border-gray-100 p-6 flex items-center justify-between z-10">
+          <h3 className="text-2xl font-bold text-gray-900">{property ? 'Editar Propiedad' : 'Nueva Propiedad'}</h3>
+          <button onClick={onClose} className="w-10 h-10 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center transition-colors">
+            <X size={20} className="text-gray-600" />
+          </button>
+        </div>
+
+        <div className="p-6 space-y-6">
+          {/* Título */}
+          <div>
+            <label className="block text-sm font-semibold text-gray-700 mb-2">Título *</label>
+            <input
+              type="text"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-indigo-500 outline-none"
+              placeholder="Ej: PH Santa Maria Court"
+            />
+          </div>
+
+          {/* Tipo y Precio */}
+          <div className="grid md:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-2">Tipo *</label>
+              <select
+                value={type}
+                onChange={(e) => setType(e.target.value as 'Venta' | 'Alquiler')}
+                className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-indigo-500 outline-none"
+              >
+                <option value="Venta">Venta</option>
+                <option value="Alquiler">Alquiler</option>
+              </select>
+            </div>
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-2">Precio *</label>
+              <input
+                type="number"
+                value={price}
+                onChange={(e) => setPrice(e.target.value)}
+                className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-indigo-500 outline-none"
+                placeholder="0.00"
+              />
+            </div>
+          </div>
+
+          {/* Zona y Dirección */}
+          <div className="grid md:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-2">Zona *</label>
+              <select
+                value={zone}
+                onChange={(e) => setZone(e.target.value)}
+                className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-indigo-500 outline-none"
+              >
+                {zones.map(z => (
+                  <option key={z} value={z}>{z}</option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-2">Dirección</label>
+              <input
+                type="text"
+                value={address}
+                onChange={(e) => setAddress(e.target.value)}
+                className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-indigo-500 outline-none"
+                placeholder="Dirección completa"
+              />
+            </div>
+          </div>
+
+          {/* Habitaciones, Baños, Área */}
+          <div className="grid md:grid-cols-3 gap-4">
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-2">Habitaciones</label>
+              <input
+                type="number"
+                value={bedrooms}
+                onChange={(e) => setBedrooms(e.target.value)}
+                className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-indigo-500 outline-none"
+                placeholder="3"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-2">Baños</label>
+              <input
+                type="number"
+                step="0.5"
+                value={bathrooms}
+                onChange={(e) => setBathrooms(e.target.value)}
+                className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-indigo-500 outline-none"
+                placeholder="2.5"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-2">Área (m²)</label>
+              <input
+                type="number"
+                value={areaM2}
+                onChange={(e) => setAreaM2(e.target.value)}
+                className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-indigo-500 outline-none"
+                placeholder="120"
+              />
+            </div>
+          </div>
+
+          {/* Descripción */}
+          <div>
+            <label className="block text-sm font-semibold text-gray-700 mb-2">Descripción</label>
+            <textarea
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              rows={4}
+              className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-indigo-500 outline-none"
+              placeholder="Describe la propiedad..."
+            />
+          </div>
+
+          {/* Imágenes */}
+          <div>
+            <label className="block text-sm font-semibold text-gray-700 mb-2">Imágenes</label>
+            <input
+              type="file"
+              accept="image/*"
+              multiple
+              onChange={handleImageUpload}
+              className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-indigo-500 outline-none"
+            />
+            {images.length > 0 && (
+              <div className="grid grid-cols-4 gap-4 mt-4">
+                {images.map((img, idx) => (
+                  <div key={idx} className="relative group">
+                    <img src={img} alt={`Imagen ${idx + 1}`} className="w-full h-32 object-cover rounded-lg" />
+                    <button
+                      onClick={() => removeImage(idx)}
+                      className="absolute top-2 right-2 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                    >
+                      <X size={16} />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Estado y Opciones */}
+          <div className="grid md:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-2">Estado</label>
+              <select
+                value={status}
+                onChange={(e) => setStatus(e.target.value as Property['status'])}
+                className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-indigo-500 outline-none"
+              >
+                <option value="Activa">Activa</option>
+                <option value="Inactiva">Inactiva</option>
+                <option value="Vendida">Vendida</option>
+                <option value="Alquilada">Alquilada</option>
+              </select>
+            </div>
+          </div>
+
+          {/* Opciones adicionales */}
+          <div className="space-y-3 p-4 bg-gray-50 rounded-xl">
+            <label className="flex items-center gap-3 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={highDemand}
+                onChange={(e) => setHighDemand(e.target.checked)}
+                className="w-5 h-5 rounded border-gray-300 text-indigo-600"
+              />
+              <span className="text-sm font-medium text-gray-700">Alta Demanda</span>
+            </label>
+            {highDemand && (
+              <div className="ml-8">
+                <label className="block text-sm text-gray-600 mb-1">Visitas esta semana</label>
+                <input
+                  type="number"
+                  value={demandVisits}
+                  onChange={(e) => setDemandVisits(e.target.value)}
+                  className="w-full px-4 py-2 rounded-lg border border-gray-200"
+                />
+              </div>
+            )}
+            <label className="flex items-center gap-3 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={priceAdjusted}
+                onChange={(e) => setPriceAdjusted(e.target.checked)}
+                className="w-5 h-5 rounded border-gray-300 text-indigo-600"
+              />
+              <span className="text-sm font-medium text-gray-700">Precio Ajustado</span>
+            </label>
+            {priceAdjusted && (
+              <div className="ml-8">
+                <label className="block text-sm text-gray-600 mb-1">% bajo mercado</label>
+                <input
+                  type="number"
+                  value={priceAdjustmentPercent}
+                  onChange={(e) => setPriceAdjustmentPercent(e.target.value)}
+                  className="w-full px-4 py-2 rounded-lg border border-gray-200"
+                />
+              </div>
+            )}
+          </div>
+
+          {/* Botones */}
+          <div className="flex gap-4 pt-4 border-t border-gray-200">
+            <button
+              onClick={onClose}
+              className="flex-1 px-6 py-3 rounded-xl border border-gray-200 text-gray-700 font-semibold hover:bg-gray-50 transition-colors"
+            >
+              Cancelar
+            </button>
+            <button
+              onClick={handleSave}
+              disabled={!title || !price || !zone}
+              className="flex-1 px-6 py-3 rounded-xl bg-indigo-600 text-white font-semibold hover:bg-indigo-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {property ? 'Guardar Cambios' : 'Crear Propiedad'}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
   );
 };

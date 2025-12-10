@@ -51,3 +51,47 @@ export interface Prospect {
   talonarioFileBase64?: string | null;
   signedAcpFileBase64?: string | null;
 }
+
+// ============================================
+// SISTEMA DE PLANES
+// ============================================
+export type PlanType = 'Freshie' | 'Wolf of Wallstreet';
+
+// ============================================
+// SISTEMA DE PROPIEDADES
+// ============================================
+export type PropertyListingType = 'Venta' | 'Alquiler';
+export type PropertyStatus = 'Activa' | 'Inactiva' | 'Vendida' | 'Alquilada';
+
+export interface Property {
+  id: string;
+  companyId: string;
+  title: string;
+  description?: string;
+  type: PropertyListingType;
+  price: number;
+  zone: string;
+  bedrooms?: number | null;
+  bathrooms?: number | null;
+  areaM2?: number | null;
+  images: string[]; // Array de Base64 strings
+  address?: string;
+  features?: string[];
+  status: PropertyStatus;
+  highDemand?: boolean;
+  demandVisits?: number;
+  priceAdjusted?: boolean;
+  priceAdjustmentPercent?: number;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export interface PropertyInterest {
+  id: string;
+  prospectId: string;
+  propertyId: string;
+  interested: boolean;
+  createdAt?: string;
+  property?: Property; // Populated when fetching interests with property details
+  prospect?: Prospect; // Populated when fetching interests with prospect details
+}

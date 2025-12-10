@@ -105,6 +105,72 @@ const ensureTablesExist = async (client: any) => {
     } catch (e) {
       console.warn('Nota: No se pudieron agregar las columnas de archivos (puede que ya existan):', e);
     }
+
+    // Agregar columna de plan a companies si no existe
+    try {
+      await client.query(`
+        DO $$
+        BEGIN
+          IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'companies' AND column_name = 'plan') THEN
+            ALTER TABLE companies ADD COLUMN plan TEXT DEFAULT 'Freshie' CHECK (plan IN ('Freshie', 'Wolf of Wallstreet'));
+          END IF;
+        END $$;
+      `);
+    } catch (e) {
+      console.warn('Nota: No se pudo agregar la columna plan (puede que ya exista):', e);
+    }
+
+    // Tabla de propiedades
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS properties (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        company_id UUID REFERENCES companies(id) ON DELETE CASCADE NOT NULL,
+        title TEXT NOT NULL,
+        description TEXT,
+        type TEXT NOT NULL CHECK (type IN ('Venta', 'Alquiler')),
+        price NUMERIC NOT NULL,
+        zone TEXT NOT NULL,
+        bedrooms INTEGER,
+        bathrooms NUMERIC,
+        area_m2 NUMERIC,
+        images TEXT[],
+        address TEXT,
+        features TEXT[],
+        status TEXT DEFAULT 'Activa' CHECK (status IN ('Activa', 'Inactiva', 'Vendida', 'Alquilada')),
+        high_demand BOOLEAN DEFAULT false,
+        demand_visits INTEGER DEFAULT 0,
+        price_adjusted BOOLEAN DEFAULT false,
+        price_adjustment_percent NUMERIC DEFAULT 0,
+        created_at TIMESTAMP DEFAULT NOW(),
+        updated_at TIMESTAMP DEFAULT NOW()
+      )
+    `);
+
+    // Tabla de intereses de prospectos en propiedades
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS property_interests (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        prospect_id INTEGER REFERENCES prospects(id) ON DELETE CASCADE NOT NULL,
+        property_id UUID REFERENCES properties(id) ON DELETE CASCADE NOT NULL,
+        interested BOOLEAN DEFAULT true,
+        created_at TIMESTAMP DEFAULT NOW(),
+        UNIQUE(prospect_id, property_id)
+      )
+    `);
+
+    // Crear índices si no existen
+    try {
+      await client.query(`CREATE INDEX IF NOT EXISTS idx_properties_company_id ON properties(company_id)`);
+      await client.query(`CREATE INDEX IF NOT EXISTS idx_properties_status ON properties(status)`);
+      await client.query(`CREATE INDEX IF NOT EXISTS idx_properties_type ON properties(type)`);
+      await client.query(`CREATE INDEX IF NOT EXISTS idx_properties_zone ON properties(zone)`);
+      await client.query(`CREATE INDEX IF NOT EXISTS idx_property_interests_prospect_id ON property_interests(prospect_id)`);
+      await client.query(`CREATE INDEX IF NOT EXISTS idx_property_interests_property_id ON property_interests(property_id)`);
+      await client.query(`CREATE INDEX IF NOT EXISTS idx_property_interests_interested ON property_interests(interested)`);
+    } catch (e) {
+      console.warn('Nota: No se pudieron crear índices (pueden que ya existan):', e);
+    }
+
   } catch (e) {
     console.warn("Nota: Verificación de tablas omitida o fallida (puede que ya existan o falten permisos DDL).", e);
   }
@@ -324,6 +390,7 @@ export interface Company {
   companyName: string;
   logoUrl?: string;
   zones: string[];
+  plan?: 'Freshie' | 'Wolf of Wallstreet'; // Plan de la empresa
 }
 
 // Función simple para hash de contraseña (en producción usar bcrypt)
@@ -513,7 +580,8 @@ export const verifyLogin = async (email: string, password: string): Promise<Comp
       email: company.email,
       companyName: company.name, // Asumiendo que name es el nombre de la empresa
       logoUrl: company.logo_url,
-      zones: zones
+      zones: zones,
+      plan: (company.plan || 'Freshie') as 'Freshie' | 'Wolf of Wallstreet'
     };
 
   } catch (error) {
@@ -559,7 +627,8 @@ export const getCompanyById = async (companyId: string): Promise<Company | null>
       email: company.email,
       companyName: company.name,
       logoUrl: company.logo_url,
-      zones: zones
+      zones: zones,
+      plan: (company.plan || 'Freshie') as 'Freshie' | 'Wolf of Wallstreet'
     };
 
   } catch (error) {
@@ -628,5 +697,512 @@ export const updateCompanyLogo = async (companyId: string, logoBase64: string): 
   } catch (error) {
     console.error('❌ Error actualizando logo:', error);
     return false;
+  }
+};
+
+// ============================================
+// FUNCIONES PARA SISTEMA DE PLANES
+// ============================================
+
+// Actualizar plan de una empresa
+export const updateCompanyPlan = async (companyId: string, plan: 'Freshie' | 'Wolf of Wallstreet'): Promise<boolean> => {
+  if (!pool) {
+    console.error('❌ Pool de base de datos no inicializado.');
+    return false;
+  }
+
+  try {
+    const client = await pool.connect();
+    await ensureTablesExist(client);
+
+    await client.query(
+      'UPDATE companies SET plan = $1 WHERE id = $2',
+      [plan, companyId]
+    );
+
+    client.release();
+    console.log(`✅ Plan actualizado a ${plan} para la empresa ${companyId}`);
+    return true;
+
+  } catch (error) {
+    console.error('❌ Error actualizando plan:', error);
+    return false;
+  }
+};
+
+// ============================================
+// FUNCIONES PARA SISTEMA DE PROPIEDADES
+// ============================================
+
+import { Property, PropertyInterest } from '../types';
+
+// Obtener todas las propiedades de una empresa
+export const getPropertiesByCompany = async (companyId: string): Promise<Property[]> => {
+  if (!pool) {
+    return [];
+  }
+
+  try {
+    const client = await pool.connect();
+    await ensureTablesExist(client);
+
+    const res = await client.query(
+      'SELECT * FROM properties WHERE company_id = $1 ORDER BY created_at DESC',
+      [companyId]
+    );
+
+    client.release();
+
+    return res.rows.map((row: any) => ({
+      id: row.id,
+      companyId: row.company_id,
+      title: row.title,
+      description: row.description,
+      type: row.type as 'Venta' | 'Alquiler',
+      price: parseFloat(row.price || 0),
+      zone: row.zone,
+      bedrooms: row.bedrooms,
+      bathrooms: row.bathrooms ? parseFloat(row.bathrooms) : null,
+      areaM2: row.area_m2 ? parseFloat(row.area_m2) : null,
+      images: Array.isArray(row.images) ? row.images : [],
+      address: row.address,
+      features: Array.isArray(row.features) ? row.features : [],
+      status: row.status as 'Activa' | 'Inactiva' | 'Vendida' | 'Alquilada',
+      highDemand: row.high_demand || false,
+      demandVisits: row.demand_visits || 0,
+      priceAdjusted: row.price_adjusted || false,
+      priceAdjustmentPercent: row.price_adjustment_percent ? parseFloat(row.price_adjustment_percent) : 0,
+      createdAt: row.created_at ? new Date(row.created_at).toISOString() : undefined,
+      updatedAt: row.updated_at ? new Date(row.updated_at).toISOString() : undefined
+    }));
+
+  } catch (error) {
+    console.error('❌ Error obteniendo propiedades:', error);
+    return [];
+  }
+};
+
+// Obtener propiedades disponibles para un prospecto (basado en precio máximo y zona)
+export const getAvailablePropertiesForProspect = async (
+  companyId: string,
+  maxPrice: number,
+  interestedZones: string[]
+): Promise<Property[]> => {
+  if (!pool) {
+    return [];
+  }
+
+  try {
+    const client = await pool.connect();
+    await ensureTablesExist(client);
+
+    // Buscar propiedades activas que:
+    // 1. Pertenezcan a la empresa
+    // 2. Estén en las zonas de interés del prospecto (si hay zonas especificadas)
+    // 3. El precio esté dentro del rango (para venta: precio <= maxPrice * 1.1, para alquiler: precio <= maxPrice * 0.3)
+    // 4. Estén activas
+
+    let query = `
+      SELECT * FROM properties 
+      WHERE company_id = $1 
+      AND status = 'Activa'
+      AND (
+        (type = 'Venta' AND price <= $2 * 1.1)
+        OR
+        (type = 'Alquiler' AND price <= $2 * 0.3)
+      )
+    `;
+
+    const values: any[] = [companyId, maxPrice];
+
+    // Si hay zonas de interés, filtrar por ellas
+    if (interestedZones && interestedZones.length > 0) {
+      query += ` AND zone = ANY($3)`;
+      values.push(interestedZones);
+    }
+
+    query += ` ORDER BY 
+      CASE WHEN type = 'Venta' THEN 1 ELSE 2 END,
+      price ASC,
+      created_at DESC
+      LIMIT 20`;
+
+    const res = await client.query(query, values);
+    client.release();
+
+    return res.rows.map((row: any) => ({
+      id: row.id,
+      companyId: row.company_id,
+      title: row.title,
+      description: row.description,
+      type: row.type as 'Venta' | 'Alquiler',
+      price: parseFloat(row.price || 0),
+      zone: row.zone,
+      bedrooms: row.bedrooms,
+      bathrooms: row.bathrooms ? parseFloat(row.bathrooms) : null,
+      areaM2: row.area_m2 ? parseFloat(row.area_m2) : null,
+      images: Array.isArray(row.images) ? row.images : [],
+      address: row.address,
+      features: Array.isArray(row.features) ? row.features : [],
+      status: row.status as 'Activa' | 'Inactiva' | 'Vendida' | 'Alquilada',
+      highDemand: row.high_demand || false,
+      demandVisits: row.demand_visits || 0,
+      priceAdjusted: row.price_adjusted || false,
+      priceAdjustmentPercent: row.price_adjustment_percent ? parseFloat(row.price_adjustment_percent) : 0,
+      createdAt: row.created_at ? new Date(row.created_at).toISOString() : undefined,
+      updatedAt: row.updated_at ? new Date(row.updated_at).toISOString() : undefined
+    }));
+
+  } catch (error) {
+    console.error('❌ Error obteniendo propiedades disponibles:', error);
+    return [];
+  }
+};
+
+// Crear/Actualizar propiedad
+export const saveProperty = async (property: Omit<Property, 'id' | 'createdAt' | 'updatedAt'>): Promise<string | null> => {
+  if (!pool) {
+    console.error('❌ Pool de base de datos no inicializado.');
+    return null;
+  }
+
+  try {
+    const client = await pool.connect();
+    await ensureTablesExist(client);
+
+    const query = `
+      INSERT INTO properties (
+        company_id, title, description, type, price, zone, bedrooms, bathrooms, area_m2,
+        images, address, features, status, high_demand, demand_visits, price_adjusted, price_adjustment_percent
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17)
+      RETURNING id
+    `;
+
+    const values = [
+      property.companyId,
+      property.title,
+      property.description || null,
+      property.type,
+      property.price,
+      property.zone,
+      property.bedrooms || null,
+      property.bathrooms || null,
+      property.areaM2 || null,
+      property.images || [],
+      property.address || null,
+      property.features || [],
+      property.status || 'Activa',
+      property.highDemand || false,
+      property.demandVisits || 0,
+      property.priceAdjusted || false,
+      property.priceAdjustmentPercent || 0
+    ];
+
+    const res = await client.query(query, values);
+    client.release();
+
+    console.log('✅ Propiedad guardada con ID:', res.rows[0].id);
+    return res.rows[0].id;
+
+  } catch (error) {
+    console.error('❌ Error guardando propiedad:', error);
+    return null;
+  }
+};
+
+// Actualizar propiedad
+export const updateProperty = async (propertyId: string, property: Partial<Omit<Property, 'id' | 'companyId' | 'createdAt'>>): Promise<boolean> => {
+  if (!pool) {
+    console.error('❌ Pool de base de datos no inicializado.');
+    return false;
+  }
+
+  try {
+    const client = await pool.connect();
+    await ensureTablesExist(client);
+
+    const updates: string[] = [];
+    const values: any[] = [];
+    let paramIndex = 1;
+
+    if (property.title !== undefined) {
+      updates.push(`title = $${paramIndex++}`);
+      values.push(property.title);
+    }
+    if (property.description !== undefined) {
+      updates.push(`description = $${paramIndex++}`);
+      values.push(property.description);
+    }
+    if (property.type !== undefined) {
+      updates.push(`type = $${paramIndex++}`);
+      values.push(property.type);
+    }
+    if (property.price !== undefined) {
+      updates.push(`price = $${paramIndex++}`);
+      values.push(property.price);
+    }
+    if (property.zone !== undefined) {
+      updates.push(`zone = $${paramIndex++}`);
+      values.push(property.zone);
+    }
+    if (property.bedrooms !== undefined) {
+      updates.push(`bedrooms = $${paramIndex++}`);
+      values.push(property.bedrooms);
+    }
+    if (property.bathrooms !== undefined) {
+      updates.push(`bathrooms = $${paramIndex++}`);
+      values.push(property.bathrooms);
+    }
+    if (property.areaM2 !== undefined) {
+      updates.push(`area_m2 = $${paramIndex++}`);
+      values.push(property.areaM2);
+    }
+    if (property.images !== undefined) {
+      updates.push(`images = $${paramIndex++}`);
+      values.push(property.images);
+    }
+    if (property.address !== undefined) {
+      updates.push(`address = $${paramIndex++}`);
+      values.push(property.address);
+    }
+    if (property.features !== undefined) {
+      updates.push(`features = $${paramIndex++}`);
+      values.push(property.features);
+    }
+    if (property.status !== undefined) {
+      updates.push(`status = $${paramIndex++}`);
+      values.push(property.status);
+    }
+    if (property.highDemand !== undefined) {
+      updates.push(`high_demand = $${paramIndex++}`);
+      values.push(property.highDemand);
+    }
+    if (property.demandVisits !== undefined) {
+      updates.push(`demand_visits = $${paramIndex++}`);
+      values.push(property.demandVisits);
+    }
+    if (property.priceAdjusted !== undefined) {
+      updates.push(`price_adjusted = $${paramIndex++}`);
+      values.push(property.priceAdjusted);
+    }
+    if (property.priceAdjustmentPercent !== undefined) {
+      updates.push(`price_adjustment_percent = $${paramIndex++}`);
+      values.push(property.priceAdjustmentPercent);
+    }
+
+    if (updates.length === 0) {
+      client.release();
+      return true; // No hay nada que actualizar
+    }
+
+    values.push(propertyId);
+    const query = `UPDATE properties SET ${updates.join(', ')}, updated_at = NOW() WHERE id = $${paramIndex}`;
+
+    await client.query(query, values);
+    client.release();
+
+    console.log('✅ Propiedad actualizada');
+    return true;
+
+  } catch (error) {
+    console.error('❌ Error actualizando propiedad:', error);
+    return false;
+  }
+};
+
+// Eliminar propiedad
+export const deleteProperty = async (propertyId: string): Promise<boolean> => {
+  if (!pool) {
+    console.error('❌ Pool de base de datos no inicializado.');
+    return false;
+  }
+
+  try {
+    const client = await pool.connect();
+    await ensureTablesExist(client);
+
+    await client.query('DELETE FROM properties WHERE id = $1', [propertyId]);
+    client.release();
+
+    console.log('✅ Propiedad eliminada');
+    return true;
+
+  } catch (error) {
+    console.error('❌ Error eliminando propiedad:', error);
+    return false;
+  }
+};
+
+// Obtener propiedad por ID
+export const getPropertyById = async (propertyId: string): Promise<Property | null> => {
+  if (!pool) {
+    return null;
+  }
+
+  try {
+    const client = await pool.connect();
+    await ensureTablesExist(client);
+
+    const res = await client.query('SELECT * FROM properties WHERE id = $1', [propertyId]);
+
+    if (res.rows.length === 0) {
+      client.release();
+      return null;
+    }
+
+    const row = res.rows[0];
+    client.release();
+
+    return {
+      id: row.id,
+      companyId: row.company_id,
+      title: row.title,
+      description: row.description,
+      type: row.type as 'Venta' | 'Alquiler',
+      price: parseFloat(row.price || 0),
+      zone: row.zone,
+      bedrooms: row.bedrooms,
+      bathrooms: row.bathrooms ? parseFloat(row.bathrooms) : null,
+      areaM2: row.area_m2 ? parseFloat(row.area_m2) : null,
+      images: Array.isArray(row.images) ? row.images : [],
+      address: row.address,
+      features: Array.isArray(row.features) ? row.features : [],
+      status: row.status as 'Activa' | 'Inactiva' | 'Vendida' | 'Alquilada',
+      highDemand: row.high_demand || false,
+      demandVisits: row.demand_visits || 0,
+      priceAdjusted: row.price_adjusted || false,
+      priceAdjustmentPercent: row.price_adjustment_percent ? parseFloat(row.price_adjustment_percent) : 0,
+      createdAt: row.created_at ? new Date(row.created_at).toISOString() : undefined,
+      updatedAt: row.updated_at ? new Date(row.updated_at).toISOString() : undefined
+    };
+
+  } catch (error) {
+    console.error('❌ Error obteniendo propiedad:', error);
+    return null;
+  }
+};
+
+// ============================================
+// FUNCIONES PARA INTERESES EN PROPIEDADES
+// ============================================
+
+// Guardar/Actualizar interés de un prospecto en una propiedad
+export const savePropertyInterest = async (
+  prospectId: string,
+  propertyId: string,
+  interested: boolean = true
+): Promise<boolean> => {
+  if (!pool) {
+    console.error('❌ Pool de base de datos no inicializado.');
+    return false;
+  }
+
+  try {
+    const client = await pool.connect();
+    await ensureTablesExist(client);
+
+    // Usar INSERT ... ON CONFLICT para actualizar si ya existe
+    await client.query(`
+      INSERT INTO property_interests (prospect_id, property_id, interested)
+      VALUES ($1, $2, $3)
+      ON CONFLICT (prospect_id, property_id)
+      DO UPDATE SET interested = $3, created_at = NOW()
+    `, [prospectId, propertyId, interested]);
+
+    client.release();
+    console.log(`✅ Interés ${interested ? 'guardado' : 'removido'} para prospecto ${prospectId} en propiedad ${propertyId}`);
+    return true;
+
+  } catch (error) {
+    console.error('❌ Error guardando interés:', error);
+    return false;
+  }
+};
+
+// Obtener intereses de una empresa (propiedades con prospectos interesados)
+export const getPropertyInterestsByCompany = async (companyId: string): Promise<PropertyInterest[]> => {
+  if (!pool) {
+    return [];
+  }
+
+  try {
+    const client = await pool.connect();
+    await ensureTablesExist(client);
+
+    const res = await client.query(`
+      SELECT 
+        pi.*,
+        p.id as prospect_id_full,
+        p.full_name,
+        p.email,
+        p.phone,
+        p.monthly_income,
+        p.calculation_result,
+        prop.*
+      FROM property_interests pi
+      INNER JOIN prospects p ON pi.prospect_id = p.id
+      INNER JOIN properties prop ON pi.property_id = prop.id
+      WHERE prop.company_id = $1 AND pi.interested = true
+      ORDER BY pi.created_at DESC
+    `, [companyId]);
+
+    client.release();
+
+    return res.rows.map((row: any) => {
+      const prospect: Prospect = {
+        id: String(row.prospect_id_full),
+        name: row.full_name || '',
+        email: row.email || '',
+        phone: row.phone || '',
+        income: parseFloat(row.monthly_income || 0),
+        date: new Date().toISOString(),
+        dateDisplay: '',
+        status: 'Nuevo',
+        result: safeParseJSON(row.calculation_result) || {
+          maxPropertyPrice: 0,
+          monthlyPayment: 0,
+          downPaymentPercent: 0,
+          downPaymentAmount: 0
+        },
+        zone: []
+      };
+
+      const property: Property = {
+        id: row.property_id,
+        companyId: row.company_id,
+        title: row.title,
+        description: row.description,
+        type: row.type as 'Venta' | 'Alquiler',
+        price: parseFloat(row.price || 0),
+        zone: row.zone,
+        bedrooms: row.bedrooms,
+        bathrooms: row.bathrooms ? parseFloat(row.bathrooms) : null,
+        areaM2: row.area_m2 ? parseFloat(row.area_m2) : null,
+        images: Array.isArray(row.images) ? row.images : [],
+        address: row.address,
+        features: Array.isArray(row.features) ? row.features : [],
+        status: row.status as 'Activa' | 'Inactiva' | 'Vendida' | 'Alquilada',
+        highDemand: row.high_demand || false,
+        demandVisits: row.demand_visits || 0,
+        priceAdjusted: row.price_adjusted || false,
+        priceAdjustmentPercent: row.price_adjustment_percent ? parseFloat(row.price_adjustment_percent) : 0,
+        createdAt: row.created_at ? new Date(row.created_at).toISOString() : undefined,
+        updatedAt: row.updated_at ? new Date(row.updated_at).toISOString() : undefined
+      };
+
+      return {
+        id: row.id,
+        prospectId: String(row.prospect_id),
+        propertyId: row.property_id,
+        interested: row.interested,
+        createdAt: row.created_at ? new Date(row.created_at).toISOString() : undefined,
+        prospect,
+        property
+      };
+    });
+
+  } catch (error) {
+    console.error('❌ Error obteniendo intereses:', error);
+    return [];
   }
 };
