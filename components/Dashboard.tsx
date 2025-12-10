@@ -777,8 +777,8 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableZones, onUpdateZo
               </button>
             </div>
 
-            {/* Table */}
-            <div className="overflow-x-auto flex-1">
+            {/* Table / Cards */}
+            <div className="flex-1">
               {isLoading ? (
                 <div className="flex justify-center items-center h-full text-gray-400">
                   <div className="flex flex-col items-center gap-2">
@@ -791,54 +791,101 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableZones, onUpdateZo
                    <p>Aún no hay prospectos registrados.</p>
                 </div>
               ) : (
-                <div className="overflow-x-auto -mx-4 sm:mx-0">
-                  <table className="w-full text-left border-collapse min-w-[600px]">
-                    <thead>
-                      <tr className="bg-gray-50/50 text-gray-400 text-xs uppercase tracking-wider">
-                        <th className="px-4 sm:px-8 py-4 sm:py-6 font-semibold rounded-tl-[2rem]">Prospecto</th>
-                        <th className="px-3 sm:px-6 py-4 sm:py-6 font-semibold">Ingreso</th>
-                        <th className="px-3 sm:px-6 py-4 sm:py-6 font-semibold">Capacidad</th>
-                        <th className="px-3 sm:px-6 py-4 sm:py-6 font-semibold hidden md:table-cell">Zona</th>
-                        <th className="px-3 sm:px-6 py-4 sm:py-6 font-semibold hidden sm:table-cell">Fecha</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-gray-50">
-                      {prospects.map((prospect) => (
-                        <tr 
-                          key={prospect.id} 
-                          onClick={() => setSelectedProspect(prospect)}
-                          className="hover:bg-indigo-50/30 transition-colors group cursor-pointer"
-                        >
-                          <td className="px-4 sm:px-8 py-4 sm:py-5">
-                            <div className="flex flex-col">
-                              <span className="font-bold text-gray-900 text-sm">{prospect.name}</span>
-                              <span className="text-xs text-gray-400 hidden sm:inline">{prospect.email}</span>
-                            </div>
-                          </td>
-                          <td className="px-3 sm:px-6 py-4 sm:py-5">
-                            <span className="font-medium text-gray-700 text-sm">{formatCurrency(prospect.income)}</span>
-                          </td>
-                          <td className="px-3 sm:px-6 py-4 sm:py-5">
-                            <span className="font-bold text-indigo-600 bg-indigo-50 px-2 sm:px-3 py-1 rounded-lg text-xs whitespace-nowrap">
-                              {formatCurrency(prospect.result?.maxPropertyPrice || 0)}
-                            </span>
-                          </td>
-                          <td className="px-3 sm:px-6 py-4 sm:py-5 hidden md:table-cell">
+                <>
+                  {/* Mobile Cards View */}
+                  <div className="block md:hidden space-y-4 p-4">
+                    {prospects.map((prospect) => (
+                      <div
+                        key={prospect.id}
+                        onClick={() => setSelectedProspect(prospect)}
+                        className="bg-white border border-gray-200 rounded-2xl p-4 hover:border-indigo-300 hover:shadow-md transition-all cursor-pointer"
+                      >
+                        <div className="flex items-start justify-between mb-3">
+                          <div className="flex-1">
+                            <h3 className="font-bold text-gray-900 text-base mb-1">{prospect.name}</h3>
+                            <p className="text-xs text-gray-400">{prospect.email}</p>
+                          </div>
+                          <span className="font-bold text-indigo-600 bg-indigo-50 px-3 py-1 rounded-lg text-xs whitespace-nowrap">
+                            {formatCurrency(prospect.result?.maxPropertyPrice || 0)}
+                          </span>
+                        </div>
+                        
+                        <div className="grid grid-cols-2 gap-3 pt-3 border-t border-gray-100">
+                          <div>
+                            <p className="text-xs text-gray-500 mb-1">Ingreso Mensual</p>
+                            <p className="font-semibold text-gray-900 text-sm">{formatCurrency(prospect.income)}</p>
+                          </div>
+                          <div>
+                            <p className="text-xs text-gray-500 mb-1">Fecha</p>
+                            <p className="font-semibold text-gray-900 text-sm">{prospect.dateDisplay || new Date(prospect.date).toLocaleDateString('es-PA')}</p>
+                          </div>
+                        </div>
+                        
+                        {prospect.zone && (
+                          <div className="mt-3 pt-3 border-t border-gray-100">
                             <div className="flex items-center gap-2">
                               <MapPin size={14} className="text-gray-400 shrink-0" />
-                              <span className="text-sm text-gray-600 font-medium truncate max-w-[150px]">
-                                {Array.isArray(prospect.zone) ? prospect.zone.join(', ') : (typeof prospect.zone === 'string' ? prospect.zone : 'Sin zona')}
-                              </span>
+                              <p className="text-xs text-gray-500 mb-1">Zona de Interés</p>
                             </div>
-                          </td>
-                          <td className="px-3 sm:px-6 py-4 sm:py-5 hidden sm:table-cell">
-                            <span className="text-sm text-gray-500 whitespace-nowrap">{prospect.dateDisplay || new Date(prospect.date).toLocaleDateString('es-PA')}</span>
-                          </td>
+                            <p className="text-sm text-gray-700 font-medium mt-1">
+                              {Array.isArray(prospect.zone) ? prospect.zone.join(', ') : (typeof prospect.zone === 'string' ? prospect.zone : 'Sin zona')}
+                            </p>
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Desktop Table View */}
+                  <div className="hidden md:block overflow-x-auto -mx-4 sm:mx-0">
+                    <table className="w-full text-left border-collapse min-w-[600px]">
+                      <thead>
+                        <tr className="bg-gray-50/50 text-gray-400 text-xs uppercase tracking-wider">
+                          <th className="px-4 sm:px-8 py-4 sm:py-6 font-semibold rounded-tl-[2rem]">Prospecto</th>
+                          <th className="px-3 sm:px-6 py-4 sm:py-6 font-semibold">Ingreso</th>
+                          <th className="px-3 sm:px-6 py-4 sm:py-6 font-semibold">Capacidad</th>
+                          <th className="px-3 sm:px-6 py-4 sm:py-6 font-semibold">Zona</th>
+                          <th className="px-3 sm:px-6 py-4 sm:py-6 font-semibold">Fecha</th>
                         </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
+                      </thead>
+                      <tbody className="divide-y divide-gray-50">
+                        {prospects.map((prospect) => (
+                          <tr 
+                            key={prospect.id} 
+                            onClick={() => setSelectedProspect(prospect)}
+                            className="hover:bg-indigo-50/30 transition-colors group cursor-pointer"
+                          >
+                            <td className="px-4 sm:px-8 py-4 sm:py-5">
+                              <div className="flex flex-col">
+                                <span className="font-bold text-gray-900 text-sm">{prospect.name}</span>
+                                <span className="text-xs text-gray-400">{prospect.email}</span>
+                              </div>
+                            </td>
+                            <td className="px-3 sm:px-6 py-4 sm:py-5">
+                              <span className="font-medium text-gray-700 text-sm">{formatCurrency(prospect.income)}</span>
+                            </td>
+                            <td className="px-3 sm:px-6 py-4 sm:py-5">
+                              <span className="font-bold text-indigo-600 bg-indigo-50 px-2 sm:px-3 py-1 rounded-lg text-xs whitespace-nowrap">
+                                {formatCurrency(prospect.result?.maxPropertyPrice || 0)}
+                              </span>
+                            </td>
+                            <td className="px-3 sm:px-6 py-4 sm:py-5">
+                              <div className="flex items-center gap-2">
+                                <MapPin size={14} className="text-gray-400 shrink-0" />
+                                <span className="text-sm text-gray-600 font-medium truncate max-w-[150px]">
+                                  {Array.isArray(prospect.zone) ? prospect.zone.join(', ') : (typeof prospect.zone === 'string' ? prospect.zone : 'Sin zona')}
+                                </span>
+                              </div>
+                            </td>
+                            <td className="px-3 sm:px-6 py-4 sm:py-5">
+                              <span className="text-sm text-gray-500 whitespace-nowrap">{prospect.dateDisplay || new Date(prospect.date).toLocaleDateString('es-PA')}</span>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </>
               )}
             </div>
           </div>
