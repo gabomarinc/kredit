@@ -204,9 +204,7 @@ export const ProspectFlow: React.FC<ProspectFlowProps> = ({ availableZones, comp
                       }}
                     />
                   </div>
-                ) : (
-                  console.log('ℹ️ No hay logo para mostrar')
-                )}
+                ) : null}
                 <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-3 tracking-tight">Calcula tu hogar ideal</h1>
                 <p className="text-gray-500 text-lg font-light">Descubre qué propiedad puedes adquirir según tu capacidad de pago.</p>
               </div>
