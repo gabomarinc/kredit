@@ -414,3 +414,38 @@ export const getCompanyById = async (companyId: string): Promise<Company | null>
     return null;
   }
 };
+
+// Actualizar zonas de una empresa
+export const updateCompanyZones = async (companyId: string, zones: string[]): Promise<boolean> => {
+  if (!pool) {
+    console.error('❌ Pool de base de datos no inicializado.');
+    return false;
+  }
+
+  try {
+    console.log('🔄 Actualizando zonas de la empresa...', { companyId, zones });
+    const client = await pool.connect();
+    
+    // Eliminar todas las zonas actuales
+    await client.query('DELETE FROM company_zones WHERE company_id = $1', [companyId]);
+    
+    // Insertar las nuevas zonas
+    if (zones.length > 0) {
+      for (const zoneName of zones) {
+        await client.query(`
+          INSERT INTO company_zones (company_id, zone_name)
+          VALUES ($1, $2)
+          ON CONFLICT (company_id, zone_name) DO NOTHING
+        `, [companyId, zoneName]);
+      }
+    }
+    
+    client.release();
+    console.log(`✅ ${zones.length} zonas actualizadas en la base de datos`);
+    return true;
+
+  } catch (error) {
+    console.error('❌ Error actualizando zonas:', error);
+    return false;
+  }
+};
