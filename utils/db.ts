@@ -150,7 +150,7 @@ const ensureTablesExist = async (client: any) => {
     await client.query(`
       CREATE TABLE IF NOT EXISTS property_interests (
         id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-        prospect_id INTEGER REFERENCES prospects(id) ON DELETE CASCADE NOT NULL,
+        prospect_id UUID REFERENCES prospects(id) ON DELETE CASCADE NOT NULL,
         property_id UUID REFERENCES properties(id) ON DELETE CASCADE NOT NULL,
         interested BOOLEAN DEFAULT true,
         created_at TIMESTAMP DEFAULT NOW(),
