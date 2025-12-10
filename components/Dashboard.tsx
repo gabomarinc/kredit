@@ -486,8 +486,8 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableZones, onUpdateZo
                 </div>
                 
                 <div className="p-6 bg-gray-50/50">
-                  <div className="bg-gray-900 rounded-xl p-4 mb-4 relative group">
-                    <code className="text-xs text-gray-300 font-mono break-all whitespace-pre-wrap">
+                  <div className="bg-gray-900 rounded-xl p-4 mb-4 relative">
+                    <code className="text-xs text-gray-300 font-mono whitespace-pre-wrap block overflow-visible">
                       {embedCode}
                     </code>
                     <div className="absolute right-2 top-2">
