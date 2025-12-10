@@ -291,7 +291,12 @@ export const getProspectsFromDB = async (): Promise<Prospect[]> => {
         monthlyPayment: 0,
         downPaymentPercent: 0,
         downPaymentAmount: 0
-      }
+      },
+      // Archivos en Base64
+      idFileBase64: row.id_file_base64 || null,
+      fichaFileBase64: row.ficha_file_base64 || null,
+      talonarioFileBase64: row.talonario_file_base64 || null,
+      signedAcpFileBase64: row.signed_acp_file_base64 || null
     }));
 
   } catch (error) {
