@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Lumina Real Estate</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+  <!-- Polyfills for Node.js built-ins required by Postgres driver -->
+  <script type="module">
+    import { Buffer } from "https://esm.sh/buffer@6.0.3";
+    window.Buffer = Buffer;
+    window.process = { env: { NODE_ENV: "production" } };
+  </script>
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+          },
+          colors: {
+            pastel: {
+              cream: '#FDFBF7',
+              sand: '#E6E1D6',
+              sage: '#D3E0DC',
+              blush: '#F7E6E6',
+              blue: '#E3F1F6',
+              gold: '#C5A065',
+              dark: '#1A202C',
+              lavender: '#E0E7FF',
+            }
+          },
+          animation: {
+            'float': 'float 6s ease-in-out infinite',
+            'fade-in-up': 'fadeInUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards',
+          },
+          keyframes: {
+            float: {
+              '0%, 100%': { transform: 'translateY(0)' },
+              '50%': { transform: 'translateY(-10px)' },
+            },
+            fadeInUp: {
+              '0%': { opacity: 0, transform: 'translateY(20px)' },
+              '100%': { opacity: 1, transform: 'translateY(0)' },
+            }
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    body {
+      background: radial-gradient(circle at 0% 0%, #F3E8FF 0%, transparent 50%), 
+                  radial-gradient(circle at 100% 0%, #E0E7FF 0%, transparent 50%), 
+                  radial-gradient(circle at 100% 100%, #FDFBF7 0%, transparent 50%), 
+                  radial-gradient(circle at 0% 100%, #E3F1F6 0%, transparent 50%);
+      background-color: #F8FAFC;
+      background-attachment: fixed;
+      color: #2C3E50;
+      min-height: 100vh;
+    }
+    button, a, input, select, .card-hover {
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+  </style>
+
+ <script type="importmap">
+{
+  "imports": {
+    "react": "https://esm.sh/react@18.2.0",
+    "react-dom/client": "https://esm.sh/react-dom@18.2.0/client?deps=react@18.2.0",
+    "react-dom": "https://esm.sh/react-dom@18.2.0?deps=react@18.2.0",
+    "recharts": "https://esm.sh/recharts@2.12.2?external=react,react-dom&deps=react@18.2.0",
+    "lucide-react": "https://esm.sh/lucide-react@0.344.0?external=react&deps=react@18.2.0",
+    "@neondatabase/serverless": "https://esm.sh/@neondatabase/serverless@0.9.4"
+  }
+}
+</script>
+
+<link rel="stylesheet" href="/index.css">
+</head>
+<body>
+  <div id="root"></div>
+<script type="module" src="/index.tsx"></script>
+</body>
+</html>
