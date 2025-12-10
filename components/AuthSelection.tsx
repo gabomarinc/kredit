@@ -19,7 +19,7 @@ export const AuthSelection: React.FC<AuthSelectionProps> = ({ onLogin, onRegiste
         <div className="relative z-10 flex flex-col items-center text-center mb-12">
           {/* Logo */}
           <div className="w-20 h-20 bg-gradient-to-br from-indigo-500 to-indigo-600 rounded-3xl flex items-center justify-center mb-6 shadow-xl shadow-indigo-200 transform rotate-3 hover:rotate-6 transition-transform duration-500">
-            <span className="text-3xl font-bold text-white tracking-tighter">L</span>
+            <span className="text-3xl font-bold text-white tracking-tighter">ê</span>
           </div>
 
           <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-3 tracking-tight">Bienvenido a Krêdit</h1>

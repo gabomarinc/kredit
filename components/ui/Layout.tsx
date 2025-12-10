@@ -19,7 +19,7 @@ export const Layout: React.FC<LayoutProps> = ({ children, isAdmin, onToggleRole,
           {/* Logo Area */}
           <div className="flex items-center gap-3 backdrop-blur-md bg-white/70 p-2 pr-4 rounded-2xl border border-white/50 shadow-sm transition-all hover:shadow-md cursor-default">
             <div className={`w-9 h-9 rounded-xl flex items-center justify-center text-white font-bold shadow-sm transition-colors ${isAdmin ? 'bg-indigo-900' : 'bg-indigo-500'}`}>
-              {companyName.charAt(0)}
+              ê
             </div>
             <div className="flex flex-col">
               <span className="font-bold text-sm tracking-tight text-gray-900 leading-none">{companyName}</span>
