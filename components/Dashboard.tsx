@@ -1310,6 +1310,45 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableZones, onUpdateZo
           </div>
         </div>
       )}
+
+      {/* Document Viewer Modal */}
+      {selectedDocument && (
+        <div className="fixed inset-0 z-[200] flex items-center justify-center p-4">
+          <div 
+            className="absolute inset-0 bg-black/80 backdrop-blur-sm transition-opacity"
+            onClick={() => setSelectedDocument(null)}
+          ></div>
+          <div className="bg-white rounded-[2rem] w-full max-w-6xl max-h-[90vh] overflow-hidden shadow-2xl relative z-10 flex flex-col">
+            {/* Header */}
+            <div className="bg-gray-900 text-white p-6 flex items-center justify-between">
+              <h3 className="text-lg font-bold">{selectedDocument.name}</h3>
+              <button 
+                onClick={() => setSelectedDocument(null)}
+                className="w-10 h-10 rounded-full bg-white/20 hover:bg-white/30 flex items-center justify-center transition-colors"
+              >
+                <X size={20} className="text-white" />
+              </button>
+            </div>
+
+            {/* Content */}
+            <div className="flex-1 overflow-auto p-8 flex items-center justify-center bg-gray-50">
+              {selectedDocument.type === 'image' ? (
+                <img 
+                  src={selectedDocument.url} 
+                  alt={selectedDocument.name}
+                  className="max-w-full max-h-[70vh] object-contain rounded-lg shadow-lg"
+                />
+              ) : (
+                <iframe 
+                  src={selectedDocument.url}
+                  className="w-full h-[70vh] rounded-lg border border-gray-200 shadow-lg bg-white"
+                  title={selectedDocument.name}
+                />
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 };
