@@ -84,24 +84,42 @@ export const ProspectFlow: React.FC<ProspectFlowProps> = ({ availableZones, comp
       const urlParams = new URLSearchParams(window.location.search);
       const companyIdFromUrl = urlParams.get('company_id');
       
+      console.log('🔍 Buscando company_id:', {
+        fromUrl: companyIdFromUrl,
+        fromLocalStorage: localStorage.getItem('companyId'),
+        isEmbed
+      });
+      
       // O usar el de localStorage (si está en modo embed desde el mismo dominio)
       const companyId = companyIdFromUrl || localStorage.getItem('companyId');
       
       if (companyId) {
+        console.log('🔄 Cargando datos de empresa con ID:', companyId);
         try {
           const company = await getCompanyById(companyId);
-          if (company && company.logoUrl) {
+          console.log('📋 Datos de empresa obtenidos:', {
+            hasCompany: !!company,
+            hasLogo: !!company?.logoUrl,
+            logoUrlType: company?.logoUrl ? (company.logoUrl.startsWith('data:') ? 'base64' : company.logoUrl.startsWith('blob:') ? 'blob' : 'url') : 'none',
+            logoUrlPreview: company?.logoUrl ? company.logoUrl.substring(0, 80) + '...' : 'none'
+          });
+          
+          if (company && company.logoUrl && company.logoUrl.trim() !== '' && company.logoUrl !== 'null') {
             setCompanyLogo(company.logoUrl);
-            console.log('✅ Logo de empresa cargado');
+            console.log('✅ Logo de empresa cargado y establecido');
+          } else {
+            console.warn('⚠️ Empresa encontrada pero sin logo válido');
           }
         } catch (error) {
-          console.warn('⚠️ No se pudo cargar el logo de la empresa:', error);
+          console.error('❌ Error cargando logo de la empresa:', error);
         }
+      } else {
+        console.warn('⚠️ No se encontró company_id en URL ni localStorage');
       }
     };
     
     loadCompanyLogo();
-  }, []);
+  }, [isEmbed]);
 
   // Smooth scroll to top on step change
   useEffect(() => {
@@ -167,18 +185,27 @@ export const ProspectFlow: React.FC<ProspectFlowProps> = ({ availableZones, comp
         {step === 1 && (
             <div className="animate-fade-in-up">
               <div className="text-center mb-10">
-                {companyLogo && (
+                {companyLogo ? (
                   <div className="mb-6 flex justify-center">
                     <img 
                       src={companyLogo} 
                       alt={`Logo de ${companyName}`}
-                      className="h-16 w-auto object-contain"
-                      onError={() => {
-                        console.warn('⚠️ Error cargando logo, ocultando');
+                      className="h-16 w-auto object-contain max-w-xs"
+                      onLoad={() => {
+                        console.log('✅ Logo cargado y mostrado exitosamente');
+                      }}
+                      onError={(e) => {
+                        console.error('❌ Error cargando logo:', {
+                          src: companyLogo.substring(0, 80),
+                          srcType: companyLogo.startsWith('data:') ? 'base64' : companyLogo.startsWith('blob:') ? 'blob' : 'url',
+                          error: e
+                        });
                         setCompanyLogo(null);
                       }}
                     />
                   </div>
+                ) : (
+                  console.log('ℹ️ No hay logo para mostrar')
                 )}
                 <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-3 tracking-tight">Calcula tu hogar ideal</h1>
                 <p className="text-gray-500 text-lg font-light">Descubre qué propiedad puedes adquirir según tu capacidad de pago.</p>
