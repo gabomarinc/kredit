@@ -1206,3 +1206,52 @@ export const getPropertyInterestsByCompany = async (companyId: string): Promise<
     return [];
   }
 };
+
+// Obtener propiedades en las que un prospecto está interesado
+export const getPropertyInterestsByProspect = async (prospectId: string): Promise<Property[]> => {
+  if (!pool) {
+    return [];
+  }
+
+  try {
+    const client = await pool.connect();
+    await ensureTablesExist(client);
+
+    const res = await client.query(`
+      SELECT prop.*
+      FROM property_interests pi
+      INNER JOIN properties prop ON pi.property_id = prop.id
+      WHERE pi.prospect_id = $1 AND pi.interested = true
+      ORDER BY pi.created_at DESC
+    `, [prospectId]);
+
+    client.release();
+
+    return res.rows.map((row: any) => ({
+      id: row.id,
+      companyId: row.company_id,
+      title: row.title,
+      description: row.description,
+      type: row.type as 'Venta' | 'Alquiler',
+      price: parseFloat(row.price || 0),
+      zone: row.zone,
+      bedrooms: row.bedrooms,
+      bathrooms: row.bathrooms ? parseFloat(row.bathrooms) : null,
+      areaM2: row.area_m2 ? parseFloat(row.area_m2) : null,
+      images: Array.isArray(row.images) ? row.images : [],
+      address: row.address,
+      features: Array.isArray(row.features) ? row.features : [],
+      status: row.status as 'Activa' | 'Inactiva' | 'Vendida' | 'Alquilada',
+      highDemand: row.high_demand || false,
+      demandVisits: row.demand_visits || 0,
+      priceAdjusted: row.price_adjusted || false,
+      priceAdjustmentPercent: row.price_adjustment_percent ? parseFloat(row.price_adjustment_percent) : 0,
+      createdAt: row.created_at ? new Date(row.created_at).toISOString() : undefined,
+      updatedAt: row.updated_at ? new Date(row.updated_at).toISOString() : undefined
+    }));
+
+  } catch (error) {
+    console.error('❌ Error obteniendo propiedades del prospecto:', error);
+    return [];
+  }
+};

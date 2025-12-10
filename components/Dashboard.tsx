@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { 
-  Users, DollarSign, LayoutDashboard, FileText, Download, Filter, Calendar, CheckCircle2, X, ChevronDown, MapPin, Briefcase, Settings, Plus, Trash2, Building, Image as ImageIcon, Shield, Save, Code, Copy, ExternalLink, Loader2, User, Target, MessageCircle, ShieldCheck, TrendingUp, Eye, FileText as FileTextIcon, BedDouble, Bath
+  Users, DollarSign, LayoutDashboard, FileText, Download, Filter, Calendar, CheckCircle2, X, ChevronDown, MapPin, Briefcase, Settings, Plus, Trash2, Building, Image as ImageIcon, Shield, Save, Code, Copy, ExternalLink, Loader2, User, Target, MessageCircle, ShieldCheck, TrendingUp, Eye, FileText as FileTextIcon, BedDouble, Bath, Heart
 } from 'lucide-react';
-import { getProspectsFromDB, getCompanyById, updateCompanyZones, updateCompanyLogo, Company, getPropertiesByCompany, saveProperty, updateProperty, deleteProperty, getPropertyInterestsByCompany, updateCompanyPlan } from '../utils/db';
+import { getProspectsFromDB, getCompanyById, updateCompanyZones, updateCompanyLogo, Company, getPropertiesByCompany, saveProperty, updateProperty, deleteProperty, getPropertyInterestsByCompany, updateCompanyPlan, getPropertyInterestsByProspect } from '../utils/db';
 import { Prospect, Property, PropertyInterest, PlanType } from '../types';
 import { formatCurrency } from '../utils/calculator';
 import * as XLSX from 'xlsx';
@@ -42,6 +42,8 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableZones, onUpdateZo
   const [isLoadingProperties, setIsLoadingProperties] = useState(false);
   const [selectedPropertyForEdit, setSelectedPropertyForEdit] = useState<Property | null>(null);
   const [showPropertyModal, setShowPropertyModal] = useState(false);
+  const [prospectInterestedProperties, setProspectInterestedProperties] = useState<Property[]>([]);
+  const [isLoadingProspectProperties, setIsLoadingProspectProperties] = useState(false);
 
   // Settings State - Cargar desde DB
   const [adminName, setAdminName] = useState('Admin Gerente');
@@ -115,6 +117,26 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableZones, onUpdateZo
     };
     loadProperties();
   }, [activeTab]);
+
+  // Load properties for selected prospect
+  useEffect(() => {
+    const loadProspectProperties = async () => {
+      if (selectedProspect) {
+        setIsLoadingProspectProperties(true);
+        try {
+          const props = await getPropertyInterestsByProspect(selectedProspect.id);
+          setProspectInterestedProperties(props);
+        } catch (e) {
+          console.error("Error loading prospect properties:", e);
+        } finally {
+          setIsLoadingProspectProperties(false);
+        }
+      } else {
+        setProspectInterestedProperties([]);
+      }
+    };
+    loadProspectProperties();
+  }, [selectedProspect]);
 
   // Calculate KPIs based on REAL prospects
   const totalForms = prospects.length;
@@ -1678,6 +1700,86 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableZones, onUpdateZo
                   )}
                 </div>
               </div>
+
+              {/* Interés en Propiedades Section */}
+              {prospectInterestedProperties.length > 0 && (
+                <div className="mb-8">
+                  <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
+                    <Heart size={20} className="text-pink-500" />
+                    Interés en Propiedades
+                  </h3>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    {prospectInterestedProperties.map((property) => (
+                      <div
+                        key={property.id}
+                        className="bg-white border border-gray-200 rounded-xl overflow-hidden hover:shadow-lg transition-shadow cursor-pointer group"
+                      >
+                        {/* Imagen */}
+                        <div className="relative h-40 bg-gray-100 overflow-hidden">
+                          {property.images && property.images.length > 0 ? (
+                            <img
+                              src={property.images[0]}
+                              alt={property.title}
+                              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                            />
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-indigo-50 to-purple-50">
+                              <Building size={32} className="text-indigo-300" />
+                            </div>
+                          )}
+                          <div className={`absolute top-3 left-3 px-3 py-1 rounded-lg text-xs font-bold text-white ${
+                            property.type === 'Venta' ? 'bg-purple-600' : 'bg-green-600'
+                          }`}>
+                            {property.type}
+                          </div>
+                        </div>
+
+                        {/* Contenido */}
+                        <div className="p-4">
+                          <h4 className="font-bold text-gray-900 mb-2 text-sm line-clamp-1">{property.title}</h4>
+                          <div className="flex items-center gap-1.5 text-gray-500 text-xs mb-3">
+                            <MapPin size={12} />
+                            <span className="truncate">{property.zone}</span>
+                          </div>
+                          
+                          <div className="flex items-center gap-3 text-xs text-gray-600 mb-3">
+                            {property.bedrooms && (
+                              <div className="flex items-center gap-1">
+                                <BedDouble size={14} className="text-gray-400" />
+                                <span>{property.bedrooms}</span>
+                              </div>
+                            )}
+                            {property.bathrooms && (
+                              <div className="flex items-center gap-1">
+                                <Bath size={14} className="text-gray-400" />
+                                <span>{property.bathrooms}</span>
+                              </div>
+                            )}
+                            {property.areaM2 && (
+                              <span className="text-gray-400">
+                                {property.areaM2}m²
+                              </span>
+                            )}
+                          </div>
+
+                          <div className="pt-3 border-t border-gray-100">
+                            <div className="text-xs text-gray-400 uppercase font-semibold mb-1">Precio</div>
+                            <div className="text-lg font-bold text-indigo-600">{formatCurrency(property.price)}</div>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Loading state for properties */}
+              {isLoadingProspectProperties && (
+                <div className="mb-8 text-center py-8">
+                  <div className="inline-block animate-spin rounded-full h-6 w-6 border-b-2 border-indigo-600"></div>
+                  <p className="text-gray-500 mt-3 text-sm">Cargando propiedades de interés...</p>
+                </div>
+              )}
 
             </div>
           </div>
