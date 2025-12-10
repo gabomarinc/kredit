@@ -518,3 +518,31 @@ export const updateCompanyZones = async (companyId: string, zones: string[]): Pr
     return false;
   }
 };
+
+// Actualizar logo de una empresa
+export const updateCompanyLogo = async (companyId: string, logoBase64: string): Promise<boolean> => {
+  if (!pool) {
+    console.error('❌ Pool de base de datos no inicializado.');
+    return false;
+  }
+
+  try {
+    console.log('🔄 Actualizando logo de la empresa...', { companyId });
+    const client = await pool.connect();
+    
+    await ensureTablesExist(client);
+
+    await client.query(
+      'UPDATE companies SET logo_url = $1 WHERE id = $2',
+      [logoBase64, companyId]
+    );
+    
+    client.release();
+    console.log('✅ Logo actualizado exitosamente en la base de datos');
+    return true;
+
+  } catch (error) {
+    console.error('❌ Error actualizando logo:', error);
+    return false;
+  }
+};

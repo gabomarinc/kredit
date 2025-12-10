@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { 
   Users, DollarSign, LayoutDashboard, FileText, Download, Filter, Calendar, CheckCircle2, X, ChevronDown, MapPin, Briefcase, Settings, Plus, Trash2, Building, Image as ImageIcon, Shield, Save, Code, Copy, ExternalLink, Loader2
 } from 'lucide-react';
-import { getProspectsFromDB, getCompanyById, updateCompanyZones, Company } from '../utils/db';
+import { getProspectsFromDB, getCompanyById, updateCompanyZones, updateCompanyLogo, Company } from '../utils/db';
 import { Prospect } from '../types';
 import { formatCurrency } from '../utils/calculator';
 
@@ -30,6 +30,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableZones, onUpdateZo
   const [adminEmail, setAdminEmail] = useState('gerencia@kredit.com');
   const [companyData, setCompanyData] = useState<Company | null>(null);
   const [logoError, setLogoError] = useState(false);
+  const [isUpdatingLogo, setIsUpdatingLogo] = useState(false);
 
   // Load Data from Neon
   useEffect(() => {
@@ -336,25 +337,99 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableZones, onUpdateZo
 
                 <div className="p-8 grid md:grid-cols-3 gap-8 items-center">
                    <div className="text-center md:text-left">
-                     {companyData?.logoUrl && !logoError ? (
-                       <div className="w-32 h-32 rounded-3xl border-2 border-gray-200 overflow-hidden bg-white flex items-center justify-center mx-auto md:mx-0 shadow-sm">
-                         <img 
-                           src={companyData.logoUrl.startsWith('data:') ? companyData.logoUrl : companyData.logoUrl} 
-                           alt="Logo de la empresa" 
-                           className="w-full h-full object-contain p-2"
-                           onError={() => {
-                             // Si la imagen falla al cargar, mostrar placeholder
-                             console.warn('⚠️ Error cargando logo, mostrando placeholder');
-                             setLogoError(true);
-                           }}
-                         />
-                       </div>
-                     ) : (
-                       <div className="w-32 h-32 rounded-3xl border-2 border-dashed border-gray-200 flex flex-col items-center justify-center text-gray-400 hover:border-indigo-300 hover:bg-indigo-50/30 transition-all cursor-pointer mx-auto md:mx-0">
-                         <ImageIcon size={32} strokeWidth={1} />
-                         <span className="text-xs font-semibold mt-2">Cambiar Logo</span>
-                       </div>
-                     )}
+                     <label className="cursor-pointer">
+                       {companyData?.logoUrl && !logoError ? (
+                         <div className="w-32 h-32 rounded-3xl border-2 border-gray-200 overflow-hidden bg-white flex items-center justify-center mx-auto md:mx-0 shadow-sm relative group">
+                           <img 
+                             src={companyData.logoUrl.startsWith('data:') ? companyData.logoUrl : companyData.logoUrl} 
+                             alt="Logo de la empresa" 
+                             className="w-full h-full object-contain p-2"
+                             onError={() => {
+                               // Si la imagen falla al cargar, mostrar placeholder
+                               console.warn('⚠️ Error cargando logo, mostrando placeholder');
+                               setLogoError(true);
+                             }}
+                           />
+                           {isUpdatingLogo ? (
+                             <div className="absolute inset-0 bg-white/90 flex items-center justify-center rounded-3xl">
+                               <Loader2 className="animate-spin text-indigo-600" size={24} />
+                             </div>
+                           ) : (
+                             <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center rounded-3xl">
+                               <span className="text-white text-xs font-semibold">Cambiar</span>
+                             </div>
+                           )}
+                         </div>
+                       ) : (
+                         <div className="w-32 h-32 rounded-3xl border-2 border-dashed border-gray-200 flex flex-col items-center justify-center text-gray-400 hover:border-indigo-300 hover:bg-indigo-50/30 transition-all mx-auto md:mx-0">
+                           {isUpdatingLogo ? (
+                             <Loader2 className="animate-spin text-indigo-600" size={32} />
+                           ) : (
+                             <>
+                               <ImageIcon size={32} strokeWidth={1} />
+                               <span className="text-xs font-semibold mt-2">Cambiar Logo</span>
+                             </>
+                           )}
+                         </div>
+                       )}
+                       <input 
+                         type="file" 
+                         accept="image/*"
+                         className="hidden"
+                         onChange={async (e) => {
+                           const file = e.target.files?.[0];
+                           if (!file) return;
+
+                           // Validar tamaño (máx 2MB)
+                           if (file.size > 2 * 1024 * 1024) {
+                             alert('El logo debe ser menor a 2MB');
+                             return;
+                           }
+
+                           setIsUpdatingLogo(true);
+                           setLogoError(false);
+
+                           try {
+                             // Convertir a base64
+                             const reader = new FileReader();
+                             reader.readAsDataURL(file);
+                             reader.onload = async () => {
+                               const base64 = reader.result as string;
+                               
+                               const companyId = localStorage.getItem('companyId');
+                               if (!companyId) {
+                                 alert('Error: No se encontró el ID de la empresa');
+                                 setIsUpdatingLogo(false);
+                                 return;
+                               }
+
+                               // Actualizar en la base de datos
+                               const success = await updateCompanyLogo(companyId, base64);
+                               
+                               if (success) {
+                                 // Actualizar el estado local
+                                 if (companyData) {
+                                   setCompanyData({ ...companyData, logoUrl: base64 });
+                                 }
+                                 console.log('✅ Logo actualizado exitosamente');
+                               } else {
+                                 alert('Error al actualizar el logo. Por favor intenta de nuevo.');
+                               }
+                               
+                               setIsUpdatingLogo(false);
+                             };
+                             reader.onerror = () => {
+                               alert('Error al leer el archivo');
+                               setIsUpdatingLogo(false);
+                             };
+                           } catch (error) {
+                             console.error('Error actualizando logo:', error);
+                             alert('Error al actualizar el logo');
+                             setIsUpdatingLogo(false);
+                           }
+                         }}
+                       />
+                     </label>
                    </div>
                    <div className="md:col-span-2 space-y-4">
                       <div>
