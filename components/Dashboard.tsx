@@ -46,6 +46,14 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableZones, onUpdateZo
         if (companyId) {
           const company = await getCompanyById(companyId);
           if (company) {
+            console.log('📋 Datos de empresa cargados:', {
+              id: company.id,
+              name: company.name,
+              email: company.email,
+              hasLogo: !!company.logoUrl,
+              logoUrlType: company.logoUrl ? (company.logoUrl.startsWith('data:') ? 'base64' : company.logoUrl.startsWith('blob:') ? 'blob' : 'url') : 'none',
+              logoUrlPreview: company.logoUrl ? company.logoUrl.substring(0, 50) + '...' : 'none'
+            });
             setCompanyData(company);
             setAdminName(company.name);
             setAdminEmail(company.email);
@@ -338,15 +346,38 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableZones, onUpdateZo
                 <div className="p-8 grid md:grid-cols-3 gap-8 items-center">
                    <div className="text-center md:text-left">
                      <label className="cursor-pointer">
-                       {companyData?.logoUrl && !logoError ? (
+                       {(() => {
+                         const hasLogo = companyData?.logoUrl && companyData.logoUrl.trim() !== '' && companyData.logoUrl !== 'null' && companyData.logoUrl !== 'undefined';
+                         const shouldShow = hasLogo && !logoError;
+                         
+                         if (companyData) {
+                           console.log('🔍 Verificando logo:', {
+                             hasCompanyData: true,
+                             hasLogoUrl: !!companyData.logoUrl,
+                             logoUrlPreview: companyData.logoUrl ? companyData.logoUrl.substring(0, 80) + '...' : 'none',
+                             logoUrlType: companyData.logoUrl ? (companyData.logoUrl.startsWith('data:') ? 'base64' : companyData.logoUrl.startsWith('blob:') ? 'blob' : 'url') : 'none',
+                             logoError,
+                             shouldShow
+                           });
+                         }
+                         
+                         return shouldShow;
+                       })() ? (
                          <div className="w-32 h-32 rounded-3xl border-2 border-gray-200 overflow-hidden bg-white flex items-center justify-center mx-auto md:mx-0 shadow-sm relative group">
                            <img 
-                             src={companyData.logoUrl.startsWith('data:') ? companyData.logoUrl : companyData.logoUrl} 
+                             src={companyData.logoUrl} 
                              alt="Logo de la empresa" 
                              className="w-full h-full object-contain p-2"
-                             onError={() => {
+                             onLoad={() => {
+                               console.log('✅ Logo cargado exitosamente');
+                             }}
+                             onError={(e) => {
                                // Si la imagen falla al cargar, mostrar placeholder
-                               console.warn('⚠️ Error cargando logo, mostrando placeholder');
+                               console.error('❌ Error cargando logo:', {
+                                 src: companyData.logoUrl,
+                                 srcType: companyData.logoUrl.startsWith('data:') ? 'base64' : companyData.logoUrl.startsWith('blob:') ? 'blob' : 'url',
+                                 error: e
+                               });
                                setLogoError(true);
                              }}
                            />
