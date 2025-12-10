@@ -1102,19 +1102,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableZones, onUpdateZo
                   {selectedProspect.name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)}
                 </div>
                 <div className="flex-1">
-                  <div className="flex items-center gap-3 mb-2">
-                    <h2 className="text-3xl font-bold text-gray-900">{selectedProspect.name}</h2>
-                    <span className="px-3 py-1 bg-green-50 text-green-700 rounded-full text-xs font-semibold">
-                      ALTA PROBABILIDAD
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <span className="px-2 py-1 bg-indigo-50 text-indigo-700 rounded-full text-xs font-medium">VISITA</span>
-                    <div className="flex items-center gap-1 text-gray-500 text-sm">
-                      <MessageCircle size={14} />
-                      <span>WhatsApp</span>
-                    </div>
-                  </div>
+                  <h2 className="text-3xl font-bold text-gray-900">{selectedProspect.name}</h2>
                 </div>
               </div>
 
