@@ -40,7 +40,23 @@ export const Register: React.FC<RegisterProps> = ({ onRegisterComplete, onGoToLo
 
   const handleFinish = async () => {
     try {
-      console.log('🔄 Iniciando registro...', { email: formData.email, zones: formData.zones.length });
+      console.log('🔄 Iniciando registro...');
+      console.log('📋 Datos del formulario:', {
+        email: formData.email,
+        name: formData.name,
+        companyName: formData.companyName,
+        zonesCount: formData.zones.length,
+        zones: formData.zones,
+        zonesType: typeof formData.zones,
+        isArray: Array.isArray(formData.zones)
+      });
+      
+      // Validar que hay zonas
+      if (!formData.zones || formData.zones.length === 0) {
+        console.error('❌ ERROR: No hay zonas para guardar');
+        alert('Por favor selecciona al menos una zona antes de finalizar el registro.');
+        return;
+      }
       
       // Guardar en la base de datos
       const companyId = await saveCompanyToDB({
@@ -49,7 +65,7 @@ export const Register: React.FC<RegisterProps> = ({ onRegisterComplete, onGoToLo
         password: formData.password,
         companyName: formData.companyName || 'Tu Inmobiliaria',
         logoUrl: formData.logo ? URL.createObjectURL(formData.logo) : undefined,
-        zones: formData.zones
+        zones: formData.zones // Asegurar que es un array
       });
 
       console.log('📋 Resultado de saveCompanyToDB:', companyId);
