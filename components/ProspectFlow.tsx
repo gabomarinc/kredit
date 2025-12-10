@@ -55,7 +55,7 @@ const FileUpload = ({ label, file, setFile }: { label: string, file: File | null
   </div>
 );
 
-export const ProspectFlow: React.FC<ProspectFlowProps> = ({ availableZones, companyName = "Lumina", isEmbed = false }) => {
+export const ProspectFlow: React.FC<ProspectFlowProps> = ({ availableZones, companyName = "Krêdit", isEmbed = false }) => {
   const [step, setStep] = useState<number>(1);
   const [preferences, setPreferences] = useState<UserPreferences>({
     propertyType: PropertyType.Apartment,

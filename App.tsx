@@ -30,7 +30,7 @@ function App() {
   
   // App Global Data
   const [zones, setZones] = useState<string[]>(ZONES_PANAMA);
-  const [companyName, setCompanyName] = useState('Lumina Real Estate');
+  const [companyName, setCompanyName] = useState('Krêdit');
 
   const handleLogin = async () => {
     // Cargar datos de la empresa desde localStorage o DB

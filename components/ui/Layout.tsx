@@ -9,7 +9,7 @@ interface LayoutProps {
   companyName?: string;
 }
 
-export const Layout: React.FC<LayoutProps> = ({ children, isAdmin, onToggleRole, isWelcomeScreen, companyName = "Lumina" }) => {
+export const Layout: React.FC<LayoutProps> = ({ children, isAdmin, onToggleRole, isWelcomeScreen, companyName = "Krêdit" }) => {
   return (
     <div className={`min-h-screen font-sans text-pastel-dark selection:bg-indigo-100 selection:text-indigo-900 ${isWelcomeScreen ? 'flex flex-col justify-center' : ''}`}>
       

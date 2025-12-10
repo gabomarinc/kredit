@@ -22,7 +22,7 @@ export const AuthSelection: React.FC<AuthSelectionProps> = ({ onLogin, onRegiste
             <span className="text-3xl font-bold text-white tracking-tighter">L</span>
           </div>
 
-          <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-3 tracking-tight">Bienvenido a Lumina</h1>
+          <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-3 tracking-tight">Bienvenido a Krêdit</h1>
           <p className="text-gray-500 text-lg leading-relaxed max-w-lg mx-auto font-light">
             Elige cómo deseas ingresar a tu espacio de trabajo inteligente.
           </p>
@@ -73,7 +73,7 @@ export const AuthSelection: React.FC<AuthSelectionProps> = ({ onLogin, onRegiste
         </div>
 
         <div className="mt-12 text-center relative z-10">
-           <p className="text-xs text-gray-400 font-medium">Lumina Real Estate Platform • v1.0</p>
+           <p className="text-xs text-gray-400 font-medium">Krêdit Platform • v1.0</p>
         </div>
       </div>
     </div>

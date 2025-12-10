@@ -27,7 +27,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableZones, onUpdateZo
 
   // Settings State - Cargar desde DB
   const [adminName, setAdminName] = useState('Admin Gerente');
-  const [adminEmail, setAdminEmail] = useState('gerencia@lumina.com');
+  const [adminEmail, setAdminEmail] = useState('gerencia@kredit.com');
   const [companyData, setCompanyData] = useState<Company | null>(null);
 
   // Load Data from Neon
