@@ -38,6 +38,16 @@ export const Register: React.FC<RegisterProps> = ({ onRegisterComplete, onGoToLo
     setFormData({ ...formData, zones: formData.zones.filter(z => z !== zoneToDelete) });
   };
 
+  // Función para convertir archivo a base64
+  const fileToBase64 = (file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = () => resolve(reader.result as string);
+      reader.onerror = error => reject(error);
+    });
+  };
+
   const handleFinish = async () => {
     try {
       console.log('🔄 Iniciando registro...');
@@ -58,13 +68,24 @@ export const Register: React.FC<RegisterProps> = ({ onRegisterComplete, onGoToLo
         return;
       }
       
+      // Convertir logo a base64 si existe
+      let logoBase64: string | undefined = undefined;
+      if (formData.logo) {
+        try {
+          logoBase64 = await fileToBase64(formData.logo);
+          console.log('✅ Logo convertido a base64');
+        } catch (error) {
+          console.error('❌ Error convirtiendo logo a base64:', error);
+        }
+      }
+      
       // Guardar en la base de datos
       const companyId = await saveCompanyToDB({
         name: formData.name,
         email: formData.email,
         password: formData.password,
         companyName: formData.companyName || 'Tu Inmobiliaria',
-        logoUrl: formData.logo ? URL.createObjectURL(formData.logo) : undefined,
+        logoUrl: logoBase64, // Guardar como base64 en lugar de blob URL
         zones: formData.zones // Asegurar que es un array
       });
 

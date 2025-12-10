@@ -339,11 +339,12 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableZones, onUpdateZo
                      {companyData?.logoUrl && !logoError ? (
                        <div className="w-32 h-32 rounded-3xl border-2 border-gray-200 overflow-hidden bg-white flex items-center justify-center mx-auto md:mx-0 shadow-sm">
                          <img 
-                           src={companyData.logoUrl} 
+                           src={companyData.logoUrl.startsWith('data:') ? companyData.logoUrl : companyData.logoUrl} 
                            alt="Logo de la empresa" 
                            className="w-full h-full object-contain p-2"
                            onError={() => {
                              // Si la imagen falla al cargar, mostrar placeholder
+                             console.warn('⚠️ Error cargando logo, mostrando placeholder');
                              setLogoError(true);
                            }}
                          />
