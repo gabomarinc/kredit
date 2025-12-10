@@ -128,11 +128,12 @@ const safeParseJSON = (input: any) => {
 
 export const getProspectsFromDB = async (): Promise<Prospect[]> => {
   if (!pool) {
-    console.warn('Pool de base de datos no inicializado. Retornando datos mockeados.');
+    console.error('❌ Pool de base de datos no inicializado. Retornando datos mockeados.');
     return MOCK_PROSPECTS;
   }
   
   try {
+    console.log('🔄 Consultando base de datos...');
     const client = await pool.connect();
     
     // Aseguramos que la tabla exista antes de consultar
@@ -147,8 +148,13 @@ export const getProspectsFromDB = async (): Promise<Prospect[]> => {
     
     client.release();
 
+    console.log(`📊 Registros encontrados en DB: ${res.rows.length}`);
+
+    // Si la tabla está vacía, retornar array vacío en lugar de mockups
+    // Solo usar mockups si hay un error de conexión
     if (res.rows.length === 0) {
-        return MOCK_PROSPECTS;
+        console.log('ℹ️ La tabla prospects está vacía. No hay datos guardados aún.');
+        return [];
     }
 
     // Mapeamos los resultados de la DB (snake_case) a nuestro tipo TypeScript (camelCase)
