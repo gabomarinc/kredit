@@ -2036,6 +2036,70 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableZones, onUpdateZo
         </div>
       )}
 
+      {/* Modal de Selección: Manual o Importar */}
+      {showPropertySelectionModal && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+          <div className="bg-white rounded-[2rem] w-full max-w-2xl shadow-2xl relative animate-fade-in-up">
+            <div className="p-8">
+              <div className="flex items-center justify-between mb-6">
+                <h3 className="text-2xl font-bold text-gray-900">Agregar Propiedades</h3>
+                <button
+                  onClick={() => setShowPropertySelectionModal(false)}
+                  className="w-10 h-10 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center transition-colors"
+                >
+                  <X size={20} className="text-gray-600" />
+                </button>
+              </div>
+
+              <p className="text-gray-500 mb-8 text-center">Elige cómo deseas agregar propiedades</p>
+
+              <div className="grid md:grid-cols-2 gap-4">
+                {/* Botón: Agregar Manualmente */}
+                <button
+                  onClick={() => {
+                    setShowPropertySelectionModal(false);
+                    setSelectedPropertyForEdit(null);
+                    setShowPropertyModal(true);
+                  }}
+                  className="p-8 rounded-2xl border-2 border-indigo-200 bg-indigo-50/30 hover:bg-indigo-50 hover:border-indigo-400 transition-all text-left group"
+                >
+                  <div className="w-16 h-16 rounded-2xl bg-indigo-600 text-white flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                    <Plus size={32} />
+                  </div>
+                  <h4 className="text-xl font-bold text-gray-900 mb-2">Agregar Propiedad Manual</h4>
+                  <p className="text-sm text-gray-600">Crea una propiedad nueva completando el formulario paso a paso</p>
+                </button>
+
+                {/* Botón: Importar desde Excel/CSV */}
+                <button
+                  onClick={() => {
+                    // Trigger file input
+                    const input = document.createElement('input');
+                    input.type = 'file';
+                    input.accept = '.xlsx,.xls,.csv';
+                    input.onchange = async (e) => {
+                      const file = (e.target as HTMLInputElement).files?.[0];
+                      if (file) {
+                        await handleImportProperties(file);
+                        setShowPropertySelectionModal(false);
+                      }
+                    };
+                    input.click();
+                  }}
+                  className="p-8 rounded-2xl border-2 border-purple-200 bg-purple-50/30 hover:bg-purple-50 hover:border-purple-400 transition-all text-left group"
+                >
+                  <div className="w-16 h-16 rounded-2xl bg-purple-600 text-white flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                    <Download size={32} />
+                  </div>
+                  <h4 className="text-xl font-bold text-gray-900 mb-2">Importar Propiedades</h4>
+                  <p className="text-sm text-gray-600">Importa múltiples propiedades desde un archivo Excel o CSV</p>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Modal de Crear/Editar Propiedad */}
       {showPropertyModal && (
         <PropertyModal
