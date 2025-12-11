@@ -63,6 +63,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableZones, onUpdateZo
   const [companyData, setCompanyData] = useState<Company | null>(null);
   const [logoError, setLogoError] = useState(false);
   const [isUpdatingLogo, setIsUpdatingLogo] = useState(false);
+  const [isPromotora, setIsPromotora] = useState<boolean>(false); // Inicializar como false para que no aparezca el cuadro
 
 
   // Load Data from Neon
