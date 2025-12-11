@@ -858,6 +858,10 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableZones, onUpdateZo
                           <span className="text-gray-400">Gestión de propiedades</span>
                         </div>
                       </div>
+                      <div className="mt-6 pt-4 border-t border-gray-200">
+                        <div className="text-3xl font-bold text-gray-900">$0.00</div>
+                        <div className="text-sm text-gray-500">/ mes</div>
+                      </div>
                       {companyData?.plan === 'Freshie' && (
                         <div className="mt-4 text-xs font-semibold text-indigo-600 bg-indigo-100 px-3 py-1 rounded-full inline-block">
                           Plan Actual
@@ -910,6 +914,10 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableZones, onUpdateZo
                           <CheckCircle2 size={16} className="text-purple-500" />
                           <span className="font-semibold text-purple-600">Seguimiento de intereses</span>
                         </div>
+                      </div>
+                      <div className="mt-6 pt-4 border-t border-gray-200">
+                        <div className="text-3xl font-bold text-gray-900">$6.99</div>
+                        <div className="text-sm text-gray-500">/ mes</div>
                       </div>
                       {companyData?.plan === 'Wolf of Wallstreet' && (
                         <div className="mt-4 text-xs font-semibold text-purple-600 bg-purple-100 px-3 py-1 rounded-full inline-block">
