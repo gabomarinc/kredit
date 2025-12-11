@@ -2148,8 +2148,8 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableZones, onUpdateZo
         </div>
       )}
 
-      {/* Modal de Selección: Manual o Importar */}
-      {showPropertySelectionModal && (
+      {/* Modal de Selección: Manual o Importar (Solo para Propiedades/Broker) */}
+      {showPropertySelectionModal && !isPromotora && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
           <div className="bg-white rounded-[3rem] p-8 md:p-12 shadow-[0_20px_60px_-15px_rgba(0,0,0,0.05)] w-full max-w-4xl animate-fade-in-up border border-white/50 backdrop-blur-sm relative overflow-hidden">
             
@@ -2171,9 +2171,9 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableZones, onUpdateZo
                 <span className="text-3xl font-bold text-white tracking-tighter">ê</span>
               </div>
 
-              <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-3 tracking-tight">Agregar {isPromotora ? 'Proyectos' : 'Propiedades'}</h1>
+              <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-3 tracking-tight">Agregar Propiedades</h1>
               <p className="text-gray-500 text-lg leading-relaxed max-w-lg mx-auto font-light">
-                Elige cómo deseas agregar {isPromotora ? 'proyectos' : 'propiedades'} a tu catálogo.
+                Elige cómo deseas agregar propiedades a tu catálogo.
               </p>
             </div>
 
@@ -2183,12 +2183,8 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableZones, onUpdateZo
                 onClick={() => {
                   setShowPropertySelectionModal(false);
                   setTimeout(() => {
-                    if (isPromotora) {
-                      setShowProjectModal(true);
-                    } else {
-                      setSelectedPropertyForEdit(null);
-                      setShowPropertyModal(true);
-                    }
+                    setSelectedPropertyForEdit(null);
+                    setShowPropertyModal(true);
                   }, 300);
                 }}
                 className="group text-left p-8 rounded-[2.5rem] border-2 border-gray-100 bg-white hover:border-indigo-200 hover:bg-indigo-50/30 hover:shadow-xl transition-all duration-300 relative overflow-hidden"
@@ -2196,9 +2192,9 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableZones, onUpdateZo
                 <div className="w-16 h-16 rounded-2xl bg-white border border-gray-100 text-gray-900 flex items-center justify-center mb-6 shadow-sm group-hover:scale-110 group-hover:bg-indigo-600 group-hover:text-white transition-all duration-300">
                   <Plus size={28} strokeWidth={1.5} />
                 </div>
-                <h3 className="text-2xl font-bold text-gray-900 mb-2">Agregar {isPromotora ? 'Proyecto' : 'Propiedad'} Manual</h3>
+                <h3 className="text-2xl font-bold text-gray-900 mb-2">Agregar Propiedad Manual</h3>
                 <p className="text-gray-500 leading-relaxed text-sm mb-4">
-                  Crea un {isPromotora ? 'proyecto' : 'propiedad'} nuevo completando el formulario paso a paso.
+                  Crea una propiedad nueva completando el formulario paso a paso.
                 </p>
                 
                 <div className="flex items-center gap-2 text-indigo-600 font-bold text-sm opacity-0 group-hover:opacity-100 transform translate-y-2 group-hover:translate-y-0 transition-all duration-300">
@@ -2230,9 +2226,9 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableZones, onUpdateZo
                 <div className="w-16 h-16 rounded-2xl bg-purple-600 text-white flex items-center justify-center mb-6 shadow-lg shadow-purple-200 group-hover:bg-white group-hover:text-purple-600 transition-all duration-300 group-hover:scale-110">
                   <Download size={28} strokeWidth={1.5} />
                 </div>
-                <h3 className="text-2xl font-bold text-gray-900 mb-2 group-hover:text-purple-900 transition-colors">Importar {isPromotora ? 'Proyectos' : 'Propiedades'}</h3>
+                <h3 className="text-2xl font-bold text-gray-900 mb-2 group-hover:text-purple-900 transition-colors">Importar Propiedades</h3>
                 <p className="text-gray-500 leading-relaxed text-sm mb-4 group-hover:text-gray-600 transition-colors">
-                  Importa múltiples {isPromotora ? 'proyectos' : 'propiedades'} desde un archivo Excel o CSV.
+                  Importa múltiples propiedades desde un archivo Excel o CSV.
                 </p>
 
                 <div className="flex items-center gap-2 text-purple-600 font-bold text-sm opacity-0 group-hover:opacity-100 transform translate-y-2 group-hover:translate-y-0 transition-all duration-300">
