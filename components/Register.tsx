@@ -148,10 +148,6 @@ export const Register: React.FC<RegisterProps> = ({ onRegisterComplete, onGoToLo
     }
   };
 
-  const handleFinish = () => {
-    handleFinalSubmit();
-  };
-
   return (
     <div className="min-h-screen flex items-center justify-center p-4">
       <div className="bg-white rounded-[2.5rem] p-8 md:p-12 shadow-[0_20px_60px_-15px_rgba(0,0,0,0.05)] w-full max-w-2xl animate-fade-in-up border border-white/50 backdrop-blur-sm relative">
