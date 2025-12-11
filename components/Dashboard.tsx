@@ -2472,9 +2472,6 @@ const PropertyModal: React.FC<PropertyModalProps> = ({ property, zones, onClose,
     } finally {
       setIsSaving(false);
     }
-    } finally {
-      setIsSaving(false);
-    }
   };
 
   return (
