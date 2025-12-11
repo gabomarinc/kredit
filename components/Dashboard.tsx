@@ -43,6 +43,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableZones, onUpdateZo
   const [isLoadingProperties, setIsLoadingProperties] = useState(false);
   const [selectedPropertyForEdit, setSelectedPropertyForEdit] = useState<Property | null>(null);
   const [showPropertyModal, setShowPropertyModal] = useState(false);
+  const [showPropertySelectionModal, setShowPropertySelectionModal] = useState(false);
   const [prospectInterestedProperties, setProspectInterestedProperties] = useState<Property[]>([]);
   const [isLoadingProspectProperties, setIsLoadingProspectProperties] = useState(false);
   const [notification, setNotification] = useState<{ isOpen: boolean; type: NotificationType; message: string; title?: string }>({
@@ -123,6 +124,124 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableZones, onUpdateZo
     };
     loadProperties();
   }, [activeTab]);
+
+  // Función para importar propiedades desde Excel/CSV
+  const handleImportProperties = async (file: File) => {
+    const companyId = localStorage.getItem('companyId');
+    if (!companyId) {
+      setNotification({
+        isOpen: true,
+        type: 'error',
+        message: 'No se encontró el ID de la empresa. Por favor, inicia sesión nuevamente.',
+        title: 'Error de sesión'
+      });
+      return;
+    }
+
+    try {
+      setIsLoadingProperties(true);
+      
+      const fileExtension = file.name.split('.').pop()?.toLowerCase();
+      let importedData: any[] = [];
+
+      if (fileExtension === 'csv') {
+        // Leer CSV
+        const text = await file.text();
+        const lines = text.split('\n');
+        const headers = lines[0].split(',').map(h => h.trim());
+        
+        importedData = lines.slice(1).map(line => {
+          const values = line.split(',').map(v => v.trim());
+          const obj: any = {};
+          headers.forEach((header, index) => {
+            obj[header] = values[index] || '';
+          });
+          return obj;
+        }).filter(row => Object.values(row).some(v => v));
+      } else {
+        // Leer Excel usando XLSX
+        const arrayBuffer = await file.arrayBuffer();
+        const workbook = XLSX.read(arrayBuffer, { type: 'array' });
+        const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+        importedData = XLSX.utils.sheet_to_json(firstSheet);
+      }
+
+      if (importedData.length === 0) {
+        setNotification({
+          isOpen: true,
+          type: 'warning',
+          message: 'El archivo no contiene datos válidos.',
+          title: 'Archivo vacío'
+        });
+        setIsLoadingProperties(false);
+        return;
+      }
+
+      // Mapear datos importados a propiedades
+      let successCount = 0;
+      let errorCount = 0;
+
+      for (const row of importedData) {
+        try {
+          // Mapear columnas comunes (flexible)
+          const propertyData = {
+            companyId,
+            title: row['Título'] || row['Title'] || row['Nombre'] || row['title'] || row['nombre'] || 'Propiedad sin título',
+            description: row['Descripción'] || row['Description'] || row['description'] || row['descripcion'] || '',
+            type: (row['Tipo'] || row['Type'] || row['type'] || 'Venta') as 'Venta' | 'Alquiler',
+            price: parseFloat(row['Precio'] || row['Price'] || row['price'] || row['Precio'] || '0') || 0,
+            zone: row['Zona'] || row['Zone'] || row['zone'] || availableZones[0] || '',
+            bedrooms: row['Habitaciones'] || row['Bedrooms'] || row['bedrooms'] || row['Habitaciones'] ? parseInt(row['Habitaciones'] || row['Bedrooms'] || row['bedrooms']) : null,
+            bathrooms: row['Baños'] || row['Bathrooms'] || row['bathrooms'] || row['Baños'] ? parseFloat(row['Baños'] || row['Bathrooms'] || row['bathrooms']) : null,
+            areaM2: row['Área'] || row['Area'] || row['area'] || row['m2'] || row['Área'] ? parseFloat(row['Área'] || row['Area'] || row['area'] || row['m2']) : null,
+            images: [],
+            address: row['Dirección'] || row['Address'] || row['address'] || row['Dirección'] || '',
+            features: [],
+            status: 'Activa' as Property['status'],
+            highDemand: false,
+            demandVisits: 0,
+            priceAdjusted: false,
+            priceAdjustmentPercent: 0
+          };
+
+          if (propertyData.price > 0 && propertyData.zone) {
+            await saveProperty(propertyData);
+            successCount++;
+          } else {
+            errorCount++;
+          }
+        } catch (error) {
+          console.error('Error importando propiedad:', error);
+          errorCount++;
+        }
+      }
+
+      // Recargar propiedades
+      const props = await getPropertiesByCompany(companyId);
+      setProperties(props);
+
+      setIsLoadingProperties(false);
+
+      setNotification({
+        isOpen: true,
+        type: successCount > 0 ? 'success' : 'error',
+        message: successCount > 0 
+          ? `Se importaron ${successCount} propiedades exitosamente${errorCount > 0 ? `. ${errorCount} propiedades tuvieron errores.` : '.'}`
+          : `No se pudieron importar las propiedades. Verifica el formato del archivo.`,
+        title: successCount > 0 ? 'Importación exitosa' : 'Error en importación'
+      });
+
+    } catch (error) {
+      console.error('Error importando propiedades:', error);
+      setIsLoadingProperties(false);
+      setNotification({
+        isOpen: true,
+        type: 'error',
+        message: 'Error al importar el archivo. Verifica que sea un Excel o CSV válido.',
+        title: 'Error de importación'
+      });
+    }
+  };
 
   // Load properties for selected prospect
   useEffect(() => {
@@ -558,8 +677,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableZones, onUpdateZo
               {companyData?.plan === 'Wolf of Wallstreet' ? (
                 <button
                   onClick={() => {
-                    setSelectedPropertyForEdit(null);
-                    setShowPropertyModal(true);
+                    setShowPropertySelectionModal(true);
                   }}
                   className="bg-indigo-600 text-white px-6 py-3 rounded-xl font-semibold hover:bg-indigo-700 transition-colors flex items-center gap-2 shadow-lg shadow-indigo-200"
                 >
@@ -588,8 +706,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableZones, onUpdateZo
                 {companyData?.plan === 'Wolf of Wallstreet' && (
                   <button
                     onClick={() => {
-                      setSelectedPropertyForEdit(null);
-                      setShowPropertyModal(true);
+                      setShowPropertySelectionModal(true);
                     }}
                     className="bg-indigo-600 text-white px-6 py-3 rounded-xl font-semibold hover:bg-indigo-700 transition-colors"
                   >
