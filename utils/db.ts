@@ -1,3 +1,4 @@
+/// <reference types="vite/client" />
 import { Pool } from '@neondatabase/serverless';
 import { CalculationResult, Prospect, PersonalData, FinancialData, UserPreferences } from '../types';
 import { MOCK_PROSPECTS } from '../constants';
@@ -65,6 +66,7 @@ const ensureTablesExist = async (client: any) => {
     await client.query(`
       CREATE TABLE IF NOT EXISTS prospects (
         id SERIAL PRIMARY KEY,
+        company_id UUID REFERENCES companies(id) ON DELETE SET NULL,
         full_name TEXT,
         email TEXT,
         phone TEXT,
@@ -99,6 +101,9 @@ const ensureTablesExist = async (client: any) => {
           END IF;
           IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'prospects' AND column_name = 'signed_acp_file_base64') THEN
             ALTER TABLE prospects ADD COLUMN signed_acp_file_base64 TEXT;
+          END IF;
+          IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'prospects' AND column_name = 'company_id') THEN
+            ALTER TABLE prospects ADD COLUMN company_id UUID REFERENCES companies(id) ON DELETE SET NULL;
           END IF;
         END $$;
       `);
@@ -216,7 +221,8 @@ export const saveProspectToDB = async (
   personal: PersonalData,
   financial: FinancialData,
   preferences: UserPreferences,
-  result: CalculationResult
+  result: CalculationResult,
+  companyId?: string | null
 ) => {
   if (!pool) {
     console.error('❌ Pool de base de datos no inicializado. Verifica VITE_DATABASE_URL en Vercel.');
@@ -255,6 +261,7 @@ export const saveProspectToDB = async (
     // Insertamos en la tabla prospects
     const query = `
       INSERT INTO prospects (
+        company_id,
         full_name, 
         email, 
         phone, 
@@ -270,11 +277,12 @@ export const saveProspectToDB = async (
         talonario_file_base64,
         signed_acp_file_base64,
         created_at
-      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, 'Nuevo', $10, $11, $12, $13, NOW())
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, 'Nuevo', $11, $12, $13, $14, NOW())
       RETURNING id
     `;
 
     const values = [
+      companyId || null,
       personal.fullName,
       personal.email,
       personal.phone,
@@ -355,6 +363,7 @@ export const getProspectsFromDB = async (): Promise<Prospect[]> => {
     // Mapeamos los resultados de la DB (snake_case) a nuestro tipo TypeScript (camelCase)
     return res.rows.map((row: any) => ({
       id: String(row.id),
+      companyId: row.company_id || null,
       name: row.full_name || '',
       email: row.email || '',
       phone: row.phone || '',

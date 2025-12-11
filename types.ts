@@ -33,6 +33,7 @@ export interface CalculationResult {
 
 export interface Prospect {
   id: string;
+  companyId?: string | null;
   name: string;
   email: string;
   phone?: string;

@@ -189,16 +189,16 @@ export const ProspectFlow: React.FC<ProspectFlowProps> = ({ availableZones, comp
     
     setIsCalculating(true);
 
+    const urlParams = new URLSearchParams(window.location.search);
+    const companyId = urlParams.get('company_id') || localStorage.getItem('companyId');
+
     try {
       // Guardar a Neon Database
-      const savedId = await saveProspectToDB(personal, financial, preferences, result);
+      const savedId = await saveProspectToDB(personal, financial, preferences, result, companyId);
       if (savedId) {
         setProspectId(savedId.toString());
         
         // Cargar propiedades disponibles si la empresa tiene plan Premium
-        const urlParams = new URLSearchParams(window.location.search);
-        const companyId = urlParams.get('company_id') || localStorage.getItem('companyId');
-        
         if (companyId) {
           try {
             const company = await getCompanyById(companyId);
