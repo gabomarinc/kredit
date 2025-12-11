@@ -120,7 +120,12 @@ export const Register: React.FC<RegisterProps> = ({ onRegisterComplete, onGoToLo
         console.error('1. El email ya está en uso');
         console.error('2. Error de conexión a la base de datos');
         console.error('3. Error al insertar los datos');
-        alert('Error al registrar. El email puede estar en uso o hay un problema de conexión. Intenta con otro email o verifica la consola para más detalles.');
+        setNotification({
+          isOpen: true,
+          type: 'error',
+          message: 'El email puede estar en uso o hay un problema de conexión. Intenta con otro email o verifica la consola para más detalles.',
+          title: 'Error al registrar'
+        });
       }
     } catch (error) {
       console.error('❌ Error en registro (catch):', error);
@@ -128,7 +133,12 @@ export const Register: React.FC<RegisterProps> = ({ onRegisterComplete, onGoToLo
         message: error instanceof Error ? error.message : String(error),
         stack: error instanceof Error ? error.stack : undefined
       });
-      alert('Error al registrar. Por favor intenta de nuevo. Revisa la consola para más detalles.');
+      setNotification({
+        isOpen: true,
+        type: 'error',
+        message: 'Error al registrar. Por favor intenta de nuevo. Revisa la consola para más detalles.',
+        title: 'Error al registrar'
+      });
     }
   };
 
