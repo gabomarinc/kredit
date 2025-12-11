@@ -902,6 +902,32 @@ export const updateCompanyLogo = async (companyId: string, logoBase64: string): 
 // ============================================
 
 // Actualizar plan de una empresa
+// Actualizar nombre de la empresa
+export const updateCompanyName = async (companyId: string, companyName: string): Promise<boolean> => {
+  if (!pool) {
+    console.error('❌ Pool de base de datos no inicializado.');
+    return false;
+  }
+
+  try {
+    console.log('🔄 Actualizando nombre de la empresa...', { companyId, companyName });
+    const client = await pool.connect();
+    
+    await client.query(
+      'UPDATE companies SET company_name = $1 WHERE id = $2',
+      [companyName, companyId]
+    );
+    
+    client.release();
+    console.log('✅ Nombre de la empresa actualizado en la base de datos');
+    return true;
+
+  } catch (error) {
+    console.error('❌ Error actualizando nombre de la empresa:', error);
+    return false;
+  }
+};
+
 export const updateCompanyPlan = async (companyId: string, plan: 'Freshie' | 'Wolf of Wallstreet'): Promise<boolean> => {
   if (!pool) {
     console.error('❌ Pool de base de datos no inicializado.');

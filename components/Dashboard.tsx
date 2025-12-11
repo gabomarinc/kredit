@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { 
   Users, DollarSign, LayoutDashboard, FileText, Download, Filter, Calendar, CheckCircle2, X, ChevronDown, MapPin, Briefcase, Settings, Plus, Trash2, Building, Image as ImageIcon, Shield, Save, Code, Copy, ExternalLink, Loader2, User, Target, MessageCircle, ShieldCheck, TrendingUp, Eye, FileText as FileTextIcon, BedDouble, Bath, Heart, ArrowRight, Upload, Check, ChevronLeft
 } from 'lucide-react';
-import { getProspectsFromDB, getCompanyById, updateCompanyZones, updateCompanyLogo, Company, getPropertiesByCompany, saveProperty, updateProperty, deleteProperty, getPropertyInterestsByCompany, updateCompanyPlan, getPropertyInterestsByProspect, saveProject, getProjectsByCompany, updateProject, deleteProject } from '../utils/db';
+import { getProspectsFromDB, getCompanyById, updateCompanyZones, updateCompanyLogo, Company, getPropertiesByCompany, saveProperty, updateProperty, deleteProperty, getPropertyInterestsByCompany, updateCompanyPlan, getPropertyInterestsByProspect, saveProject, getProjectsByCompany, updateProject, deleteProject, updateCompanyName } from '../utils/db';
 import { Prospect, Property, PropertyInterest, PlanType, Project, ProjectModel } from '../types';
 import { NotificationModal, NotificationType } from './ui/NotificationModal';
 import { formatCurrency } from '../utils/calculator';
@@ -25,6 +25,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableZones, onUpdateZo
   const [selectedDocument, setSelectedDocument] = useState<{ type: string; url: string; name: string } | null>(null);
   const [newZone, setNewZone] = useState('');
   const [copied, setCopied] = useState(false);
+  const [isSavingCompanyName, setIsSavingCompanyName] = useState(false);
 
   // Export Modal State
   const [exportFilterType, setExportFilterType] = useState<'all' | 'dateRange'>('all');
@@ -1337,8 +1338,55 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableZones, onUpdateZo
                         />
                       </div>
                       <div className="flex justify-end">
-                        <button className="flex items-center gap-2 text-indigo-600 font-semibold text-sm hover:text-indigo-800 transition-colors">
-                          <Save size={16} /> Guardar Cambios
+                        <button 
+                          onClick={async () => {
+                            const companyId = localStorage.getItem('companyId');
+                            if (!companyId) return;
+                            
+                            setIsSavingCompanyName(true);
+                            try {
+                              const success = await updateCompanyName(companyId, companyName);
+                              if (success) {
+                                setNotification({
+                                  isOpen: true,
+                                  type: 'success',
+                                  message: 'Nombre de la empresa actualizado exitosamente.',
+                                  title: 'Actualizado'
+                                });
+                                onUpdateCompanyName(companyName);
+                              } else {
+                                setNotification({
+                                  isOpen: true,
+                                  type: 'error',
+                                  message: 'Error al actualizar el nombre de la empresa.',
+                                  title: 'Error'
+                                });
+                              }
+                            } catch (error) {
+                              console.error('Error actualizando nombre:', error);
+                              setNotification({
+                                isOpen: true,
+                                type: 'error',
+                                message: 'Error al actualizar el nombre de la empresa.',
+                                title: 'Error'
+                              });
+                            } finally {
+                              setIsSavingCompanyName(false);
+                            }
+                          }}
+                          disabled={isSavingCompanyName}
+                          className="flex items-center gap-2 text-indigo-600 font-semibold text-sm hover:text-indigo-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                          {isSavingCompanyName ? (
+                            <>
+                              <Loader2 size={16} className="animate-spin" />
+                              Guardando...
+                            </>
+                          ) : (
+                            <>
+                              <Save size={16} /> Guardar Cambios
+                            </>
+                          )}
                         </button>
                       </div>
                    </div>
@@ -3302,14 +3350,23 @@ const ProjectModal: React.FC<ProjectModalProps> = ({ project, zones, onClose, on
             ) : (
               <button
                 onClick={handleSave}
-                disabled={!name || !zone || models.length === 0}
+                disabled={!name || !zone || models.length === 0 || isSaving}
                 className={`flex-1 sm:flex-none flex items-center justify-center gap-3 px-8 py-4 rounded-full font-bold text-lg transition-all duration-300 shadow-xl order-1 sm:order-2 w-full sm:w-auto ${
-                  name && zone && models.length > 0
+                  name && zone && models.length > 0 && !isSaving
                     ? 'bg-indigo-600 text-white hover:bg-indigo-700 shadow-indigo-200'
                     : 'bg-gray-100 text-gray-400 cursor-not-allowed shadow-none'
                 }`}
               >
-                Guardar Proyecto <Check size={20} className="shrink-0" />
+                {isSaving ? (
+                  <>
+                    <Loader2 size={20} className="animate-spin shrink-0" />
+                    Guardando...
+                  </>
+                ) : (
+                  <>
+                    Guardar Proyecto <Check size={20} className="shrink-0" />
+                  </>
+                )}
               </button>
             )}
           </div>
