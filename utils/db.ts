@@ -462,10 +462,10 @@ export const updateProspectToDB = async (
       ? preferences.zone 
       : (preferences.zone ? [preferences.zone] : []);
 
-    // Actualizar prospecto
+    // Actualizar prospecto - IMPORTANTE: Actualizar TODOS los campos, no usar COALESCE para campos que deben actualizarse
     const query = `
       UPDATE prospects SET
-        company_id = COALESCE($1, company_id),
+        company_id = $1,
         full_name = $2,
         email = $3,
         phone = $4,
@@ -483,21 +483,22 @@ export const updateProspectToDB = async (
       WHERE id = $15
     `;
 
+    // Asegurar que todos los valores estén definidos correctamente
     const values = [
       companyId || null,
       personal.fullName || '',
       personal.email || '',
       personal.phone || '',
-      financial.familyIncome || 0,
+      financial.familyIncome || 0, // Asegurar que sea un número
       preferences.propertyType || '',
-      preferences.bedrooms || null,
-      preferences.bathrooms || null,
-      zonesArray, // Asegurar que es un array
-      JSON.stringify(result),
-      idFileBase64,
-      fichaFileBase64,
-      talonarioFileBase64,
-      signedAcpFileBase64,
+      preferences.bedrooms ?? null, // Usar ?? para manejar 0 como valor válido
+      preferences.bathrooms ?? null,
+      zonesArray.length > 0 ? zonesArray : [], // Asegurar que sea un array, incluso si está vacío
+      JSON.stringify(result || {}),
+      idFileBase64 || null,
+      fichaFileBase64 || null,
+      talonarioFileBase64 || null,
+      signedAcpFileBase64 || null,
       prospectId
     ];
 
