@@ -2,8 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { 
   Users, DollarSign, LayoutDashboard, FileText, Download, Filter, Calendar, CheckCircle2, X, ChevronDown, MapPin, Briefcase, Settings, Plus, Trash2, Building, Image as ImageIcon, Shield, Save, Code, Copy, ExternalLink, Loader2, User, Target, MessageCircle, ShieldCheck, TrendingUp, Eye, FileText as FileTextIcon, BedDouble, Bath, Heart, ArrowRight
 } from 'lucide-react';
-import { getProspectsFromDB, getCompanyById, updateCompanyZones, updateCompanyLogo, Company, getPropertiesByCompany, saveProperty, updateProperty, deleteProperty, getPropertyInterestsByCompany, updateCompanyPlan, getPropertyInterestsByProspect } from '../utils/db';
-import { Prospect, Property, PropertyInterest, PlanType } from '../types';
+import { getProspectsFromDB, getCompanyById, updateCompanyZones, updateCompanyLogo, Company, getPropertiesByCompany, saveProperty, updateProperty, deleteProperty, getPropertyInterestsByCompany, updateCompanyPlan, getPropertyInterestsByProspect, saveProject, getProjectsByCompany } from '../utils/db';
+import { Prospect, Property, PropertyInterest, PlanType, Project, ProjectModel } from '../types';
 import { NotificationModal, NotificationType } from './ui/NotificationModal';
 import { formatCurrency } from '../utils/calculator';
 import * as XLSX from 'xlsx';
@@ -102,30 +102,37 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableZones, onUpdateZo
     fetchData();
   }, []); // Run once on mount
 
-  // Load Properties when tab changes to properties
+  // Load Properties/Projects when tab changes to properties
   useEffect(() => {
-    const loadProperties = async () => {
+    const loadData = async () => {
       if (activeTab === 'properties') {
         setIsLoadingProperties(true);
         try {
           const companyId = localStorage.getItem('companyId');
           if (companyId) {
-            const props = await getPropertiesByCompany(companyId);
-            setProperties(props);
-            
-            // Also load property interests
-            const interests = await getPropertyInterestsByCompany(companyId);
-            setPropertyInterests(interests);
+            if (isPromotora) {
+              // Cargar proyectos para Promotora
+              const projs = await getProjectsByCompany(companyId);
+              setProjects(projs);
+            } else {
+              // Cargar propiedades para Broker
+              const props = await getPropertiesByCompany(companyId);
+              setProperties(props);
+              
+              // Also load property interests
+              const interests = await getPropertyInterestsByCompany(companyId);
+              setPropertyInterests(interests);
+            }
           }
         } catch (e) {
-          console.error("Error loading properties:", e);
+          console.error("Error loading data:", e);
         } finally {
           setIsLoadingProperties(false);
         }
       }
     };
-    loadProperties();
-  }, [activeTab]);
+    loadData();
+  }, [activeTab, isPromotora]);
 
   // Función para importar propiedades desde Excel/CSV
   const handleImportProperties = async (file: File) => {
@@ -681,7 +688,11 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableZones, onUpdateZo
               {companyData?.plan === 'Wolf of Wallstreet' ? (
                 <button
                   onClick={() => {
-                    setShowPropertySelectionModal(true);
+                    if (isPromotora) {
+                      setShowProjectModal(true);
+                    } else {
+                      setShowPropertySelectionModal(true);
+                    }
                   }}
                   className="bg-indigo-600 text-white px-6 py-3 rounded-xl font-semibold hover:bg-indigo-700 transition-colors flex items-center gap-2 shadow-lg shadow-indigo-200"
                 >
@@ -702,7 +713,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableZones, onUpdateZo
                 <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div>
                 <p className="text-gray-500 mt-4">Cargando {isPromotora ? 'proyectos' : 'propiedades'}...</p>
               </div>
-            ) : properties.length === 0 ? (
+            ) : (isPromotora ? projects.length === 0 : properties.length === 0) ? (
               <div className="bg-white rounded-[2rem] p-12 text-center border border-gray-100">
                 <Building size={64} className="mx-auto mb-4 text-gray-300" />
                 <h3 className="text-xl font-bold text-gray-900 mb-2">No hay {isPromotora ? 'proyectos' : 'propiedades'} registrados</h3>
@@ -710,7 +721,11 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableZones, onUpdateZo
                 {companyData?.plan === 'Wolf of Wallstreet' && (
                   <button
                     onClick={() => {
-                      setShowPropertySelectionModal(true);
+                      if (isPromotora) {
+                        setShowProjectModal(true);
+                      } else {
+                        setShowPropertySelectionModal(true);
+                      }
                     }}
                     className="bg-indigo-600 text-white px-6 py-3 rounded-xl font-semibold hover:bg-indigo-700 transition-colors"
                   >
@@ -2074,8 +2089,12 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableZones, onUpdateZo
               <button
                 onClick={() => {
                   setShowPropertySelectionModal(false);
-                  setSelectedPropertyForEdit(null);
-                  setShowPropertyModal(true);
+                  if (isPromotora) {
+                    setShowProjectModal(true);
+                  } else {
+                    setSelectedPropertyForEdit(null);
+                    setShowPropertyModal(true);
+                  }
                 }}
                 className="group text-left p-8 rounded-[2.5rem] border-2 border-gray-100 bg-white hover:border-indigo-200 hover:bg-indigo-50/30 hover:shadow-xl transition-all duration-300 relative overflow-hidden"
               >
@@ -2133,8 +2152,8 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableZones, onUpdateZo
         </div>
       )}
 
-      {/* Modal de Crear/Editar Propiedad */}
-      {showPropertyModal && (
+      {/* Modal de Crear/Editar Propiedad (Broker) */}
+      {showPropertyModal && !isPromotora && (
         <PropertyModal
           property={selectedPropertyForEdit}
           companyId={localStorage.getItem('companyId') || ''}
@@ -2160,6 +2179,28 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableZones, onUpdateZo
             setProperties(props);
             setShowPropertyModal(false);
             setSelectedPropertyForEdit(null);
+          }}
+        />
+      )}
+
+      {/* Modal de Crear/Editar Proyecto (Promotora) */}
+      {showProjectModal && isPromotora && (
+        <ProjectModal
+          companyId={localStorage.getItem('companyId') || ''}
+          zones={availableZones}
+          onClose={() => {
+            setShowProjectModal(false);
+          }}
+          onSave={async (projectData) => {
+            const companyId = localStorage.getItem('companyId');
+            if (!companyId) return;
+
+            await saveProject({ ...projectData, companyId });
+            
+            // Recargar proyectos
+            const projs = await getProjectsByCompany(companyId);
+            setProjects(projs);
+            setShowProjectModal(false);
           }}
         />
       )}
@@ -2461,6 +2502,501 @@ const PropertyModal: React.FC<PropertyModalProps> = ({ property, zones, onClose,
             >
               {property ? 'Guardar Cambios' : 'Crear Propiedad'}
             </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// Componente Modal para Crear/Editar Proyecto (Paso a Paso) - Promotora
+interface ProjectModalProps {
+  companyId: string;
+  zones: string[];
+  onClose: () => void;
+  onSave: (project: Omit<Project, 'id' | 'createdAt' | 'updatedAt'>) => void;
+}
+
+const ProjectModal: React.FC<ProjectModalProps> = ({ zones, onClose, onSave }) => {
+  const [step, setStep] = useState(1);
+  const [name, setName] = useState('');
+  const [description, setDescription] = useState('');
+  const [zone, setZone] = useState(zones[0] || '');
+  const [address, setAddress] = useState('');
+  const [projectImages, setProjectImages] = useState<string[]>([]);
+  const [status, setStatus] = useState<'Activo' | 'Inactivo'>('Activo');
+  const [models, setModels] = useState<ProjectModel[]>([]);
+  const [currentModel, setCurrentModel] = useState<ProjectModel>({
+    name: '',
+    areaM2: null,
+    bedrooms: null,
+    bathrooms: null,
+    amenities: [],
+    unitsTotal: 0,
+    unitsAvailable: 0,
+    price: 0,
+    images: []
+  });
+  const [newAmenity, setNewAmenity] = useState('');
+
+  const handleProjectImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files) return;
+
+    const newImages: string[] = [];
+    for (let i = 0; i < files.length; i++) {
+      const file = files[i];
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        const base64 = reader.result as string;
+        newImages.push(base64);
+        if (newImages.length === files.length) {
+          setProjectImages([...projectImages, ...newImages]);
+        }
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleModelImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files) return;
+
+    const newImages: string[] = [];
+    for (let i = 0; i < files.length; i++) {
+      const file = files[i];
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        const base64 = reader.result as string;
+        newImages.push(base64);
+        if (newImages.length === files.length) {
+          setCurrentModel({ ...currentModel, images: [...currentModel.images, ...newImages] });
+        }
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const addModel = () => {
+    if (!currentModel.name || currentModel.unitsTotal === 0 || currentModel.price === 0) {
+      return;
+    }
+    setModels([...models, { ...currentModel }]);
+    setCurrentModel({
+      name: '',
+      areaM2: null,
+      bedrooms: null,
+      bathrooms: null,
+      amenities: [],
+      unitsTotal: 0,
+      unitsAvailable: 0,
+      price: 0,
+      images: []
+    });
+    setNewAmenity('');
+  };
+
+  const removeModel = (index: number) => {
+    setModels(models.filter((_, i) => i !== index));
+  };
+
+  const addAmenity = () => {
+    if (newAmenity.trim() && !currentModel.amenities?.includes(newAmenity.trim())) {
+      setCurrentModel({
+        ...currentModel,
+        amenities: [...(currentModel.amenities || []), newAmenity.trim()]
+      });
+      setNewAmenity('');
+    }
+  };
+
+  const removeAmenity = (amenity: string) => {
+    setCurrentModel({
+      ...currentModel,
+      amenities: currentModel.amenities?.filter(a => a !== amenity) || []
+    });
+  };
+
+  const handleSave = () => {
+    if (!name || !zone || models.length === 0) {
+      return;
+    }
+    onSave({
+      companyId: '',
+      name,
+      description,
+      zone,
+      address,
+      images: projectImages,
+      status,
+      models
+    });
+  };
+
+  const totalSteps = 3;
+
+  return (
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+      <div className="bg-white rounded-[2rem] w-full max-w-4xl max-h-[90vh] overflow-y-auto shadow-2xl relative">
+        <div className="sticky top-0 bg-white border-b border-gray-100 p-6 flex items-center justify-between z-10">
+          <div>
+            <h3 className="text-2xl font-bold text-gray-900">Nuevo Proyecto</h3>
+            <div className="flex gap-2 mt-2">
+              {Array.from({ length: totalSteps }).map((_, idx) => (
+                <div
+                  key={idx}
+                  className={`h-2 rounded-full transition-all ${
+                    idx + 1 <= step ? 'bg-indigo-600 w-8' : 'bg-gray-200 w-2'
+                  }`}
+                />
+              ))}
+            </div>
+          </div>
+          <button onClick={onClose} className="w-10 h-10 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center transition-colors">
+            <X size={20} className="text-gray-600" />
+          </button>
+        </div>
+
+        <div className="p-6 space-y-6">
+          {/* PASO 1: Información Básica del Proyecto */}
+          {step === 1 && (
+            <div className="space-y-6 animate-fade-in-up">
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">Nombre del Proyecto *</label>
+                <input
+                  type="text"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-indigo-500 outline-none"
+                  placeholder="Ej: Edificio Residencial Los Pinos"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">Descripción</label>
+                <textarea
+                  value={description}
+                  onChange={(e) => setDescription(e.target.value)}
+                  className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-indigo-500 outline-none resize-none"
+                  rows={4}
+                  placeholder="Describe el proyecto..."
+                />
+              </div>
+
+              <div className="grid md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">Zona *</label>
+                  <select
+                    value={zone}
+                    onChange={(e) => setZone(e.target.value)}
+                    className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-indigo-500 outline-none"
+                  >
+                    {zones.map(z => (
+                      <option key={z} value={z}>{z}</option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">Dirección</label>
+                  <input
+                    type="text"
+                    value={address}
+                    onChange={(e) => setAddress(e.target.value)}
+                    className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-indigo-500 outline-none"
+                    placeholder="Dirección completa"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">Imágenes del Proyecto</label>
+                <input
+                  type="file"
+                  multiple
+                  accept="image/*"
+                  onChange={handleProjectImageUpload}
+                  className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-indigo-500 outline-none"
+                />
+                {projectImages.length > 0 && (
+                  <div className="grid grid-cols-4 gap-2 mt-4">
+                    {projectImages.map((img, idx) => (
+                      <div key={idx} className="relative">
+                        <img src={img} alt={`Proyecto ${idx + 1}`} className="w-full h-24 object-cover rounded-lg" />
+                        <button
+                          onClick={() => setProjectImages(projectImages.filter((_, i) => i !== idx))}
+                          className="absolute top-1 right-1 w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center text-xs"
+                        >
+                          <X size={12} />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">Estado</label>
+                <select
+                  value={status}
+                  onChange={(e) => setStatus(e.target.value as 'Activo' | 'Inactivo')}
+                  className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-indigo-500 outline-none"
+                >
+                  <option value="Activo">Activo</option>
+                  <option value="Inactivo">Inactivo</option>
+                </select>
+              </div>
+            </div>
+          )}
+
+          {/* PASO 2: Agregar Modelos */}
+          {step === 2 && (
+            <div className="space-y-6 animate-fade-in-up">
+              <h4 className="text-lg font-bold text-gray-900 mb-4">Agregar Modelos al Proyecto</h4>
+
+              {/* Formulario de Modelo Actual */}
+              <div className="bg-gray-50 p-6 rounded-xl space-y-4">
+                <div className="grid md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">Nombre del Modelo *</label>
+                    <input
+                      type="text"
+                      value={currentModel.name}
+                      onChange={(e) => setCurrentModel({ ...currentModel, name: e.target.value })}
+                      className="w-full px-4 py-2 rounded-lg border border-gray-200"
+                      placeholder="Ej: Modelo A - 2BR"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">Precio *</label>
+                    <input
+                      type="number"
+                      value={currentModel.price || ''}
+                      onChange={(e) => setCurrentModel({ ...currentModel, price: parseFloat(e.target.value) || 0 })}
+                      className="w-full px-4 py-2 rounded-lg border border-gray-200"
+                      placeholder="0.00"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid md:grid-cols-4 gap-4">
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">Área (m²)</label>
+                    <input
+                      type="number"
+                      value={currentModel.areaM2 || ''}
+                      onChange={(e) => setCurrentModel({ ...currentModel, areaM2: parseFloat(e.target.value) || null })}
+                      className="w-full px-4 py-2 rounded-lg border border-gray-200"
+                      placeholder="0"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">Habitaciones</label>
+                    <input
+                      type="number"
+                      value={currentModel.bedrooms || ''}
+                      onChange={(e) => setCurrentModel({ ...currentModel, bedrooms: parseInt(e.target.value) || null })}
+                      className="w-full px-4 py-2 rounded-lg border border-gray-200"
+                      placeholder="0"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">Baños</label>
+                    <input
+                      type="number"
+                      step="0.5"
+                      value={currentModel.bathrooms || ''}
+                      onChange={(e) => setCurrentModel({ ...currentModel, bathrooms: parseFloat(e.target.value) || null })}
+                      className="w-full px-4 py-2 rounded-lg border border-gray-200"
+                      placeholder="0"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">Unidades Totales *</label>
+                    <input
+                      type="number"
+                      value={currentModel.unitsTotal || ''}
+                      onChange={(e) => setCurrentModel({ ...currentModel, unitsTotal: parseInt(e.target.value) || 0, unitsAvailable: parseInt(e.target.value) || 0 })}
+                      className="w-full px-4 py-2 rounded-lg border border-gray-200"
+                      placeholder="0"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">Amenidades</label>
+                  <div className="flex gap-2 mb-2">
+                    <input
+                      type="text"
+                      value={newAmenity}
+                      onChange={(e) => setNewAmenity(e.target.value)}
+                      onKeyPress={(e) => e.key === 'Enter' && addAmenity()}
+                      className="flex-1 px-4 py-2 rounded-lg border border-gray-200"
+                      placeholder="Ej: Piscina, Gimnasio..."
+                    />
+                    <button
+                      onClick={addAmenity}
+                      className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700"
+                    >
+                      Agregar
+                    </button>
+                  </div>
+                  {currentModel.amenities && currentModel.amenities.length > 0 && (
+                    <div className="flex flex-wrap gap-2">
+                      {currentModel.amenities.map((amenity, idx) => (
+                        <span
+                          key={idx}
+                          className="px-3 py-1 bg-indigo-100 text-indigo-700 rounded-full text-sm flex items-center gap-2"
+                        >
+                          {amenity}
+                          <button onClick={() => removeAmenity(amenity)} className="text-indigo-500 hover:text-indigo-700">
+                            <X size={14} />
+                          </button>
+                        </span>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">Imágenes del Modelo</label>
+                  <input
+                    type="file"
+                    multiple
+                    accept="image/*"
+                    onChange={handleModelImageUpload}
+                    className="w-full px-4 py-2 rounded-lg border border-gray-200"
+                  />
+                  {currentModel.images.length > 0 && (
+                    <div className="grid grid-cols-4 gap-2 mt-4">
+                      {currentModel.images.map((img, idx) => (
+                        <div key={idx} className="relative">
+                          <img src={img} alt={`Modelo ${idx + 1}`} className="w-full h-24 object-cover rounded-lg" />
+                          <button
+                            onClick={() => setCurrentModel({ ...currentModel, images: currentModel.images.filter((_, i) => i !== idx) })}
+                            className="absolute top-1 right-1 w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center text-xs"
+                          >
+                            <X size={12} />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                <button
+                  onClick={addModel}
+                  disabled={!currentModel.name || currentModel.unitsTotal === 0 || currentModel.price === 0}
+                  className="w-full px-6 py-3 bg-indigo-600 text-white rounded-xl font-semibold hover:bg-indigo-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  Agregar Modelo
+                </button>
+              </div>
+
+              {/* Lista de Modelos Agregados */}
+              {models.length > 0 && (
+                <div className="space-y-3">
+                  <h5 className="font-semibold text-gray-700">Modelos Agregados ({models.length})</h5>
+                  {models.map((model, idx) => (
+                    <div key={idx} className="bg-white p-4 rounded-lg border border-gray-200 flex items-center justify-between">
+                      <div>
+                        <p className="font-semibold">{model.name}</p>
+                        <p className="text-sm text-gray-500">
+                          {model.areaM2 ? `${model.areaM2}m² • ` : ''}
+                          {model.bedrooms ? `${model.bedrooms} BR • ` : ''}
+                          {model.bathrooms ? `${model.bathrooms} BA • ` : ''}
+                          {formatCurrency(model.price)} • {model.unitsAvailable}/{model.unitsTotal} disponibles
+                        </p>
+                      </div>
+                      <button
+                        onClick={() => removeModel(idx)}
+                        className="px-3 py-1 bg-red-100 text-red-600 rounded-lg hover:bg-red-200"
+                      >
+                        Eliminar
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* PASO 3: Revisar y Guardar */}
+          {step === 3 && (
+            <div className="space-y-6 animate-fade-in-up">
+              <h4 className="text-lg font-bold text-gray-900 mb-4">Revisar Información</h4>
+
+              <div className="bg-gray-50 p-6 rounded-xl space-y-4">
+                <div>
+                  <h5 className="font-semibold text-gray-700 mb-2">Información del Proyecto</h5>
+                  <p><strong>Nombre:</strong> {name}</p>
+                  <p><strong>Zona:</strong> {zone}</p>
+                  {address && <p><strong>Dirección:</strong> {address}</p>}
+                  {description && <p><strong>Descripción:</strong> {description}</p>}
+                  <p><strong>Estado:</strong> {status}</p>
+                  {projectImages.length > 0 && (
+                    <div className="mt-2">
+                      <p className="font-semibold mb-2">Imágenes ({projectImages.length})</p>
+                      <div className="grid grid-cols-4 gap-2">
+                        {projectImages.map((img, idx) => (
+                          <img key={idx} src={img} alt={`Proyecto ${idx + 1}`} className="w-full h-20 object-cover rounded-lg" />
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                <div>
+                  <h5 className="font-semibold text-gray-700 mb-2">Modelos ({models.length})</h5>
+                  {models.map((model, idx) => (
+                    <div key={idx} className="bg-white p-4 rounded-lg mb-2">
+                      <p className="font-semibold">{model.name}</p>
+                      <p className="text-sm text-gray-600">
+                        {model.areaM2 ? `${model.areaM2}m² • ` : ''}
+                        {model.bedrooms ? `${model.bedrooms} BR • ` : ''}
+                        {model.bathrooms ? `${model.bathrooms} BA • ` : ''}
+                        Precio: {formatCurrency(model.price)} • {model.unitsAvailable}/{model.unitsTotal} disponibles
+                      </p>
+                      {model.amenities && model.amenities.length > 0 && (
+                        <p className="text-sm text-gray-500 mt-1">Amenidades: {model.amenities.join(', ')}</p>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Navegación */}
+          <div className="flex gap-4 pt-4 border-t border-gray-200">
+            {step > 1 && (
+              <button
+                onClick={() => setStep(step - 1)}
+                className="px-6 py-3 rounded-xl border border-gray-200 text-gray-700 font-semibold hover:bg-gray-50 transition-colors"
+              >
+                Atrás
+              </button>
+            )}
+            {step < totalSteps ? (
+              <button
+                onClick={() => {
+                  if (step === 1 && !name) return;
+                  if (step === 2 && models.length === 0) return;
+                  setStep(step + 1);
+                }}
+                disabled={(step === 1 && !name) || (step === 2 && models.length === 0)}
+                className="flex-1 px-6 py-3 rounded-xl bg-indigo-600 text-white font-semibold hover:bg-indigo-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                Continuar
+              </button>
+            ) : (
+              <button
+                onClick={handleSave}
+                disabled={!name || !zone || models.length === 0}
+                className="flex-1 px-6 py-3 rounded-xl bg-indigo-600 text-white font-semibold hover:bg-indigo-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                Guardar Proyecto
+              </button>
+            )}
           </div>
         </div>
       </div>

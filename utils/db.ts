@@ -1,6 +1,6 @@
 /// <reference types="vite/client" />
 import { Pool } from '@neondatabase/serverless';
-import { CalculationResult, Prospect, PersonalData, FinancialData, UserPreferences } from '../types';
+import { CalculationResult, Prospect, PersonalData, FinancialData, UserPreferences, Project, ProjectModel } from '../types';
 import { MOCK_PROSPECTS } from '../constants';
 
 // Usar variable de entorno para la conexión a Neon
@@ -186,6 +186,41 @@ const ensureTablesExist = async (client: any) => {
       console.warn('Nota: No se pudo agregar la restricción UNIQUE (puede que ya exista):', e);
     }
 
+    // Tabla de proyectos (para Promotora)
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS projects (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        company_id UUID REFERENCES companies(id) ON DELETE CASCADE NOT NULL,
+        name TEXT NOT NULL,
+        description TEXT,
+        zone TEXT,
+        address TEXT,
+        images TEXT[],
+        status TEXT DEFAULT 'Activo' CHECK (status IN ('Activo', 'Inactivo')),
+        created_at TIMESTAMP DEFAULT NOW(),
+        updated_at TIMESTAMP DEFAULT NOW()
+      )
+    `);
+
+    // Tabla de modelos dentro de un proyecto
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS project_models (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        project_id UUID REFERENCES projects(id) ON DELETE CASCADE NOT NULL,
+        name TEXT NOT NULL,
+        area_m2 NUMERIC,
+        bedrooms INTEGER,
+        bathrooms NUMERIC,
+        amenities TEXT[],
+        units_total INTEGER NOT NULL,
+        units_available INTEGER NOT NULL,
+        price NUMERIC NOT NULL,
+        images TEXT[],
+        created_at TIMESTAMP DEFAULT NOW(),
+        updated_at TIMESTAMP DEFAULT NOW()
+      )
+    `);
+
     // Crear índices si no existen
     try {
       await client.query(`CREATE INDEX IF NOT EXISTS idx_properties_company_id ON properties(company_id)`);
@@ -195,6 +230,8 @@ const ensureTablesExist = async (client: any) => {
       await client.query(`CREATE INDEX IF NOT EXISTS idx_property_interests_prospect_id ON property_interests(prospect_id)`);
       await client.query(`CREATE INDEX IF NOT EXISTS idx_property_interests_property_id ON property_interests(property_id)`);
       await client.query(`CREATE INDEX IF NOT EXISTS idx_property_interests_interested ON property_interests(interested)`);
+      await client.query(`CREATE INDEX IF NOT EXISTS idx_projects_company_id ON projects(company_id)`);
+      await client.query(`CREATE INDEX IF NOT EXISTS idx_project_models_project_id ON project_models(project_id)`);
     } catch (e) {
       console.warn('Nota: No se pudieron crear índices (pueden que ya existan):', e);
     }
@@ -1288,6 +1325,135 @@ export const getPropertyInterestsByProspect = async (prospectId: string): Promis
 
   } catch (error) {
     console.error('❌ Error obteniendo propiedades del prospecto:', error);
+    return [];
+  }
+};
+
+// ========== FUNCIONES PARA PROYECTOS (PROMOTORA) ==========
+
+// Guardar proyecto con sus modelos
+export const saveProject = async (project: Omit<Project, 'id' | 'createdAt' | 'updatedAt'>): Promise<string | null> => {
+  if (!pool) {
+    console.error('❌ Pool de base de datos no inicializado.');
+    return null;
+  }
+
+  try {
+    const client = await pool.connect();
+    await ensureTablesExist(client);
+
+    // Insertar proyecto
+    const projectQuery = `
+      INSERT INTO projects (company_id, name, description, zone, address, images, status)
+      VALUES ($1, $2, $3, $4, $5, $6, $7)
+      RETURNING id
+    `;
+
+    const projectResult = await client.query(projectQuery, [
+      project.companyId,
+      project.name,
+      project.description || null,
+      project.zone || null,
+      project.address || null,
+      project.images || [],
+      project.status || 'Activo'
+    ]);
+
+    const projectId = projectResult.rows[0].id;
+
+    // Insertar modelos
+    if (project.models && project.models.length > 0) {
+      for (const model of project.models) {
+        const modelQuery = `
+          INSERT INTO project_models (
+            project_id, name, area_m2, bedrooms, bathrooms, amenities,
+            units_total, units_available, price, images
+          )
+          VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+        `;
+
+        await client.query(modelQuery, [
+          projectId,
+          model.name,
+          model.areaM2 || null,
+          model.bedrooms || null,
+          model.bathrooms || null,
+          model.amenities || [],
+          model.unitsTotal,
+          model.unitsAvailable,
+          model.price,
+          model.images || []
+        ]);
+      }
+    }
+
+    client.release();
+    console.log(`✅ Proyecto guardado con ID: ${projectId}`);
+    return projectId;
+
+  } catch (error) {
+    console.error('❌ Error guardando proyecto:', error);
+    return null;
+  }
+};
+
+// Obtener proyectos de una empresa
+export const getProjectsByCompany = async (companyId: string): Promise<Project[]> => {
+  if (!pool) {
+    return [];
+  }
+
+  try {
+    const client = await pool.connect();
+    await ensureTablesExist(client);
+
+    // Obtener proyectos
+    const projectsResult = await client.query(
+      'SELECT * FROM projects WHERE company_id = $1 ORDER BY created_at DESC',
+      [companyId]
+    );
+
+    // Para cada proyecto, obtener sus modelos
+    const projects: Project[] = [];
+    for (const row of projectsResult.rows) {
+      const modelsResult = await client.query(
+        'SELECT * FROM project_models WHERE project_id = $1 ORDER BY created_at',
+        [row.id]
+      );
+
+      const models: ProjectModel[] = modelsResult.rows.map((modelRow: any) => ({
+        id: modelRow.id,
+        name: modelRow.name,
+        areaM2: modelRow.area_m2 ? parseFloat(modelRow.area_m2) : null,
+        bedrooms: modelRow.bedrooms,
+        bathrooms: modelRow.bathrooms ? parseFloat(modelRow.bathrooms) : null,
+        amenities: Array.isArray(modelRow.amenities) ? modelRow.amenities : [],
+        unitsTotal: modelRow.units_total,
+        unitsAvailable: modelRow.units_available,
+        price: parseFloat(modelRow.price || 0),
+        images: Array.isArray(modelRow.images) ? modelRow.images : []
+      }));
+
+      projects.push({
+        id: row.id,
+        companyId: row.company_id,
+        name: row.name,
+        description: row.description,
+        zone: row.zone || '',
+        address: row.address,
+        images: Array.isArray(row.images) ? row.images : [],
+        status: row.status as 'Activo' | 'Inactivo',
+        models: models,
+        createdAt: row.created_at ? new Date(row.created_at).toISOString() : undefined,
+        updatedAt: row.updated_at ? new Date(row.updated_at).toISOString() : undefined
+      });
+    }
+
+    client.release();
+    return projects;
+
+  } catch (error) {
+    console.error('❌ Error obteniendo proyectos:', error);
     return [];
   }
 };
