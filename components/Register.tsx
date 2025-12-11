@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { 
-  User, Mail, Lock, Building, Image as ImageIcon, MapPin, ArrowRight, ChevronLeft, Check, Plus, X, Upload
+  User, Mail, Lock, Building, Image as ImageIcon, MapPin, ArrowRight, ChevronLeft, Check, Plus, X, Upload, Loader2
 } from 'lucide-react';
 import { ZONES_PANAMA } from '../constants';
 import { saveCompanyToDB } from '../utils/db';
@@ -30,6 +30,7 @@ export const Register: React.FC<RegisterProps> = ({ onRegisterComplete, onGoToLo
     type: 'error',
     message: ''
   });
+  const [isLoading, setIsLoading] = useState(false);
 
   const handleNext = () => setStep(prev => prev + 1);
   const handleBack = () => setStep(prev => prev - 1);
@@ -77,6 +78,7 @@ export const Register: React.FC<RegisterProps> = ({ onRegisterComplete, onGoToLo
           message: 'Por favor selecciona al menos una zona antes de finalizar el registro.',
           title: 'Zonas requeridas'
         });
+        setIsLoading(false);
         return;
       }
       
@@ -141,7 +143,13 @@ export const Register: React.FC<RegisterProps> = ({ onRegisterComplete, onGoToLo
         message: 'Error al registrar. Por favor intenta de nuevo. Revisa la consola para más detalles.',
         title: 'Error al registrar'
       });
+    } finally {
+      setIsLoading(false);
     }
+  };
+
+  const handleFinish = () => {
+    handleFinalSubmit();
   };
 
   return (
@@ -405,14 +413,23 @@ export const Register: React.FC<RegisterProps> = ({ onRegisterComplete, onGoToLo
               </button>
               <button
                 onClick={handleFinish}
-                disabled={formData.zones.length === 0}
+                disabled={formData.zones.length === 0 || isLoading}
                 className={`flex-1 py-4 rounded-xl font-bold transition-all flex justify-center items-center gap-2 ${
-                   formData.zones.length === 0
+                   formData.zones.length === 0 || isLoading
                    ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
                    : 'bg-gray-900 text-white hover:bg-gray-800 shadow-lg shadow-gray-200'
                 }`}
               >
-                Finalizar Registro <Check size={18} />
+                {isLoading ? (
+                  <>
+                    <Loader2 size={18} className="animate-spin" />
+                    Procesando...
+                  </>
+                ) : (
+                  <>
+                    Finalizar Registro <Check size={18} />
+                  </>
+                )}
               </button>
             </div>
           </div>

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Mail, Lock, ArrowRight, LayoutDashboard } from 'lucide-react';
+import { Mail, Lock, ArrowRight, LayoutDashboard, Loader2 } from 'lucide-react';
 import { verifyLogin } from '../utils/db';
 import { NotificationModal, NotificationType } from './ui/NotificationModal';
 
@@ -16,6 +16,7 @@ export const Login: React.FC<LoginProps> = ({ onLogin, onGoToRegister }) => {
     type: 'error',
     message: ''
   });
+  const [isLoading, setIsLoading] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -24,6 +25,7 @@ export const Login: React.FC<LoginProps> = ({ onLogin, onGoToRegister }) => {
       return;
     }
 
+    setIsLoading(true);
     try {
       console.log('🔄 Verificando credenciales...');
       const company = await verifyLogin(email, password);
@@ -52,6 +54,8 @@ export const Login: React.FC<LoginProps> = ({ onLogin, onGoToRegister }) => {
         message: 'Error al iniciar sesión. Por favor intenta de nuevo.',
         title: 'Error de conexión'
       });
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -102,9 +106,19 @@ export const Login: React.FC<LoginProps> = ({ onLogin, onGoToRegister }) => {
 
           <button
             type="submit"
-            className="w-full bg-gray-900 text-white py-4 rounded-xl font-bold hover:bg-gray-800 transition-all shadow-lg shadow-gray-200 flex justify-center items-center gap-2 group"
+            disabled={isLoading}
+            className="w-full bg-gray-900 text-white py-4 rounded-xl font-bold hover:bg-gray-800 transition-all shadow-lg shadow-gray-200 flex justify-center items-center gap-2 group disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            Iniciar Sesión <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" />
+            {isLoading ? (
+              <>
+                <Loader2 size={18} className="animate-spin" />
+                Iniciando sesión...
+              </>
+            ) : (
+              <>
+                Iniciar Sesión <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" />
+              </>
+            )}
           </button>
         </form>
 

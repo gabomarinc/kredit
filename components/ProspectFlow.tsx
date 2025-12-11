@@ -4,7 +4,7 @@ import { calculateAffordability, formatCurrency } from '../utils/calculator';
 import { saveProspectToDB, getCompanyById, getAvailablePropertiesForProspect, savePropertyInterest, getCompanyById as getCompany } from '../utils/db';
 import { Property, PlanType } from '../types';
 import { 
-  Home, Building2, MapPin, User, Upload, FileCheck, ArrowRight, CheckCircle2, Download, HeartHandshake, ChevronLeft, Check, BedDouble, Bath, Star, TrendingDown, X
+  Home, Building2, MapPin, User, Upload, FileCheck, ArrowRight, CheckCircle2, Download, HeartHandshake, ChevronLeft, Check, BedDouble, Bath, Star, TrendingDown, X, Loader2
 } from 'lucide-react';
 import { NotificationModal, NotificationType } from './ui/NotificationModal';
 
@@ -77,6 +77,7 @@ export const ProspectFlow: React.FC<ProspectFlowProps> = ({ availableZones, comp
   });
   const [result, setResult] = useState<CalculationResult | null>(null);
   const [isCalculating, setIsCalculating] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
   const [companyLogo, setCompanyLogo] = useState<string | null>(null);
   const [zones, setZones] = useState<string[]>(availableZones);
   const [prospectId, setProspectId] = useState<string | null>(null);
@@ -225,6 +226,7 @@ export const ProspectFlow: React.FC<ProspectFlowProps> = ({ availableZones, comp
     
     setTimeout(() => {
       setIsCalculating(false);
+      setIsSaving(false);
       handleNext(); // Ir a resultados finales (step 6)
     }, 1500);
   };
@@ -622,15 +624,23 @@ export const ProspectFlow: React.FC<ProspectFlowProps> = ({ availableZones, comp
                 </button>
                 <button
                   onClick={() => handleFinalSubmit(true)}
-                  disabled={!personal.idFile || !personal.fichaFile || !personal.talonarioFile || !personal.signedAcpFile}
+                  disabled={!personal.idFile || !personal.fichaFile || !personal.talonarioFile || !personal.signedAcpFile || isSaving}
                   className={`flex items-center justify-center gap-3 px-6 sm:px-10 py-4 rounded-full font-bold text-base sm:text-lg transition-all duration-300 shadow-xl order-1 sm:order-2 flex-1 sm:flex-initial ${
-                    !personal.idFile || !personal.fichaFile || !personal.talonarioFile || !personal.signedAcpFile || isCalculating
+                    !personal.idFile || !personal.fichaFile || !personal.talonarioFile || !personal.signedAcpFile || isSaving
                       ? 'bg-gray-100 text-gray-400 cursor-not-allowed shadow-none'
                       : 'bg-indigo-600 text-white hover:bg-indigo-700 shadow-indigo-200'
                   }`}
                 >
-                  {isCalculating ? 'Procesando...' : 'Enviar Validación'} 
-                  {!isCalculating && <ArrowRight size={20} className="shrink-0" />}
+                  {isSaving ? (
+                    <>
+                      <Loader2 size={20} className="animate-spin shrink-0" />
+                      Procesando...
+                    </>
+                  ) : (
+                    <>
+                      Enviar Validación <ArrowRight size={20} className="shrink-0" />
+                    </>
+                  )}
                 </button>
               </div>
             </div>

@@ -2408,6 +2408,7 @@ interface PropertyModalProps {
 }
 
 const PropertyModal: React.FC<PropertyModalProps> = ({ property, zones, onClose, onSave }) => {
+  const [isSaving, setIsSaving] = useState(false);
   const [title, setTitle] = useState(property?.title || '');
   const [description, setDescription] = useState(property?.description || '');
   const [type, setType] = useState<'Venta' | 'Alquiler'>(property?.type || 'Venta');
@@ -2447,25 +2448,33 @@ const PropertyModal: React.FC<PropertyModalProps> = ({ property, zones, onClose,
     setImages(images.filter((_, i) => i !== index));
   };
 
-  const handleSave = () => {
-    onSave({
-      title,
-      description,
-      type,
-      price: parseFloat(price) || 0,
-      zone,
-      bedrooms: bedrooms ? parseInt(bedrooms) : null,
-      bathrooms: bathrooms ? parseFloat(bathrooms) : null,
-      areaM2: areaM2 ? parseFloat(areaM2) : null,
-      images,
-      address,
-      features: [],
-      status,
-      highDemand,
-      demandVisits: parseInt(demandVisits) || 0,
-      priceAdjusted,
-      priceAdjustmentPercent: parseFloat(priceAdjustmentPercent) || 0
-    });
+  const handleSave = async () => {
+    setIsSaving(true);
+    try {
+      await onSave({
+        title,
+        description,
+        type,
+        price: parseFloat(price) || 0,
+        zone,
+        bedrooms: bedrooms ? parseInt(bedrooms) : null,
+        bathrooms: bathrooms ? parseFloat(bathrooms) : null,
+        areaM2: areaM2 ? parseFloat(areaM2) : null,
+        images,
+        address,
+        features: [],
+        status,
+        highDemand,
+        demandVisits: parseInt(demandVisits) || 0,
+        priceAdjusted,
+        priceAdjustmentPercent: parseFloat(priceAdjustmentPercent) || 0
+      });
+    } finally {
+      setIsSaving(false);
+    }
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   return (
@@ -2687,10 +2696,19 @@ const PropertyModal: React.FC<PropertyModalProps> = ({ property, zones, onClose,
             </button>
             <button
               onClick={handleSave}
-              disabled={!title || !price || !zone}
-              className="flex-1 px-6 py-3 rounded-xl bg-indigo-600 text-white font-semibold hover:bg-indigo-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              disabled={!title || !price || !zone || isSaving}
+              className="flex-1 px-6 py-3 rounded-xl bg-indigo-600 text-white font-semibold hover:bg-indigo-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
             >
-              {property ? 'Guardar Cambios' : 'Crear Propiedad'}
+              {isSaving ? (
+                <>
+                  <Loader2 size={18} className="animate-spin" />
+                  Guardando...
+                </>
+              ) : (
+                <>
+                  {property ? 'Guardar Cambios' : 'Crear Propiedad'}
+                </>
+              )}
             </button>
           </div>
         </div>
@@ -2821,7 +2839,10 @@ const ProjectModal: React.FC<ProjectModalProps> = ({ project, zones, onClose, on
       images: projectImages,
       status,
       models
-    });
+      });
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   const totalSteps = 3;
