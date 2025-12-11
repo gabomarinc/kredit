@@ -697,7 +697,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableZones, onUpdateZo
                 <button
                   onClick={() => {
                     if (isPromotora) {
-                      setShowProjectModal(true);
+                      setShowProjectSelectionModal(true);
                     } else {
                       setShowPropertySelectionModal(true);
                     }
@@ -730,7 +730,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableZones, onUpdateZo
                   <button
                     onClick={() => {
                       if (isPromotora) {
-                        setShowProjectModal(true);
+                        setShowProjectSelectionModal(true);
                       } else {
                         setShowPropertySelectionModal(true);
                       }
