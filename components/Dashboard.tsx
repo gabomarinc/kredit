@@ -2824,19 +2824,21 @@ const ProjectModal: React.FC<ProjectModalProps> = ({ project, zones, onClose, on
     });
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!name || !zone || models.length === 0) {
       return;
     }
-    onSave({
-      companyId: '',
-      name,
-      description,
-      zone,
-      address,
-      images: projectImages,
-      status,
-      models
+    setIsSaving(true);
+    try {
+      await onSave({
+        companyId: '',
+        name,
+        description,
+        zone,
+        address,
+        images: projectImages,
+        status,
+        models
       });
     } finally {
       setIsSaving(false);
