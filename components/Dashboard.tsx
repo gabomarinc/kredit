@@ -46,6 +46,11 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableZones, onUpdateZo
   const [showPropertySelectionModal, setShowPropertySelectionModal] = useState(false);
   const [prospectInterestedProperties, setProspectInterestedProperties] = useState<Property[]>([]);
   const [isLoadingProspectProperties, setIsLoadingProspectProperties] = useState(false);
+  
+  // Projects State (Promotora)
+  const [projects, setProjects] = useState<Project[]>([]);
+  const [showProjectModal, setShowProjectModal] = useState(false);
+  
   const [notification, setNotification] = useState<{ isOpen: boolean; type: NotificationType; message: string; title?: string }>({
     isOpen: false,
     type: 'error',
