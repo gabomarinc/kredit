@@ -359,9 +359,11 @@ export const saveProspectToDB = async (
   }
 };
 
-// Guardar prospecto inicial (solo datos básicos: nombre, email, teléfono)
+// Guardar prospecto inicial (nombre, correo, teléfono, monthly_income, property_type, bedrooms, bathrooms, interested_zones)
 export const saveProspectInitial = async (
   personal: { fullName: string; email: string; phone: string },
+  financial: { familyIncome: number },
+  preferences: { propertyType: string; bedrooms: number | null; bathrooms: number | null; zone: string[] | string },
   companyId?: string | null
 ): Promise<string | null> => {
   if (!pool) {
@@ -370,11 +372,22 @@ export const saveProspectInitial = async (
   }
 
   try {
-    console.log('🔄 Guardando prospecto inicial...');
+    console.log('🔄 Guardando prospecto inicial con todos los datos...');
     const client = await pool.connect();
     await ensureTablesExist(client);
 
-    // Insertar solo datos básicos (con valores por defecto para campos requeridos)
+    // Asegurar que zones sea un array
+    const zonesArray = Array.isArray(preferences.zone) 
+      ? preferences.zone 
+      : (preferences.zone ? [preferences.zone] : []);
+
+    // Preparar valores
+    const monthlyIncome = typeof financial.familyIncome === 'number' ? financial.familyIncome : parseFloat(String(financial.familyIncome || 0));
+    const propertyType = String(preferences.propertyType || '');
+    const bedrooms = preferences.bedrooms !== undefined && preferences.bedrooms !== null ? Number(preferences.bedrooms) : null;
+    const bathrooms = preferences.bathrooms !== undefined && preferences.bathrooms !== null ? parseFloat(String(preferences.bathrooms)) : null;
+
+    // Insertar datos básicos + preferencias
     const query = `
       INSERT INTO prospects (
         company_id,
@@ -382,9 +395,13 @@ export const saveProspectInitial = async (
         email,
         phone,
         monthly_income,
+        property_type,
+        bedrooms,
+        bathrooms,
+        interested_zones,
         status,
         created_at
-      ) VALUES ($1, $2, $3, $4, 0, 'Nuevo', NOW())
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, 'Nuevo', NOW())
       RETURNING id
     `;
 
@@ -392,8 +409,24 @@ export const saveProspectInitial = async (
       companyId || null,
       personal.fullName,
       personal.email,
-      personal.phone
+      personal.phone,
+      monthlyIncome,
+      propertyType,
+      bedrooms,
+      bathrooms,
+      zonesArray
     ];
+
+    console.log('📤 Guardando prospecto inicial con valores:', {
+      full_name: values[1],
+      email: values[2],
+      phone: values[3],
+      monthly_income: values[4],
+      property_type: values[5],
+      bedrooms: values[6],
+      bathrooms: values[7],
+      interested_zones: values[8]
+    });
 
     const res = await client.query(query, values);
     client.release();
@@ -406,14 +439,11 @@ export const saveProspectInitial = async (
   }
 };
 
-// Actualizar prospecto existente con toda la información
+// Actualizar prospecto existente (solo archivos y calculation_result)
 export const updateProspectToDB = async (
   prospectId: string,
   personal: PersonalData,
-  financial: FinancialData,
-  preferences: UserPreferences,
-  result: CalculationResult,
-  companyId?: string | null
+  result: CalculationResult
 ): Promise<boolean> => {
   if (!pool) {
     console.error('❌ Pool de base de datos no inicializado.');
@@ -421,21 +451,13 @@ export const updateProspectToDB = async (
   }
 
   try {
-    console.log('🔄 Actualizando prospecto:', prospectId);
+    console.log('🔄 Actualizando prospecto con archivos y calculation_result:', prospectId);
     console.log('📋 Datos a actualizar:', {
-      fullName: personal.fullName,
-      email: personal.email,
-      phone: personal.phone,
-      monthlyIncome: financial.familyIncome,
-      propertyType: preferences.propertyType,
-      bedrooms: preferences.bedrooms,
-      bathrooms: preferences.bathrooms,
-      zones: preferences.zone,
       hasIdFile: !!personal.idFile,
       hasFichaFile: !!personal.fichaFile,
       hasTalonarioFile: !!personal.talonarioFile,
       hasSignedAcpFile: !!personal.signedAcpFile,
-      result: result
+      hasResult: !!result
     });
     
     const client = await pool.connect();
@@ -457,48 +479,19 @@ export const updateProspectToDB = async (
       hasSignedAcpFile: !!signedAcpFileBase64
     });
 
-    // Asegurar que zones sea un array
-    const zonesArray = Array.isArray(preferences.zone) 
-      ? preferences.zone 
-      : (preferences.zone ? [preferences.zone] : []);
-
-    // Actualizar prospecto - IMPORTANTE: Actualizar TODOS los campos, no usar COALESCE para campos que deben actualizarse
+    // Actualizar prospecto - SOLO archivos y calculation_result
     const query = `
       UPDATE prospects SET
-        company_id = $1,
-        full_name = $2,
-        email = $3,
-        phone = $4,
-        monthly_income = $5,
-        property_type = $6,
-        bedrooms = $7,
-        bathrooms = $8,
-        interested_zones = $9,
-        calculation_result = $10,
-        id_file_base64 = COALESCE(NULLIF($11, ''), id_file_base64),
-        ficha_file_base64 = COALESCE(NULLIF($12, ''), ficha_file_base64),
-        talonario_file_base64 = COALESCE(NULLIF($13, ''), talonario_file_base64),
-        signed_acp_file_base64 = COALESCE(NULLIF($14, ''), signed_acp_file_base64),
+        calculation_result = $1,
+        id_file_base64 = COALESCE(NULLIF($2, ''), id_file_base64),
+        ficha_file_base64 = COALESCE(NULLIF($3, ''), ficha_file_base64),
+        talonario_file_base64 = COALESCE(NULLIF($4, ''), talonario_file_base64),
+        signed_acp_file_base64 = COALESCE(NULLIF($5, ''), signed_acp_file_base64),
         updated_at = NOW()
-      WHERE id = $15
+      WHERE id = $6
     `;
 
-    // Preparar valores asegurando tipos correctos
-    const monthlyIncome = typeof financial.familyIncome === 'number' ? financial.familyIncome : parseFloat(String(financial.familyIncome || 0));
-    const propertyType = String(preferences.propertyType || '');
-    const bedrooms = preferences.bedrooms !== undefined && preferences.bedrooms !== null ? Number(preferences.bedrooms) : null;
-    const bathrooms = preferences.bathrooms !== undefined && preferences.bathrooms !== null ? parseFloat(String(preferences.bathrooms)) : null;
-    
     const values = [
-      companyId || null,
-      String(personal.fullName || ''),
-      String(personal.email || ''),
-      String(personal.phone || ''),
-      monthlyIncome, // Asegurar que sea número
-      propertyType,
-      bedrooms,
-      bathrooms,
-      zonesArray.length > 0 ? zonesArray : [], // Asegurar que es un array
       JSON.stringify(result || {}),
       idFileBase64 || null,
       fichaFileBase64 || null,
@@ -508,20 +501,11 @@ export const updateProspectToDB = async (
     ];
 
     console.log('📤 Ejecutando UPDATE con valores:', {
-      company_id: values[0],
-      full_name: values[1],
-      email: values[2],
-      phone: values[3],
-      monthly_income: values[4],
-      property_type: values[5],
-      bedrooms: values[6],
-      bathrooms: values[7],
-      interested_zones: values[8],
-      calculation_result: values[9] ? 'presente' : 'vacío',
-      id_file: values[10] ? 'presente' : 'null',
-      ficha_file: values[11] ? 'presente' : 'null',
-      talonario_file: values[12] ? 'presente' : 'null',
-      signed_acp_file: values[13] ? 'presente' : 'null'
+      calculation_result: values[0] ? 'presente' : 'vacío',
+      id_file: values[1] ? 'presente' : 'null',
+      ficha_file: values[2] ? 'presente' : 'null',
+      talonario_file: values[3] ? 'presente' : 'null',
+      signed_acp_file: values[4] ? 'presente' : 'null'
     });
 
     const updateResult = await client.query(query, values);

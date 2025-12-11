@@ -197,7 +197,8 @@ export const ProspectFlow: React.FC<ProspectFlowProps> = ({ availableZones, comp
     if (!prospectId) {
       console.error('❌ No hay prospectId disponible. Guardando prospecto inicial primero...');
       // Si no hay prospectId, intentar guardar prospecto inicial primero
-      if (personal.fullName && personal.email && personal.phone) {
+      // Debe incluir: nombre, correo, teléfono, monthly_income, property_type, bedrooms, bathrooms, interested_zones
+      if (personal.fullName && personal.email && personal.phone && result) {
         try {
           const urlParams = new URLSearchParams(window.location.search);
           const companyId = urlParams.get('company_id') || localStorage.getItem('companyId');
@@ -207,6 +208,8 @@ export const ProspectFlow: React.FC<ProspectFlowProps> = ({ availableZones, comp
               email: personal.email,
               phone: personal.phone
             },
+            financial,
+            preferences,
             companyId
           );
           if (savedId) {
@@ -221,7 +224,7 @@ export const ProspectFlow: React.FC<ProspectFlowProps> = ({ availableZones, comp
           return;
         }
       } else {
-        console.error('❌ Faltan datos básicos del prospecto');
+        console.error('❌ Faltan datos básicos del prospecto o resultado de cálculo');
         return;
       }
     }
@@ -233,14 +236,11 @@ export const ProspectFlow: React.FC<ProspectFlowProps> = ({ availableZones, comp
     const companyId = urlParams.get('company_id') || localStorage.getItem('companyId');
 
     try {
-      // Actualizar prospecto existente con toda la información
+      // Actualizar prospecto existente (solo archivos y calculation_result)
       const success = await updateProspectToDB(
         prospectId,
         personal,
-        financial,
-        preferences,
-        result,
-        companyId
+        result
       );
       
       if (success) {
@@ -597,7 +597,8 @@ export const ProspectFlow: React.FC<ProspectFlowProps> = ({ availableZones, comp
                 <button
                   onClick={async () => {
                     // Guardar prospecto inicial cuando se completan los datos básicos
-                    if (personal.fullName && personal.email && personal.phone) {
+                    // Debe incluir: nombre, correo, teléfono, monthly_income, property_type, bedrooms, bathrooms, interested_zones
+                    if (personal.fullName && personal.email && personal.phone && result) {
                       setIsSaving(true);
                       try {
                         const urlParams = new URLSearchParams(window.location.search);
@@ -609,12 +610,14 @@ export const ProspectFlow: React.FC<ProspectFlowProps> = ({ availableZones, comp
                             email: personal.email,
                             phone: personal.phone
                           },
+                          financial,
+                          preferences,
                           companyId
                         );
                         
                         if (savedId) {
                           setProspectId(savedId);
-                          console.log('✅ Prospecto inicial guardado:', savedId);
+                          console.log('✅ Prospecto inicial guardado con todos los datos:', savedId);
                         }
                       } catch (e) {
                         console.error('Error guardando prospecto inicial:', e);
@@ -624,7 +627,7 @@ export const ProspectFlow: React.FC<ProspectFlowProps> = ({ availableZones, comp
                       }
                     }
                   }}
-                  disabled={!personal.fullName || !personal.email || !personal.phone || isSaving}
+                  disabled={!personal.fullName || !personal.email || !personal.phone || !result || isSaving}
                   className={`flex items-center justify-center gap-2 px-6 sm:px-8 py-4 sm:py-3 rounded-full font-semibold text-base transition-all duration-300 order-1 sm:order-2 flex-1 sm:flex-initial ${
                     !personal.fullName || !personal.email || !personal.phone || isSaving
                       ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
