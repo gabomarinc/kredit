@@ -177,15 +177,10 @@ export const ProspectFlow: React.FC<ProspectFlowProps> = ({ availableZones, comp
     handleNext(); // Ir al step 3 (datos básicos)
   };
 
-  // Cuando el usuario decide validar o no
-  const handleValidationDecision = (wantsToValidate: boolean) => {
-    setWantsValidation(wantsToValidate);
-    if (wantsToValidate) {
-      handleNext(); // Ir a documentación (step 5)
-    } else {
-      // Si no quiere validar, ir directo a resultados (pero sin documentos)
-      handleFinalSubmit(false);
-    }
+  // El usuario debe validar para ver los resultados completos
+  const handleValidation = () => {
+    setWantsValidation(true);
+    handleNext(); // Ir a documentación (step 5)
   };
 
   // Guardar todo y mostrar resultados finales
@@ -570,20 +565,12 @@ export const ProspectFlow: React.FC<ProspectFlowProps> = ({ availableZones, comp
                     Para obtener una pre-aprobación oficial, necesitamos validar tu información con documentos adicionales.
                   </p>
                   <button
-                    onClick={() => handleValidationDecision(true)}
+                    onClick={handleValidation}
                     className="bg-gradient-to-r from-indigo-600 to-purple-600 text-white px-12 py-5 rounded-full font-bold text-lg hover:from-indigo-700 hover:to-purple-700 transition-all duration-300 shadow-xl shadow-indigo-200 hover:shadow-2xl hover:shadow-indigo-300 transform hover:scale-105 animate-pulse hover:animate-none"
                   >
                     Validar Pre-Aprobación
                   </button>
                 </div>
-
-                {/* Opción de continuar sin validar */}
-                <button
-                  onClick={() => handleValidationDecision(false)}
-                  className="text-gray-400 hover:text-indigo-600 font-medium transition-colors text-sm"
-                >
-                  Continuar sin validar
-                </button>
               </div>
             </div>
         )}
