@@ -2039,62 +2039,91 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableZones, onUpdateZo
       {/* Modal de Selección: Manual o Importar */}
       {showPropertySelectionModal && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-          <div className="bg-white rounded-[2rem] w-full max-w-2xl shadow-2xl relative animate-fade-in-up">
-            <div className="p-8">
-              <div className="flex items-center justify-between mb-6">
-                <h3 className="text-2xl font-bold text-gray-900">Agregar Propiedades</h3>
-                <button
-                  onClick={() => setShowPropertySelectionModal(false)}
-                  className="w-10 h-10 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center transition-colors"
-                >
-                  <X size={20} className="text-gray-600" />
-                </button>
+          <div className="bg-white rounded-[3rem] p-8 md:p-12 shadow-[0_20px_60px_-15px_rgba(0,0,0,0.05)] w-full max-w-4xl animate-fade-in-up border border-white/50 backdrop-blur-sm relative overflow-hidden">
+            
+            {/* Decorative Elements */}
+            <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-50 rounded-full blur-3xl -mr-20 -mt-20 opacity-60 pointer-events-none"></div>
+            <div className="absolute bottom-0 left-0 w-64 h-64 bg-purple-50 rounded-full blur-3xl -ml-20 -mb-20 opacity-60 pointer-events-none"></div>
+
+            {/* Close Button */}
+            <button
+              onClick={() => setShowPropertySelectionModal(false)}
+              className="absolute top-6 right-6 w-10 h-10 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center transition-colors z-20"
+            >
+              <X size={20} className="text-gray-600" />
+            </button>
+
+            <div className="relative z-10 flex flex-col items-center text-center mb-12">
+              {/* Logo */}
+              <div className="w-20 h-20 bg-gradient-to-br from-indigo-500 to-indigo-600 rounded-3xl flex items-center justify-center mb-6 shadow-xl shadow-indigo-200 transform rotate-3 hover:rotate-6 transition-transform duration-500">
+                <span className="text-3xl font-bold text-white tracking-tighter">ê</span>
               </div>
 
-              <p className="text-gray-500 mb-8 text-center">Elige cómo deseas agregar propiedades</p>
+              <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-3 tracking-tight">Agregar Propiedades</h1>
+              <p className="text-gray-500 text-lg leading-relaxed max-w-lg mx-auto font-light">
+                Elige cómo deseas agregar propiedades a tu catálogo.
+              </p>
+            </div>
 
-              <div className="grid md:grid-cols-2 gap-4">
-                {/* Botón: Agregar Manualmente */}
-                <button
-                  onClick={() => {
-                    setShowPropertySelectionModal(false);
-                    setSelectedPropertyForEdit(null);
-                    setShowPropertyModal(true);
-                  }}
-                  className="p-8 rounded-2xl border-2 border-indigo-200 bg-indigo-50/30 hover:bg-indigo-50 hover:border-indigo-400 transition-all text-left group"
-                >
-                  <div className="w-16 h-16 rounded-2xl bg-indigo-600 text-white flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
-                    <Plus size={32} />
-                  </div>
-                  <h4 className="text-xl font-bold text-gray-900 mb-2">Agregar Propiedad Manual</h4>
-                  <p className="text-sm text-gray-600">Crea una propiedad nueva completando el formulario paso a paso</p>
-                </button>
+            <div className="grid md:grid-cols-2 gap-6 relative z-10">
+              {/* Botón: Agregar Manualmente */}
+              <button
+                onClick={() => {
+                  setShowPropertySelectionModal(false);
+                  setSelectedPropertyForEdit(null);
+                  setShowPropertyModal(true);
+                }}
+                className="group text-left p-8 rounded-[2.5rem] border-2 border-gray-100 bg-white hover:border-indigo-200 hover:bg-indigo-50/30 hover:shadow-xl transition-all duration-300 relative overflow-hidden"
+              >
+                <div className="w-16 h-16 rounded-2xl bg-white border border-gray-100 text-gray-900 flex items-center justify-center mb-6 shadow-sm group-hover:scale-110 group-hover:bg-indigo-600 group-hover:text-white transition-all duration-300">
+                  <Plus size={28} strokeWidth={1.5} />
+                </div>
+                <h3 className="text-2xl font-bold text-gray-900 mb-2">Agregar Propiedad Manual</h3>
+                <p className="text-gray-500 leading-relaxed text-sm mb-4">
+                  Crea una propiedad nueva completando el formulario paso a paso.
+                </p>
+                
+                <div className="flex items-center gap-2 text-indigo-600 font-bold text-sm opacity-0 group-hover:opacity-100 transform translate-y-2 group-hover:translate-y-0 transition-all duration-300">
+                  Comenzar ahora <ArrowRight size={16} />
+                </div>
 
-                {/* Botón: Importar desde Excel/CSV */}
-                <button
-                  onClick={() => {
-                    // Trigger file input
-                    const input = document.createElement('input');
-                    input.type = 'file';
-                    input.accept = '.xlsx,.xls,.csv';
-                    input.onchange = async (e) => {
-                      const file = (e.target as HTMLInputElement).files?.[0];
-                      if (file) {
-                        await handleImportProperties(file);
-                        setShowPropertySelectionModal(false);
-                      }
-                    };
-                    input.click();
-                  }}
-                  className="p-8 rounded-2xl border-2 border-purple-200 bg-purple-50/30 hover:bg-purple-50 hover:border-purple-400 transition-all text-left group"
-                >
-                  <div className="w-16 h-16 rounded-2xl bg-purple-600 text-white flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
-                    <Download size={32} />
-                  </div>
-                  <h4 className="text-xl font-bold text-gray-900 mb-2">Importar Propiedades</h4>
-                  <p className="text-sm text-gray-600">Importa múltiples propiedades desde un archivo Excel o CSV</p>
-                </button>
-              </div>
+                {/* Decoración sutil en hover */}
+                <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-100 rounded-full blur-3xl -mr-16 -mt-16 opacity-0 group-hover:opacity-20 transition-opacity"></div>
+              </button>
+
+              {/* Botón: Importar desde Excel/CSV */}
+              <button
+                onClick={() => {
+                  // Trigger file input
+                  const input = document.createElement('input');
+                  input.type = 'file';
+                  input.accept = '.xlsx,.xls,.csv';
+                  input.onchange = async (e) => {
+                    const file = (e.target as HTMLInputElement).files?.[0];
+                    if (file) {
+                      await handleImportProperties(file);
+                      setShowPropertySelectionModal(false);
+                    }
+                  };
+                  input.click();
+                }}
+                className="group text-left p-8 rounded-[2.5rem] border-2 border-gray-100 bg-gray-50/30 hover:border-purple-500 hover:bg-purple-50/30 hover:shadow-xl transition-all duration-300 relative overflow-hidden"
+              >
+                <div className="w-16 h-16 rounded-2xl bg-purple-600 text-white flex items-center justify-center mb-6 shadow-lg shadow-purple-200 group-hover:bg-white group-hover:text-purple-600 transition-all duration-300 group-hover:scale-110">
+                  <Download size={28} strokeWidth={1.5} />
+                </div>
+                <h3 className="text-2xl font-bold text-gray-900 mb-2 group-hover:text-purple-900 transition-colors">Importar Propiedades</h3>
+                <p className="text-gray-500 leading-relaxed text-sm mb-4 group-hover:text-gray-600 transition-colors">
+                  Importa múltiples propiedades desde un archivo Excel o CSV.
+                </p>
+
+                <div className="flex items-center gap-2 text-purple-600 font-bold text-sm opacity-0 group-hover:opacity-100 transform translate-y-2 group-hover:translate-y-0 transition-all duration-300">
+                  Seleccionar archivo <ArrowRight size={16} />
+                </div>
+
+                {/* Decoración sutil en hover */}
+                <div className="absolute bottom-0 right-0 w-32 h-32 bg-purple-100 rounded-full blur-3xl -mr-16 -mb-16 opacity-0 group-hover:opacity-20 transition-opacity"></div>
+              </button>
             </div>
           </div>
         </div>
