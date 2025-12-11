@@ -88,6 +88,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableZones, onUpdateZo
               logoUrlPreview: company.logoUrl ? company.logoUrl.substring(0, 50) + '...' : 'none'
             });
             setCompanyData(company);
+            setIsPromotora(company.role === 'Promotora'); // Establecer inmediatamente
             setAdminName(company.name);
             setAdminEmail(company.email);
             setLogoError(false); // Reset logo error cuando se carga nueva empresa
