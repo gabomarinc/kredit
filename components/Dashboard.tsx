@@ -991,11 +991,16 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableZones, onUpdateZo
                            const file = e.target.files?.[0];
                            if (!file) return;
 
-                           // Validar tamaño (máx 2MB)
-                           if (file.size > 2 * 1024 * 1024) {
-                             alert('El logo debe ser menor a 2MB');
-                             return;
-                           }
+                          // Validar tamaño (máx 2MB)
+                          if (file.size > 2 * 1024 * 1024) {
+                            setNotification({
+                              isOpen: true,
+                              type: 'warning',
+                              message: 'El logo debe ser menor a 2MB.',
+                              title: 'Archivo muy grande'
+                            });
+                            return;
+                          }
 
                            setIsUpdatingLogo(true);
                            setLogoError(false);
