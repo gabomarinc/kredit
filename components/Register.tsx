@@ -4,6 +4,7 @@ import {
 } from 'lucide-react';
 import { ZONES_PANAMA } from '../constants';
 import { saveCompanyToDB } from '../utils/db';
+import { NotificationModal, NotificationType } from './ui/NotificationModal';
 
 interface RegisterProps {
   onRegisterComplete: (data: { companyName: string; zones: string[] }) => void;
@@ -23,6 +24,11 @@ export const Register: React.FC<RegisterProps> = ({ onRegisterComplete, onGoToLo
   });
   const [newZone, setNewZone] = useState('');
   const [passwordError, setPasswordError] = useState('');
+  const [notification, setNotification] = useState<{ isOpen: boolean; type: NotificationType; message: string; title?: string }>({
+    isOpen: false,
+    type: 'error',
+    message: ''
+  });
 
   const handleNext = () => setStep(prev => prev + 1);
   const handleBack = () => setStep(prev => prev - 1);
@@ -64,7 +70,12 @@ export const Register: React.FC<RegisterProps> = ({ onRegisterComplete, onGoToLo
       // Validar que hay zonas
       if (!formData.zones || formData.zones.length === 0) {
         console.error('❌ ERROR: No hay zonas para guardar');
-        alert('Por favor selecciona al menos una zona antes de finalizar el registro.');
+        setNotification({
+          isOpen: true,
+          type: 'warning',
+          message: 'Por favor selecciona al menos una zona antes de finalizar el registro.',
+          title: 'Zonas requeridas'
+        });
         return;
       }
       
@@ -366,6 +377,16 @@ export const Register: React.FC<RegisterProps> = ({ onRegisterComplete, onGoToLo
           </div>
         )}
       </div>
+
+      {/* Notification Modal */}
+      <NotificationModal
+        isOpen={notification.isOpen}
+        onClose={() => setNotification({ ...notification, isOpen: false })}
+        type={notification.type}
+        message={notification.message}
+        title={notification.title}
+        duration={5000}
+      />
     </div>
   );
 };

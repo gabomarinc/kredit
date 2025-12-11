@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Mail, Lock, ArrowRight, LayoutDashboard } from 'lucide-react';
 import { verifyLogin } from '../utils/db';
+import { NotificationModal, NotificationType } from './ui/NotificationModal';
 
 interface LoginProps {
   onLogin: () => void;
@@ -10,6 +11,11 @@ interface LoginProps {
 export const Login: React.FC<LoginProps> = ({ onLogin, onGoToRegister }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [notification, setNotification] = useState<{ isOpen: boolean; type: NotificationType; message: string; title?: string }>({
+    isOpen: false,
+    type: 'error',
+    message: ''
+  });
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -31,11 +37,21 @@ export const Login: React.FC<LoginProps> = ({ onLogin, onGoToRegister }) => {
         onLogin();
       } else {
         console.error('❌ Credenciales incorrectas');
-        alert('Email o contraseña incorrectos. Por favor intenta de nuevo.');
+        setNotification({
+          isOpen: true,
+          type: 'error',
+          message: 'Email o contraseña incorrectos. Por favor intenta de nuevo.',
+          title: 'Credenciales incorrectas'
+        });
       }
     } catch (error) {
       console.error('❌ Error en login:', error);
-      alert('Error al iniciar sesión. Por favor intenta de nuevo.');
+      setNotification({
+        isOpen: true,
+        type: 'error',
+        message: 'Error al iniciar sesión. Por favor intenta de nuevo.',
+        title: 'Error de conexión'
+      });
     }
   };
 
@@ -101,6 +117,16 @@ export const Login: React.FC<LoginProps> = ({ onLogin, onGoToRegister }) => {
           </p>
         </div>
       </div>
+
+      {/* Notification Modal */}
+      <NotificationModal
+        isOpen={notification.isOpen}
+        onClose={() => setNotification({ ...notification, isOpen: false })}
+        type={notification.type}
+        message={notification.message}
+        title={notification.title}
+        duration={5000}
+      />
     </div>
   );
 };

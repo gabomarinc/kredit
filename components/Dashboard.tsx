@@ -4,6 +4,7 @@ import {
 } from 'lucide-react';
 import { getProspectsFromDB, getCompanyById, updateCompanyZones, updateCompanyLogo, Company, getPropertiesByCompany, saveProperty, updateProperty, deleteProperty, getPropertyInterestsByCompany, updateCompanyPlan, getPropertyInterestsByProspect } from '../utils/db';
 import { Prospect, Property, PropertyInterest, PlanType } from '../types';
+import { NotificationModal, NotificationType } from './ui/NotificationModal';
 import { formatCurrency } from '../utils/calculator';
 import * as XLSX from 'xlsx';
 
@@ -44,6 +45,11 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableZones, onUpdateZo
   const [showPropertyModal, setShowPropertyModal] = useState(false);
   const [prospectInterestedProperties, setProspectInterestedProperties] = useState<Property[]>([]);
   const [isLoadingProspectProperties, setIsLoadingProspectProperties] = useState(false);
+  const [notification, setNotification] = useState<{ isOpen: boolean; type: NotificationType; message: string; title?: string }>({
+    isOpen: false,
+    type: 'error',
+    message: ''
+  });
 
   // Settings State - Cargar desde DB
   const [adminName, setAdminName] = useState('Admin Gerente');
@@ -1003,9 +1009,14 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableZones, onUpdateZo
                                
                                const companyId = localStorage.getItem('companyId');
                                if (!companyId) {
-                                 alert('Error: No se encontró el ID de la empresa');
-                                 setIsUpdatingLogo(false);
-                                 return;
+                                setNotification({
+                                  isOpen: true,
+                                  type: 'error',
+                                  message: 'No se encontró el ID de la empresa. Por favor, inicia sesión nuevamente.',
+                                  title: 'Error de sesión'
+                                });
+                                setIsUpdatingLogo(false);
+                                return;
                                }
 
                                // Actualizar en la base de datos
@@ -1018,20 +1029,35 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableZones, onUpdateZo
                                  }
                                  console.log('✅ Logo actualizado exitosamente');
                                } else {
-                                 alert('Error al actualizar el logo. Por favor intenta de nuevo.');
-                               }
-                               
-                               setIsUpdatingLogo(false);
-                             };
-                             reader.onerror = () => {
-                               alert('Error al leer el archivo');
-                               setIsUpdatingLogo(false);
-                             };
-                           } catch (error) {
-                             console.error('Error actualizando logo:', error);
-                             alert('Error al actualizar el logo');
-                             setIsUpdatingLogo(false);
-                           }
+                                setNotification({
+                                  isOpen: true,
+                                  type: 'error',
+                                  message: 'Error al actualizar el logo. Por favor intenta de nuevo.',
+                                  title: 'Error al actualizar'
+                                });
+                              }
+                              
+                              setIsUpdatingLogo(false);
+                            };
+                            reader.onerror = () => {
+                              setNotification({
+                                isOpen: true,
+                                type: 'error',
+                                message: 'Error al leer el archivo. Verifica que sea una imagen válida.',
+                                title: 'Error de archivo'
+                              });
+                              setIsUpdatingLogo(false);
+                            };
+                          } catch (error) {
+                            console.error('Error actualizando logo:', error);
+                            setNotification({
+                              isOpen: true,
+                              type: 'error',
+                              message: 'Error al actualizar el logo. Por favor intenta de nuevo.',
+                              title: 'Error al actualizar'
+                            });
+                            setIsUpdatingLogo(false);
+                          }
                          }}
                        />
                      </label>
