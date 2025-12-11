@@ -422,6 +422,22 @@ export const updateProspectToDB = async (
 
   try {
     console.log('🔄 Actualizando prospecto:', prospectId);
+    console.log('📋 Datos a actualizar:', {
+      fullName: personal.fullName,
+      email: personal.email,
+      phone: personal.phone,
+      monthlyIncome: financial.familyIncome,
+      propertyType: preferences.propertyType,
+      bedrooms: preferences.bedrooms,
+      bathrooms: preferences.bathrooms,
+      zones: preferences.zone,
+      hasIdFile: !!personal.idFile,
+      hasFichaFile: !!personal.fichaFile,
+      hasTalonarioFile: !!personal.talonarioFile,
+      hasSignedAcpFile: !!personal.signedAcpFile,
+      result: result
+    });
+    
     const client = await pool.connect();
     await ensureTablesExist(client);
 
@@ -433,6 +449,18 @@ export const updateProspectToDB = async (
       fileToBase64(personal.talonarioFile),
       fileToBase64(personal.signedAcpFile)
     ]);
+
+    console.log('✅ Archivos convertidos:', {
+      hasIdFile: !!idFileBase64,
+      hasFichaFile: !!fichaFileBase64,
+      hasTalonarioFile: !!talonarioFileBase64,
+      hasSignedAcpFile: !!signedAcpFileBase64
+    });
+
+    // Asegurar que zones sea un array
+    const zonesArray = Array.isArray(preferences.zone) 
+      ? preferences.zone 
+      : (preferences.zone ? [preferences.zone] : []);
 
     // Actualizar prospecto
     const query = `
@@ -447,24 +475,24 @@ export const updateProspectToDB = async (
         bathrooms = $8,
         interested_zones = $9,
         calculation_result = $10,
-        id_file_base64 = COALESCE($11, id_file_base64),
-        ficha_file_base64 = COALESCE($12, ficha_file_base64),
-        talonario_file_base64 = COALESCE($13, talonario_file_base64),
-        signed_acp_file_base64 = COALESCE($14, signed_acp_file_base64),
+        id_file_base64 = COALESCE(NULLIF($11, ''), id_file_base64),
+        ficha_file_base64 = COALESCE(NULLIF($12, ''), ficha_file_base64),
+        talonario_file_base64 = COALESCE(NULLIF($13, ''), talonario_file_base64),
+        signed_acp_file_base64 = COALESCE(NULLIF($14, ''), signed_acp_file_base64),
         updated_at = NOW()
       WHERE id = $15
     `;
 
     const values = [
       companyId || null,
-      personal.fullName,
-      personal.email,
-      personal.phone,
-      financial.familyIncome,
-      preferences.propertyType,
-      preferences.bedrooms,
-      preferences.bathrooms,
-      preferences.zone,
+      personal.fullName || '',
+      personal.email || '',
+      personal.phone || '',
+      financial.familyIncome || 0,
+      preferences.propertyType || '',
+      preferences.bedrooms || null,
+      preferences.bathrooms || null,
+      zonesArray, // Asegurar que es un array
       JSON.stringify(result),
       idFileBase64,
       fichaFileBase64,
@@ -473,9 +501,19 @@ export const updateProspectToDB = async (
       prospectId
     ];
 
-    await client.query(query, values);
+    console.log('📤 Ejecutando UPDATE con valores:', {
+      monthly_income: values[4],
+      property_type: values[5],
+      bedrooms: values[6],
+      bathrooms: values[7],
+      interested_zones: values[8],
+      has_calculation_result: !!values[9]
+    });
+
+    const updateResult = await client.query(query, values);
     client.release();
-    console.log('✅ Prospecto actualizado exitosamente');
+    
+    console.log('✅ Prospecto actualizado exitosamente. Filas afectadas:', updateResult.rowCount);
     return true;
 
   } catch (error) {
