@@ -374,16 +374,17 @@ export const saveProspectInitial = async (
     const client = await pool.connect();
     await ensureTablesExist(client);
 
-    // Insertar solo datos básicos
+    // Insertar solo datos básicos (con valores por defecto para campos requeridos)
     const query = `
       INSERT INTO prospects (
         company_id,
         full_name,
         email,
         phone,
+        monthly_income,
         status,
         created_at
-      ) VALUES ($1, $2, $3, $4, 'Nuevo', NOW())
+      ) VALUES ($1, $2, $3, $4, 0, 'Nuevo', NOW())
       RETURNING id
     `;
 

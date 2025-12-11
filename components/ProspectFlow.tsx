@@ -186,7 +186,42 @@ export const ProspectFlow: React.FC<ProspectFlowProps> = ({ availableZones, comp
 
   // Guardar todo y mostrar resultados finales (actualizar prospecto existente)
   const handleFinalSubmit = async (hasDocuments: boolean = true) => {
-    if (!result || !prospectId) return;
+    if (!result) {
+      console.error('❌ No hay resultado de cálculo disponible');
+      return;
+    }
+    
+    if (!prospectId) {
+      console.error('❌ No hay prospectId disponible. Guardando prospecto inicial primero...');
+      // Si no hay prospectId, intentar guardar prospecto inicial primero
+      if (personal.fullName && personal.email && personal.phone) {
+        try {
+          const urlParams = new URLSearchParams(window.location.search);
+          const companyId = urlParams.get('company_id') || localStorage.getItem('companyId');
+          const savedId = await saveProspectInitial(
+            {
+              fullName: personal.fullName,
+              email: personal.email,
+              phone: personal.phone
+            },
+            companyId
+          );
+          if (savedId) {
+            setProspectId(savedId);
+            console.log('✅ Prospecto inicial guardado:', savedId);
+          } else {
+            console.error('❌ No se pudo guardar el prospecto inicial');
+            return;
+          }
+        } catch (e) {
+          console.error('❌ Error guardando prospecto inicial:', e);
+          return;
+        }
+      } else {
+        console.error('❌ Faltan datos básicos del prospecto');
+        return;
+      }
+    }
     
     setIsCalculating(true);
     setIsSaving(true);
@@ -235,11 +270,12 @@ export const ProspectFlow: React.FC<ProspectFlowProps> = ({ availableZones, comp
       console.error("Failed to update prospect in DB, but showing results anyway", e);
     }
     
+    // Avanzar al siguiente paso después de un breve delay
     setTimeout(() => {
       setIsCalculating(false);
       setIsSaving(false);
       handleNext(); // Ir a resultados finales (step 6)
-    }, 1500);
+    }, 500);
   };
 
   return (
