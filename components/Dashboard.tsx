@@ -66,6 +66,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableZones, onUpdateZo
   const [logoError, setLogoError] = useState(false);
   const [isUpdatingLogo, setIsUpdatingLogo] = useState(false);
   const [isPromotora, setIsPromotora] = useState<boolean>(false); // Inicializar como false para que no aparezca el cuadro
+  const [isSavingZones, setIsSavingZones] = useState(false);
 
 
   // Load Data from Neon
@@ -316,6 +317,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableZones, onUpdateZo
 
   const handleAddZone = async () => {
     if (newZone.trim() && !availableZones.includes(newZone.trim())) {
+      setIsSavingZones(true);
       const updatedZones = [...availableZones, newZone.trim()];
       onUpdateZones(updatedZones);
       setNewZone('');
@@ -323,12 +325,18 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableZones, onUpdateZo
       // Guardar en la base de datos
       const companyId = localStorage.getItem('companyId');
       if (companyId) {
-        const success = await updateCompanyZones(companyId, updatedZones);
-        if (success) {
-          console.log('✅ Zona agregada y guardada en la base de datos');
-        } else {
-          console.error('❌ Error al guardar zona en la base de datos');
+        try {
+          const success = await updateCompanyZones(companyId, updatedZones);
+          if (success) {
+            console.log('✅ Zona agregada y guardada en la base de datos');
+          } else {
+            console.error('❌ Error al guardar zona en la base de datos');
+          }
+        } finally {
+          setIsSavingZones(false);
         }
+      } else {
+        setIsSavingZones(false);
       }
     }
   };
