@@ -258,7 +258,12 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableZones, onUpdateZo
     const filteredData = filterProspectsForExport();
     
     if (filteredData.length === 0) {
-      alert('No hay datos para exportar con los filtros seleccionados.');
+      setNotification({
+        isOpen: true,
+        type: 'warning',
+        message: 'No hay datos para exportar con los filtros seleccionados.',
+        title: 'Sin datos'
+      });
       return;
     }
 
@@ -324,7 +329,12 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableZones, onUpdateZo
     const filteredData = filterProspectsForExport();
     
     if (filteredData.length === 0) {
-      alert('No hay datos para exportar con los filtros seleccionados.');
+      setNotification({
+        isOpen: true,
+        type: 'warning',
+        message: 'No hay datos para exportar con los filtros seleccionados.',
+        title: 'Sin datos'
+      });
       return;
     }
 
