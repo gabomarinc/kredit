@@ -448,23 +448,23 @@ export const ProspectFlow: React.FC<ProspectFlowProps> = ({ availableZones, comp
                 </div>
               </div>
 
-              <div className="flex justify-between items-center px-4">
+              <div className="flex flex-col sm:flex-row justify-between items-stretch sm:items-center gap-4 px-4">
                 <button 
                   onClick={handleBack} 
-                  className="text-gray-400 hover:text-gray-600 font-medium flex items-center gap-2 transition-colors"
+                  className="text-gray-400 hover:text-gray-600 font-medium flex items-center justify-center gap-2 py-3 sm:py-0 order-2 sm:order-1 transition-colors"
                 >
                   <ChevronLeft size={20} /> Atrás
                 </button>
                 <button
                   onClick={handleNext}
                   disabled={financial.familyIncome < 800}
-                   className={`flex items-center gap-2 px-8 py-3 rounded-full font-semibold transition-all duration-300 ${
+                   className={`flex items-center justify-center gap-2 px-6 sm:px-8 py-4 sm:py-3 rounded-full font-semibold text-base sm:text-base transition-all duration-300 order-1 sm:order-2 flex-1 sm:flex-initial ${
                     financial.familyIncome >= 800
                       ? 'bg-gray-900 text-white hover:bg-gray-800 shadow-md'
                       : 'bg-gray-100 text-gray-300 cursor-not-allowed'
                   }`}
                 >
-                  Continuar <ArrowRight size={18} />
+                  Continuar <ArrowRight size={18} className="shrink-0" />
                 </button>
               </div>
             </div>
