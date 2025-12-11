@@ -6,6 +6,8 @@ import { ZONES_PANAMA } from '../constants';
 import { saveCompanyToDB } from '../utils/db';
 import { NotificationModal, NotificationType } from './ui/NotificationModal';
 
+// Componente de registro de empresas
+
 interface RegisterProps {
   onRegisterComplete: (data: { companyName: string; zones: string[] }) => void;
   onGoToLogin: () => void;
