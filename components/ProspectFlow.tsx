@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { PropertyType, UserPreferences, FinancialData, PersonalData, CalculationResult } from '../types';
 import { calculateAffordability, formatCurrency } from '../utils/calculator';
-import { saveProspectToDB, getCompanyById, getAvailablePropertiesForProspect, savePropertyInterest, getCompanyById as getCompany } from '../utils/db';
+import { saveProspectToDB, getCompanyById, getAvailablePropertiesForProspect, savePropertyInterest, getCompanyById as getCompany, saveProspectInitial, updateProspectToDB } from '../utils/db';
 import { Property, PlanType } from '../types';
 import { 
   Home, Building2, MapPin, User, Upload, FileCheck, ArrowRight, CheckCircle2, Download, HeartHandshake, ChevronLeft, Check, BedDouble, Bath, Star, TrendingDown, X, Loader2
@@ -65,7 +65,7 @@ export const ProspectFlow: React.FC<ProspectFlowProps> = ({ availableZones, comp
     bathrooms: 2,
     zone: [] // Initialized as empty array
   });
-  const [financial, setFinancial] = useState<FinancialData>({ familyIncome: 3000 });
+  const [financial, setFinancial] = useState<FinancialData>({ familyIncome: 0 });
   const [personal, setPersonal] = useState<PersonalData>({
     fullName: '',
     email: '',
@@ -184,20 +184,29 @@ export const ProspectFlow: React.FC<ProspectFlowProps> = ({ availableZones, comp
     handleNext(); // Ir a documentación (step 5)
   };
 
-  // Guardar todo y mostrar resultados finales
+  // Guardar todo y mostrar resultados finales (actualizar prospecto existente)
   const handleFinalSubmit = async (hasDocuments: boolean = true) => {
-    if (!result) return;
+    if (!result || !prospectId) return;
     
     setIsCalculating(true);
+    setIsSaving(true);
 
     const urlParams = new URLSearchParams(window.location.search);
     const companyId = urlParams.get('company_id') || localStorage.getItem('companyId');
 
     try {
-      // Guardar a Neon Database
-      const savedId = await saveProspectToDB(personal, financial, preferences, result, companyId);
-      if (savedId) {
-        setProspectId(savedId.toString());
+      // Actualizar prospecto existente con toda la información
+      const success = await updateProspectToDB(
+        prospectId,
+        personal,
+        financial,
+        preferences,
+        result,
+        companyId
+      );
+      
+      if (success) {
+        console.log('✅ Prospecto actualizado exitosamente');
         
         // Cargar propiedades disponibles si la empresa tiene plan Premium
         if (companyId) {
@@ -219,9 +228,11 @@ export const ProspectFlow: React.FC<ProspectFlowProps> = ({ availableZones, comp
             setIsLoadingProperties(false);
           }
         }
+      } else {
+        console.error('❌ Error al actualizar prospecto');
       }
     } catch (e) {
-      console.error("Failed to save to DB, but showing results anyway", e);
+      console.error("Failed to update prospect in DB, but showing results anyway", e);
     }
     
     setTimeout(() => {
@@ -529,15 +540,52 @@ export const ProspectFlow: React.FC<ProspectFlowProps> = ({ availableZones, comp
                   <ChevronLeft size={20} /> Atrás
                 </button>
                 <button
-                  onClick={handleNext}
-                  disabled={!personal.fullName || !personal.email || !personal.phone}
+                  onClick={async () => {
+                    // Guardar prospecto inicial cuando se completan los datos básicos
+                    if (personal.fullName && personal.email && personal.phone) {
+                      setIsSaving(true);
+                      try {
+                        const urlParams = new URLSearchParams(window.location.search);
+                        const companyId = urlParams.get('company_id') || localStorage.getItem('companyId');
+                        
+                        const savedId = await saveProspectInitial(
+                          {
+                            fullName: personal.fullName,
+                            email: personal.email,
+                            phone: personal.phone
+                          },
+                          companyId
+                        );
+                        
+                        if (savedId) {
+                          setProspectId(savedId);
+                          console.log('✅ Prospecto inicial guardado:', savedId);
+                        }
+                      } catch (e) {
+                        console.error('Error guardando prospecto inicial:', e);
+                      } finally {
+                        setIsSaving(false);
+                        handleNext(); // Continuar al siguiente paso
+                      }
+                    }
+                  }}
+                  disabled={!personal.fullName || !personal.email || !personal.phone || isSaving}
                   className={`flex items-center justify-center gap-2 px-6 sm:px-8 py-4 sm:py-3 rounded-full font-semibold text-base transition-all duration-300 order-1 sm:order-2 flex-1 sm:flex-initial ${
-                    !personal.fullName || !personal.email || !personal.phone
+                    !personal.fullName || !personal.email || !personal.phone || isSaving
                       ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
                       : 'bg-indigo-600 text-white hover:bg-indigo-700 shadow-lg shadow-indigo-200'
                   }`}
                 >
-                  Continuar <ArrowRight size={18} className="shrink-0" />
+                  {isSaving ? (
+                    <>
+                      <Loader2 size={18} className="animate-spin shrink-0" />
+                      Guardando...
+                    </>
+                  ) : (
+                    <>
+                      Continuar <ArrowRight size={18} className="shrink-0" />
+                    </>
+                  )}
                 </button>
               </div>
             </div>

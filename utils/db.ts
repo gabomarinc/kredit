@@ -359,6 +359,130 @@ export const saveProspectToDB = async (
   }
 };
 
+// Guardar prospecto inicial (solo datos básicos: nombre, email, teléfono)
+export const saveProspectInitial = async (
+  personal: { fullName: string; email: string; phone: string },
+  companyId?: string | null
+): Promise<string | null> => {
+  if (!pool) {
+    console.error('❌ Pool de base de datos no inicializado.');
+    return null;
+  }
+
+  try {
+    console.log('🔄 Guardando prospecto inicial...');
+    const client = await pool.connect();
+    await ensureTablesExist(client);
+
+    // Insertar solo datos básicos
+    const query = `
+      INSERT INTO prospects (
+        company_id,
+        full_name,
+        email,
+        phone,
+        status,
+        created_at
+      ) VALUES ($1, $2, $3, $4, 'Nuevo', NOW())
+      RETURNING id
+    `;
+
+    const values = [
+      companyId || null,
+      personal.fullName,
+      personal.email,
+      personal.phone
+    ];
+
+    const res = await client.query(query, values);
+    client.release();
+    console.log('✅ Prospecto inicial guardado con ID:', res.rows[0].id);
+    return res.rows[0].id.toString();
+
+  } catch (error) {
+    console.error('❌ Error guardando prospecto inicial:', error);
+    return null;
+  }
+};
+
+// Actualizar prospecto existente con toda la información
+export const updateProspectToDB = async (
+  prospectId: string,
+  personal: PersonalData,
+  financial: FinancialData,
+  preferences: UserPreferences,
+  result: CalculationResult,
+  companyId?: string | null
+): Promise<boolean> => {
+  if (!pool) {
+    console.error('❌ Pool de base de datos no inicializado.');
+    return false;
+  }
+
+  try {
+    console.log('🔄 Actualizando prospecto:', prospectId);
+    const client = await pool.connect();
+    await ensureTablesExist(client);
+
+    // Convertir archivos a Base64
+    console.log('🔄 Convirtiendo archivos a Base64...');
+    const [idFileBase64, fichaFileBase64, talonarioFileBase64, signedAcpFileBase64] = await Promise.all([
+      fileToBase64(personal.idFile),
+      fileToBase64(personal.fichaFile),
+      fileToBase64(personal.talonarioFile),
+      fileToBase64(personal.signedAcpFile)
+    ]);
+
+    // Actualizar prospecto
+    const query = `
+      UPDATE prospects SET
+        company_id = COALESCE($1, company_id),
+        full_name = $2,
+        email = $3,
+        phone = $4,
+        monthly_income = $5,
+        property_type = $6,
+        bedrooms = $7,
+        bathrooms = $8,
+        interested_zones = $9,
+        calculation_result = $10,
+        id_file_base64 = COALESCE($11, id_file_base64),
+        ficha_file_base64 = COALESCE($12, ficha_file_base64),
+        talonario_file_base64 = COALESCE($13, talonario_file_base64),
+        signed_acp_file_base64 = COALESCE($14, signed_acp_file_base64),
+        updated_at = NOW()
+      WHERE id = $15
+    `;
+
+    const values = [
+      companyId || null,
+      personal.fullName,
+      personal.email,
+      personal.phone,
+      financial.familyIncome,
+      preferences.propertyType,
+      preferences.bedrooms,
+      preferences.bathrooms,
+      preferences.zone,
+      JSON.stringify(result),
+      idFileBase64,
+      fichaFileBase64,
+      talonarioFileBase64,
+      signedAcpFileBase64,
+      prospectId
+    ];
+
+    await client.query(query, values);
+    client.release();
+    console.log('✅ Prospecto actualizado exitosamente');
+    return true;
+
+  } catch (error) {
+    console.error('❌ Error actualizando prospecto:', error);
+    return false;
+  }
+};
+
 // Helper function to safely parse potential JSON strings
 const safeParseJSON = (input: any) => {
   if (typeof input === 'string') {
