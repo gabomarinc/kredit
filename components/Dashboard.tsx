@@ -675,8 +675,8 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableZones, onUpdateZo
             {/* Header */}
             <div className="flex items-center justify-between flex-wrap gap-4">
               <div>
-                <h2 className="text-2xl font-bold text-gray-900 mb-1">Gestión de Propiedades</h2>
-                <p className="text-gray-500 text-sm">Administra las propiedades que se mostrarán a tus prospectos</p>
+                <h2 className="text-2xl font-bold text-gray-900 mb-1">Gestión de {isPromotora ? 'Proyectos' : 'Propiedades'}</h2>
+                <p className="text-gray-500 text-sm">Administra los {isPromotora ? 'proyectos' : 'propiedades'} que se mostrarán a tus prospectos</p>
               </div>
               {companyData?.plan === 'Wolf of Wallstreet' ? (
                 <button
@@ -685,12 +685,12 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableZones, onUpdateZo
                   }}
                   className="bg-indigo-600 text-white px-6 py-3 rounded-xl font-semibold hover:bg-indigo-700 transition-colors flex items-center gap-2 shadow-lg shadow-indigo-200"
                 >
-                  <Plus size={18} /> Agregar Propiedad
+                  <Plus size={18} /> Agregar {isPromotora ? 'Proyecto' : 'Propiedad'}
                 </button>
               ) : (
                 <div className="bg-yellow-50 border border-yellow-200 rounded-xl px-4 py-3">
                   <p className="text-sm text-yellow-800 font-medium">
-                    ⚠️ Necesitas el plan <strong>"Wolf of Wallstreet"</strong> para gestionar propiedades
+                    ⚠️ Necesitas el plan <strong>"Wolf of Wallstreet"</strong> para gestionar {isPromotora ? 'proyectos' : 'propiedades'}
                   </p>
                 </div>
               )}
@@ -700,13 +700,13 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableZones, onUpdateZo
             {isLoadingProperties ? (
               <div className="text-center py-12">
                 <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div>
-                <p className="text-gray-500 mt-4">Cargando propiedades...</p>
+                <p className="text-gray-500 mt-4">Cargando {isPromotora ? 'proyectos' : 'propiedades'}...</p>
               </div>
             ) : properties.length === 0 ? (
               <div className="bg-white rounded-[2rem] p-12 text-center border border-gray-100">
                 <Building size={64} className="mx-auto mb-4 text-gray-300" />
-                <h3 className="text-xl font-bold text-gray-900 mb-2">No hay propiedades registradas</h3>
-                <p className="text-gray-500 mb-6">Comienza agregando tu primera propiedad para mostrarla a los prospectos</p>
+                <h3 className="text-xl font-bold text-gray-900 mb-2">No hay {isPromotora ? 'proyectos' : 'propiedades'} registrados</h3>
+                <p className="text-gray-500 mb-6">Comienza agregando tu primer {isPromotora ? 'proyecto' : 'propiedad'} para mostrarlo a los prospectos</p>
                 {companyData?.plan === 'Wolf of Wallstreet' && (
                   <button
                     onClick={() => {
@@ -714,7 +714,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableZones, onUpdateZo
                     }}
                     className="bg-indigo-600 text-white px-6 py-3 rounded-xl font-semibold hover:bg-indigo-700 transition-colors"
                   >
-                    Agregar Primera Propiedad
+                    Agregar Primer {isPromotora ? 'Proyecto' : 'Propiedad'}
                   </button>
                 )}
               </div>
@@ -2063,9 +2063,9 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableZones, onUpdateZo
                 <span className="text-3xl font-bold text-white tracking-tighter">ê</span>
               </div>
 
-              <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-3 tracking-tight">Agregar Propiedades</h1>
+              <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-3 tracking-tight">Agregar {isPromotora ? 'Proyectos' : 'Propiedades'}</h1>
               <p className="text-gray-500 text-lg leading-relaxed max-w-lg mx-auto font-light">
-                Elige cómo deseas agregar propiedades a tu catálogo.
+                Elige cómo deseas agregar {isPromotora ? 'proyectos' : 'propiedades'} a tu catálogo.
               </p>
             </div>
 
@@ -2082,9 +2082,9 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableZones, onUpdateZo
                 <div className="w-16 h-16 rounded-2xl bg-white border border-gray-100 text-gray-900 flex items-center justify-center mb-6 shadow-sm group-hover:scale-110 group-hover:bg-indigo-600 group-hover:text-white transition-all duration-300">
                   <Plus size={28} strokeWidth={1.5} />
                 </div>
-                <h3 className="text-2xl font-bold text-gray-900 mb-2">Agregar Propiedad Manual</h3>
+                <h3 className="text-2xl font-bold text-gray-900 mb-2">Agregar {isPromotora ? 'Proyecto' : 'Propiedad'} Manual</h3>
                 <p className="text-gray-500 leading-relaxed text-sm mb-4">
-                  Crea una propiedad nueva completando el formulario paso a paso.
+                  Crea un {isPromotora ? 'proyecto' : 'propiedad'} nuevo completando el formulario paso a paso.
                 </p>
                 
                 <div className="flex items-center gap-2 text-indigo-600 font-bold text-sm opacity-0 group-hover:opacity-100 transform translate-y-2 group-hover:translate-y-0 transition-all duration-300">
@@ -2116,9 +2116,9 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableZones, onUpdateZo
                 <div className="w-16 h-16 rounded-2xl bg-purple-600 text-white flex items-center justify-center mb-6 shadow-lg shadow-purple-200 group-hover:bg-white group-hover:text-purple-600 transition-all duration-300 group-hover:scale-110">
                   <Download size={28} strokeWidth={1.5} />
                 </div>
-                <h3 className="text-2xl font-bold text-gray-900 mb-2 group-hover:text-purple-900 transition-colors">Importar Propiedades</h3>
+                <h3 className="text-2xl font-bold text-gray-900 mb-2 group-hover:text-purple-900 transition-colors">Importar {isPromotora ? 'Proyectos' : 'Propiedades'}</h3>
                 <p className="text-gray-500 leading-relaxed text-sm mb-4 group-hover:text-gray-600 transition-colors">
-                  Importa múltiples propiedades desde un archivo Excel o CSV.
+                  Importa múltiples {isPromotora ? 'proyectos' : 'propiedades'} desde un archivo Excel o CSV.
                 </p>
 
                 <div className="flex items-center gap-2 text-purple-600 font-bold text-sm opacity-0 group-hover:opacity-100 transform translate-y-2 group-hover:translate-y-0 transition-all duration-300">

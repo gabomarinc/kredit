@@ -300,16 +300,32 @@ export const Register: React.FC<RegisterProps> = ({ onRegisterComplete, onGoToLo
               </div>
 
               {/* Rol: Promotora o Broker */}
-              <div className="relative group">
-                <label className="text-sm font-semibold text-gray-700 block mb-2">Rol</label>
-                <select
-                  value={formData.role}
-                  onChange={(e) => setFormData({ ...formData, role: e.target.value as 'Promotora' | 'Broker' })}
-                  className="w-full px-4 py-4 rounded-2xl border border-gray-200 focus:border-indigo-500 outline-none bg-white transition-all focus:shadow-md text-gray-700"
-                >
-                  <option value="Broker">Broker</option>
-                  <option value="Promotora">Promotora</option>
-                </select>
+              <div className="space-y-3">
+                <label className="text-sm font-semibold text-gray-700 block">Rol</label>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setFormData({ ...formData, role: 'Broker' })}
+                    className={`px-6 py-4 rounded-2xl border-2 transition-all font-semibold ${
+                      formData.role === 'Broker'
+                        ? 'border-indigo-500 bg-indigo-50 text-indigo-700 shadow-md'
+                        : 'border-gray-200 bg-white text-gray-600 hover:border-gray-300 hover:bg-gray-50'
+                    }`}
+                  >
+                    Broker
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setFormData({ ...formData, role: 'Promotora' })}
+                    className={`px-6 py-4 rounded-2xl border-2 transition-all font-semibold ${
+                      formData.role === 'Promotora'
+                        ? 'border-indigo-500 bg-indigo-50 text-indigo-700 shadow-md'
+                        : 'border-gray-200 bg-white text-gray-600 hover:border-gray-300 hover:bg-gray-50'
+                    }`}
+                  >
+                    Promotora
+                  </button>
+                </div>
               </div>
             </div>
 

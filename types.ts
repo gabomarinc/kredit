@@ -97,3 +97,35 @@ export interface PropertyInterest {
   property?: Property; // Populated when fetching interests with property details
   prospect?: Prospect; // Populated when fetching interests with prospect details
 }
+
+// ============================================
+// SISTEMA DE PROYECTOS (PROMOTORA)
+// ============================================
+export type ProjectStatus = 'Activo' | 'Inactivo';
+
+export interface ProjectModel {
+  id?: string;
+  name: string;
+  areaM2?: number | null;
+  bedrooms?: number | null;
+  bathrooms?: number | null;
+  amenities?: string[];
+  unitsTotal: number;
+  unitsAvailable: number;
+  price: number;
+  images: string[]; // Array de Base64 strings
+}
+
+export interface Project {
+  id: string;
+  companyId: string;
+  name: string;
+  description?: string;
+  zone: string;
+  address?: string;
+  images: string[]; // Array de Base64 strings
+  status: ProjectStatus;
+  models: ProjectModel[]; // Modelos dentro del proyecto
+  createdAt?: string;
+  updatedAt?: string;
+}
