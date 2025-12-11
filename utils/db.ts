@@ -483,17 +483,22 @@ export const updateProspectToDB = async (
       WHERE id = $15
     `;
 
-    // Asegurar que todos los valores estén definidos correctamente
+    // Preparar valores asegurando tipos correctos
+    const monthlyIncome = typeof financial.familyIncome === 'number' ? financial.familyIncome : parseFloat(String(financial.familyIncome || 0));
+    const propertyType = String(preferences.propertyType || '');
+    const bedrooms = preferences.bedrooms !== undefined && preferences.bedrooms !== null ? Number(preferences.bedrooms) : null;
+    const bathrooms = preferences.bathrooms !== undefined && preferences.bathrooms !== null ? parseFloat(String(preferences.bathrooms)) : null;
+    
     const values = [
       companyId || null,
-      personal.fullName || '',
-      personal.email || '',
-      personal.phone || '',
-      financial.familyIncome || 0, // Asegurar que sea un número
-      preferences.propertyType || '',
-      preferences.bedrooms ?? null, // Usar ?? para manejar 0 como valor válido
-      preferences.bathrooms ?? null,
-      zonesArray.length > 0 ? zonesArray : [], // Asegurar que sea un array, incluso si está vacío
+      String(personal.fullName || ''),
+      String(personal.email || ''),
+      String(personal.phone || ''),
+      monthlyIncome, // Asegurar que sea número
+      propertyType,
+      bedrooms,
+      bathrooms,
+      zonesArray.length > 0 ? zonesArray : [], // Asegurar que es un array
       JSON.stringify(result || {}),
       idFileBase64 || null,
       fichaFileBase64 || null,
@@ -503,12 +508,20 @@ export const updateProspectToDB = async (
     ];
 
     console.log('📤 Ejecutando UPDATE con valores:', {
+      company_id: values[0],
+      full_name: values[1],
+      email: values[2],
+      phone: values[3],
       monthly_income: values[4],
       property_type: values[5],
       bedrooms: values[6],
       bathrooms: values[7],
       interested_zones: values[8],
-      has_calculation_result: !!values[9]
+      calculation_result: values[9] ? 'presente' : 'vacío',
+      id_file: values[10] ? 'presente' : 'null',
+      ficha_file: values[11] ? 'presente' : 'null',
+      talonario_file: values[12] ? 'presente' : 'null',
+      signed_acp_file: values[13] ? 'presente' : 'null'
     });
 
     const updateResult = await client.query(query, values);
