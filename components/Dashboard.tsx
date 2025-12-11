@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { 
-  Users, DollarSign, LayoutDashboard, FileText, Download, Filter, Calendar, CheckCircle2, X, ChevronDown, MapPin, Briefcase, Settings, Plus, Trash2, Building, Image as ImageIcon, Shield, Save, Code, Copy, ExternalLink, Loader2, User, Target, MessageCircle, ShieldCheck, TrendingUp, Eye, FileText as FileTextIcon, BedDouble, Bath, Heart
+  Users, DollarSign, LayoutDashboard, FileText, Download, Filter, Calendar, CheckCircle2, X, ChevronDown, MapPin, Briefcase, Settings, Plus, Trash2, Building, Image as ImageIcon, Shield, Save, Code, Copy, ExternalLink, Loader2, User, Target, MessageCircle, ShieldCheck, TrendingUp, Eye, FileText as FileTextIcon, BedDouble, Bath, Heart, ArrowRight
 } from 'lucide-react';
 import { getProspectsFromDB, getCompanyById, updateCompanyZones, updateCompanyLogo, Company, getPropertiesByCompany, saveProperty, updateProperty, deleteProperty, getPropertyInterestsByCompany, updateCompanyPlan, getPropertyInterestsByProspect } from '../utils/db';
 import { Prospect, Property, PropertyInterest, PlanType } from '../types';
