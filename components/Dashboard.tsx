@@ -2727,6 +2727,7 @@ interface ProjectModalProps {
 }
 
 const ProjectModal: React.FC<ProjectModalProps> = ({ project, zones, onClose, onSave }) => {
+  const [isSaving, setIsSaving] = useState(false);
   const [step, setStep] = useState(1);
   const [name, setName] = useState(project?.name || '');
   const [description, setDescription] = useState(project?.description || '');
