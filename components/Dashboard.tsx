@@ -738,6 +738,48 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableZones, onUpdateZo
                   </button>
                 )}
               </div>
+            ) : isPromotora ? (
+              <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {projects.map((project) => (
+                  <div
+                    key={project.id}
+                    className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden group hover:shadow-md transition-shadow"
+                  >
+                    <div className="relative h-48 bg-gray-100 overflow-hidden">
+                      {project.images && project.images.length > 0 ? (
+                        <img 
+                          src={project.images[0]} 
+                          alt={project.name} 
+                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" 
+                        />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center text-gray-400 bg-gray-50">
+                          <Building size={48} />
+                        </div>
+                      )}
+                      <div className={`absolute top-3 left-3 px-3 py-1 rounded-full text-xs font-bold ${
+                        project.status === 'Activo' ? 'bg-green-600 text-white' : 'bg-gray-400 text-white'
+                      }`}>
+                        {project.status}
+                      </div>
+                    </div>
+                    <div className="p-4">
+                      <h4 className="font-bold text-gray-900 mb-1 text-lg">{project.name}</h4>
+                      <div className="flex items-center gap-1.5 text-gray-500 text-sm mb-3">
+                        <MapPin size={14} />
+                        <span>{project.zone}</span>
+                      </div>
+                      {project.description && (
+                        <p className="text-sm text-gray-600 mb-3 line-clamp-2">{project.description}</p>
+                      )}
+                      <div className="pt-3 border-t border-gray-100">
+                        <div className="text-xs text-gray-400 uppercase font-semibold mb-1">Modelos</div>
+                        <div className="text-lg font-bold text-indigo-600">{project.models?.length || 0} {project.models?.length === 1 ? 'modelo' : 'modelos'}</div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
             ) : (
               <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {properties.map((property) => (
