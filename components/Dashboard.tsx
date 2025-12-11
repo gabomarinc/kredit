@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { 
-  Users, DollarSign, LayoutDashboard, FileText, Download, Filter, Calendar, CheckCircle2, X, ChevronDown, MapPin, Briefcase, Settings, Plus, Trash2, Building, Image as ImageIcon, Shield, Save, Code, Copy, ExternalLink, Loader2, User, Target, MessageCircle, ShieldCheck, TrendingUp, Eye, FileText as FileTextIcon, BedDouble, Bath, Heart, ArrowRight
+  Users, DollarSign, LayoutDashboard, FileText, Download, Filter, Calendar, CheckCircle2, X, ChevronDown, MapPin, Briefcase, Settings, Plus, Trash2, Building, Image as ImageIcon, Shield, Save, Code, Copy, ExternalLink, Loader2, User, Target, MessageCircle, ShieldCheck, TrendingUp, Eye, FileText as FileTextIcon, BedDouble, Bath, Heart, ArrowRight, Upload, Check, ChevronLeft
 } from 'lucide-react';
 import { getProspectsFromDB, getCompanyById, updateCompanyZones, updateCompanyLogo, Company, getPropertiesByCompany, saveProperty, updateProperty, deleteProperty, getPropertyInterestsByCompany, updateCompanyPlan, getPropertyInterestsByProspect, saveProject, getProjectsByCompany } from '../utils/db';
 import { Prospect, Property, PropertyInterest, PlanType, Project, ProjectModel } from '../types';
@@ -2136,12 +2136,14 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableZones, onUpdateZo
               <button
                 onClick={() => {
                   setShowPropertySelectionModal(false);
-                  if (isPromotora) {
-                    setShowProjectModal(true);
-                  } else {
-                    setSelectedPropertyForEdit(null);
-                    setShowPropertyModal(true);
-                  }
+                  setTimeout(() => {
+                    if (isPromotora) {
+                      setShowProjectModal(true);
+                    } else {
+                      setSelectedPropertyForEdit(null);
+                      setShowPropertyModal(true);
+                    }
+                  }, 300);
                 }}
                 className="group text-left p-8 rounded-[2.5rem] border-2 border-gray-100 bg-white hover:border-indigo-200 hover:bg-indigo-50/30 hover:shadow-xl transition-all duration-300 relative overflow-hidden"
               >
@@ -2684,7 +2686,7 @@ const ProjectModal: React.FC<ProjectModalProps> = ({ zones, onClose, onSave }) =
 
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-      <div className="bg-white rounded-[2rem] w-full max-w-4xl max-h-[90vh] overflow-y-auto shadow-2xl relative">
+      <div className="bg-white rounded-[2.5rem] w-full max-w-4xl max-h-[90vh] overflow-y-auto shadow-2xl relative">
         <div className="sticky top-0 bg-white border-b border-gray-100 p-6 flex items-center justify-between z-10">
           <div>
             <h3 className="text-2xl font-bold text-gray-900">Nuevo Proyecto</h3>
@@ -2704,187 +2706,260 @@ const ProjectModal: React.FC<ProjectModalProps> = ({ zones, onClose, onSave }) =
           </button>
         </div>
 
-        <div className="p-6 space-y-6">
+        <div className="p-8 space-y-8">
           {/* PASO 1: Información Básica del Proyecto */}
           {step === 1 && (
-            <div className="space-y-6 animate-fade-in-up">
+            <div className="space-y-8 animate-fade-in-up max-w-2xl mx-auto">
+              <div className="text-center mb-8">
+                <h2 className="text-3xl font-bold text-gray-900 mb-2">Información del Proyecto</h2>
+                <p className="text-gray-500">Completa los datos básicos de tu proyecto</p>
+              </div>
+
               <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">Nombre del Proyecto *</label>
+                <label className="block text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
+                  <Building size={16} className="text-indigo-500" />
+                  Nombre del Proyecto *
+                </label>
                 <input
                   type="text"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
-                  className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-indigo-500 outline-none"
+                  className="w-full px-5 py-4 rounded-xl border border-gray-200 focus:border-indigo-500 outline-none bg-white transition-all focus:shadow-sm"
                   placeholder="Ej: Edificio Residencial Los Pinos"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">Descripción</label>
+                <label className="block text-sm font-semibold text-gray-700 mb-3">Descripción</label>
                 <textarea
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
-                  className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-indigo-500 outline-none resize-none"
+                  className="w-full px-5 py-4 rounded-xl border border-gray-200 focus:border-indigo-500 outline-none resize-none"
                   rows={4}
                   placeholder="Describe el proyecto..."
                 />
               </div>
 
-              <div className="grid md:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">Zona *</label>
-                  <select
-                    value={zone}
-                    onChange={(e) => setZone(e.target.value)}
-                    className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-indigo-500 outline-none"
-                  >
-                    {zones.map(z => (
-                      <option key={z} value={z}>{z}</option>
-                    ))}
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">Dirección</label>
-                  <input
-                    type="text"
-                    value={address}
-                    onChange={(e) => setAddress(e.target.value)}
-                    className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-indigo-500 outline-none"
-                    placeholder="Dirección completa"
-                  />
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-4 flex items-center gap-2">
+                  <MapPin size={16} className="text-indigo-500" />
+                  Zona *
+                </label>
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+                  {zones.map(z => (
+                    <button
+                      key={z}
+                      onClick={() => setZone(z)}
+                      className={`px-4 py-3 rounded-2xl text-sm font-medium transition-all duration-200 border flex items-center justify-center ${
+                        zone === z
+                          ? 'bg-indigo-600 text-white border-indigo-600 shadow-md transform scale-[1.02]'
+                          : 'bg-white text-gray-500 border-gray-100 hover:border-indigo-200 hover:bg-indigo-50/50 hover:text-indigo-600'
+                      }`}
+                    >
+                      {zone === z && <Check size={14} className="mr-2" />}
+                      {z}
+                    </button>
+                  ))}
                 </div>
               </div>
 
               <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">Imágenes del Proyecto</label>
+                <label className="block text-sm font-semibold text-gray-700 mb-3">Dirección</label>
                 <input
-                  type="file"
-                  multiple
-                  accept="image/*"
-                  onChange={handleProjectImageUpload}
-                  className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-indigo-500 outline-none"
+                  type="text"
+                  value={address}
+                  onChange={(e) => setAddress(e.target.value)}
+                  className="w-full px-5 py-4 rounded-xl border border-gray-200 focus:border-indigo-500 outline-none bg-white transition-all focus:shadow-sm"
+                  placeholder="Dirección completa"
                 />
+              </div>
+
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-4">Estado *</label>
+                <div className="grid grid-cols-2 gap-4">
+                  <button
+                    onClick={() => setStatus('Activo')}
+                    className={`p-6 rounded-2xl border-2 transition-all duration-300 ${
+                      status === 'Activo'
+                        ? 'border-green-500 bg-green-50 shadow-lg scale-[1.02]'
+                        : 'border-gray-100 bg-white hover:border-green-200 hover:shadow-md'
+                    }`}
+                  >
+                    <div className={`w-12 h-12 rounded-xl flex items-center justify-center mb-4 ${
+                      status === 'Activo' ? 'bg-green-100 text-green-600' : 'bg-gray-100 text-gray-400'
+                    }`}>
+                      <CheckCircle2 size={24} />
+                    </div>
+                    <h4 className="font-bold text-gray-900 mb-1">Activo</h4>
+                    <p className="text-sm text-gray-500">Proyecto disponible</p>
+                  </button>
+                  <button
+                    onClick={() => setStatus('Inactivo')}
+                    className={`p-6 rounded-2xl border-2 transition-all duration-300 ${
+                      status === 'Inactivo'
+                        ? 'border-gray-400 bg-gray-50 shadow-lg scale-[1.02]'
+                        : 'border-gray-100 bg-white hover:border-gray-200 hover:shadow-md'
+                    }`}
+                  >
+                    <div className={`w-12 h-12 rounded-xl flex items-center justify-center mb-4 ${
+                      status === 'Inactivo' ? 'bg-gray-200 text-gray-600' : 'bg-gray-100 text-gray-400'
+                    }`}>
+                      <X size={24} />
+                    </div>
+                    <h4 className="font-bold text-gray-900 mb-1">Inactivo</h4>
+                    <p className="text-sm text-gray-500">Proyecto pausado</p>
+                  </button>
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
+                  <ImageIcon size={16} className="text-indigo-500" />
+                  Imágenes del Proyecto
+                </label>
+                <label className="block w-full px-5 py-4 rounded-xl border-2 border-dashed border-gray-200 hover:border-indigo-400 hover:bg-indigo-50/30 transition-all cursor-pointer text-center">
+                  <Upload size={24} className="mx-auto mb-2 text-gray-400" />
+                  <span className="text-sm text-gray-600">Haz clic para subir imágenes</span>
+                  <input
+                    type="file"
+                    multiple
+                    accept="image/*"
+                    onChange={handleProjectImageUpload}
+                    className="hidden"
+                  />
+                </label>
                 {projectImages.length > 0 && (
-                  <div className="grid grid-cols-4 gap-2 mt-4">
+                  <div className="grid grid-cols-4 gap-3 mt-4">
                     {projectImages.map((img, idx) => (
-                      <div key={idx} className="relative">
-                        <img src={img} alt={`Proyecto ${idx + 1}`} className="w-full h-24 object-cover rounded-lg" />
+                      <div key={idx} className="relative group">
+                        <img src={img} alt={`Proyecto ${idx + 1}`} className="w-full h-24 object-cover rounded-xl" />
                         <button
                           onClick={() => setProjectImages(projectImages.filter((_, i) => i !== idx))}
-                          className="absolute top-1 right-1 w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center text-xs"
+                          className="absolute top-2 right-2 w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
                         >
-                          <X size={12} />
+                          <X size={14} />
                         </button>
                       </div>
                     ))}
                   </div>
                 )}
               </div>
-
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">Estado</label>
-                <select
-                  value={status}
-                  onChange={(e) => setStatus(e.target.value as 'Activo' | 'Inactivo')}
-                  className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-indigo-500 outline-none"
-                >
-                  <option value="Activo">Activo</option>
-                  <option value="Inactivo">Inactivo</option>
-                </select>
-              </div>
             </div>
           )}
 
           {/* PASO 2: Agregar Modelos */}
           {step === 2 && (
-            <div className="space-y-6 animate-fade-in-up">
-              <h4 className="text-lg font-bold text-gray-900 mb-4">Agregar Modelos al Proyecto</h4>
+            <div className="space-y-8 animate-fade-in-up max-w-2xl mx-auto">
+              <div className="text-center mb-8">
+                <h2 className="text-3xl font-bold text-gray-900 mb-2">Agregar Modelos</h2>
+                <p className="text-gray-500">Define los modelos disponibles en tu proyecto</p>
+              </div>
 
               {/* Formulario de Modelo Actual */}
-              <div className="bg-gray-50 p-6 rounded-xl space-y-4">
-                <div className="grid md:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">Nombre del Modelo *</label>
-                    <input
-                      type="text"
-                      value={currentModel.name}
-                      onChange={(e) => setCurrentModel({ ...currentModel, name: e.target.value })}
-                      className="w-full px-4 py-2 rounded-lg border border-gray-200"
-                      placeholder="Ej: Modelo A - 2BR"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">Precio *</label>
-                    <input
-                      type="number"
-                      value={currentModel.price || ''}
-                      onChange={(e) => setCurrentModel({ ...currentModel, price: parseFloat(e.target.value) || 0 })}
-                      className="w-full px-4 py-2 rounded-lg border border-gray-200"
-                      placeholder="0.00"
-                    />
-                  </div>
+              <div className="bg-gray-50/50 p-8 rounded-2xl border border-gray-100 space-y-6">
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
+                    <Building size={16} className="text-indigo-500" />
+                    Nombre del Modelo *
+                  </label>
+                  <input
+                    type="text"
+                    value={currentModel.name}
+                    onChange={(e) => setCurrentModel({ ...currentModel, name: e.target.value })}
+                    className="w-full px-5 py-4 rounded-xl border border-gray-200 focus:border-indigo-500 outline-none bg-white transition-all focus:shadow-sm"
+                    placeholder="Ej: Modelo A - 2BR"
+                  />
                 </div>
 
-                <div className="grid md:grid-cols-4 gap-4">
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
+                    <DollarSign size={16} className="text-indigo-500" />
+                    Precio *
+                  </label>
+                  <input
+                    type="number"
+                    value={currentModel.price || ''}
+                    onChange={(e) => setCurrentModel({ ...currentModel, price: parseFloat(e.target.value) || 0 })}
+                    className="w-full px-5 py-4 rounded-xl border border-gray-200 focus:border-indigo-500 outline-none bg-white transition-all focus:shadow-sm"
+                    placeholder="0.00"
+                  />
+                </div>
+
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
                   <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">Área (m²)</label>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2 flex items-center gap-1">
+                      <Target size={14} className="text-gray-400" />
+                      Área (m²)
+                    </label>
                     <input
                       type="number"
                       value={currentModel.areaM2 || ''}
                       onChange={(e) => setCurrentModel({ ...currentModel, areaM2: parseFloat(e.target.value) || null })}
-                      className="w-full px-4 py-2 rounded-lg border border-gray-200"
+                      className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-indigo-500 outline-none bg-white"
                       placeholder="0"
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">Habitaciones</label>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2 flex items-center gap-1">
+                      <BedDouble size={14} className="text-gray-400" />
+                      Habitaciones
+                    </label>
                     <input
                       type="number"
                       value={currentModel.bedrooms || ''}
                       onChange={(e) => setCurrentModel({ ...currentModel, bedrooms: parseInt(e.target.value) || null })}
-                      className="w-full px-4 py-2 rounded-lg border border-gray-200"
+                      className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-indigo-500 outline-none bg-white"
                       placeholder="0"
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">Baños</label>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2 flex items-center gap-1">
+                      <Bath size={14} className="text-gray-400" />
+                      Baños
+                    </label>
                     <input
                       type="number"
                       step="0.5"
                       value={currentModel.bathrooms || ''}
                       onChange={(e) => setCurrentModel({ ...currentModel, bathrooms: parseFloat(e.target.value) || null })}
-                      className="w-full px-4 py-2 rounded-lg border border-gray-200"
+                      className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-indigo-500 outline-none bg-white"
                       placeholder="0"
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">Unidades Totales *</label>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2 flex items-center gap-1">
+                      <Users size={14} className="text-gray-400" />
+                      Unidades *
+                    </label>
                     <input
                       type="number"
                       value={currentModel.unitsTotal || ''}
                       onChange={(e) => setCurrentModel({ ...currentModel, unitsTotal: parseInt(e.target.value) || 0, unitsAvailable: parseInt(e.target.value) || 0 })}
-                      className="w-full px-4 py-2 rounded-lg border border-gray-200"
+                      className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-indigo-500 outline-none bg-white"
                       placeholder="0"
                     />
                   </div>
                 </div>
 
                 <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">Amenidades</label>
-                  <div className="flex gap-2 mb-2">
+                  <label className="block text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
+                    <Shield size={16} className="text-indigo-500" />
+                    Amenidades
+                  </label>
+                  <div className="flex gap-2 mb-3">
                     <input
                       type="text"
                       value={newAmenity}
                       onChange={(e) => setNewAmenity(e.target.value)}
                       onKeyPress={(e) => e.key === 'Enter' && addAmenity()}
-                      className="flex-1 px-4 py-2 rounded-lg border border-gray-200"
+                      className="flex-1 px-5 py-3 rounded-xl border border-gray-200 focus:border-indigo-500 outline-none bg-white"
                       placeholder="Ej: Piscina, Gimnasio..."
                     />
                     <button
                       onClick={addAmenity}
-                      className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700"
+                      className="px-6 py-3 bg-indigo-600 text-white rounded-xl font-semibold hover:bg-indigo-700 transition-colors"
                     >
-                      Agregar
+                      <Plus size={18} />
                     </button>
                   </div>
                   {currentModel.amenities && currentModel.amenities.length > 0 && (
@@ -2892,7 +2967,7 @@ const ProjectModal: React.FC<ProjectModalProps> = ({ zones, onClose, onSave }) =
                       {currentModel.amenities.map((amenity, idx) => (
                         <span
                           key={idx}
-                          className="px-3 py-1 bg-indigo-100 text-indigo-700 rounded-full text-sm flex items-center gap-2"
+                          className="px-4 py-2 bg-indigo-100 text-indigo-700 rounded-full text-sm font-medium flex items-center gap-2"
                         >
                           {amenity}
                           <button onClick={() => removeAmenity(amenity)} className="text-indigo-500 hover:text-indigo-700">
@@ -2905,24 +2980,31 @@ const ProjectModal: React.FC<ProjectModalProps> = ({ zones, onClose, onSave }) =
                 </div>
 
                 <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">Imágenes del Modelo</label>
-                  <input
-                    type="file"
-                    multiple
-                    accept="image/*"
-                    onChange={handleModelImageUpload}
-                    className="w-full px-4 py-2 rounded-lg border border-gray-200"
-                  />
+                  <label className="block text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
+                    <ImageIcon size={16} className="text-indigo-500" />
+                    Imágenes del Modelo
+                  </label>
+                  <label className="block w-full px-5 py-4 rounded-xl border-2 border-dashed border-gray-200 hover:border-indigo-400 hover:bg-indigo-50/30 transition-all cursor-pointer text-center">
+                    <Upload size={24} className="mx-auto mb-2 text-gray-400" />
+                    <span className="text-sm text-gray-600">Haz clic para subir imágenes</span>
+                    <input
+                      type="file"
+                      multiple
+                      accept="image/*"
+                      onChange={handleModelImageUpload}
+                      className="hidden"
+                    />
+                  </label>
                   {currentModel.images.length > 0 && (
-                    <div className="grid grid-cols-4 gap-2 mt-4">
+                    <div className="grid grid-cols-4 gap-3 mt-4">
                       {currentModel.images.map((img, idx) => (
-                        <div key={idx} className="relative">
-                          <img src={img} alt={`Modelo ${idx + 1}`} className="w-full h-24 object-cover rounded-lg" />
+                        <div key={idx} className="relative group">
+                          <img src={img} alt={`Modelo ${idx + 1}`} className="w-full h-24 object-cover rounded-xl" />
                           <button
                             onClick={() => setCurrentModel({ ...currentModel, images: currentModel.images.filter((_, i) => i !== idx) })}
-                            className="absolute top-1 right-1 w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center text-xs"
+                            className="absolute top-2 right-2 w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
                           >
-                            <X size={12} />
+                            <X size={14} />
                           </button>
                         </div>
                       ))}
@@ -2933,8 +3015,9 @@ const ProjectModal: React.FC<ProjectModalProps> = ({ zones, onClose, onSave }) =
                 <button
                   onClick={addModel}
                   disabled={!currentModel.name || currentModel.unitsTotal === 0 || currentModel.price === 0}
-                  className="w-full px-6 py-3 bg-indigo-600 text-white rounded-xl font-semibold hover:bg-indigo-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="w-full px-6 py-4 bg-indigo-600 text-white rounded-xl font-bold text-lg hover:bg-indigo-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-indigo-200"
                 >
+                  <Plus size={20} className="inline mr-2" />
                   Agregar Modelo
                 </button>
               </div>
@@ -3014,14 +3097,16 @@ const ProjectModal: React.FC<ProjectModalProps> = ({ zones, onClose, onSave }) =
           )}
 
           {/* Navegación */}
-          <div className="flex gap-4 pt-4 border-t border-gray-200">
-            {step > 1 && (
+          <div className="flex flex-col sm:flex-row justify-between items-stretch sm:items-center gap-4 pt-6 border-t border-gray-200">
+            {step > 1 ? (
               <button
                 onClick={() => setStep(step - 1)}
-                className="px-6 py-3 rounded-xl border border-gray-200 text-gray-700 font-semibold hover:bg-gray-50 transition-colors"
+                className="text-gray-400 hover:text-gray-600 font-medium flex items-center justify-center gap-2 py-3 sm:py-0 order-2 sm:order-1"
               >
-                Atrás
+                <ChevronLeft size={20} /> Atrás
               </button>
+            ) : (
+              <div></div>
             )}
             {step < totalSteps ? (
               <button
@@ -3031,17 +3116,25 @@ const ProjectModal: React.FC<ProjectModalProps> = ({ zones, onClose, onSave }) =
                   setStep(step + 1);
                 }}
                 disabled={(step === 1 && !name) || (step === 2 && models.length === 0)}
-                className="flex-1 px-6 py-3 rounded-xl bg-indigo-600 text-white font-semibold hover:bg-indigo-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                className={`flex-1 sm:flex-none flex items-center justify-center gap-3 px-8 py-4 rounded-full font-bold text-lg transition-all duration-300 shadow-xl order-1 sm:order-2 w-full sm:w-auto ${
+                  (step === 1 && name) || (step === 2 && models.length > 0)
+                    ? 'bg-indigo-600 text-white hover:bg-indigo-700 shadow-indigo-200'
+                    : 'bg-gray-100 text-gray-400 cursor-not-allowed shadow-none'
+                }`}
               >
-                Continuar
+                Continuar <ArrowRight size={20} className="shrink-0" />
               </button>
             ) : (
               <button
                 onClick={handleSave}
                 disabled={!name || !zone || models.length === 0}
-                className="flex-1 px-6 py-3 rounded-xl bg-indigo-600 text-white font-semibold hover:bg-indigo-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                className={`flex-1 sm:flex-none flex items-center justify-center gap-3 px-8 py-4 rounded-full font-bold text-lg transition-all duration-300 shadow-xl order-1 sm:order-2 w-full sm:w-auto ${
+                  name && zone && models.length > 0
+                    ? 'bg-indigo-600 text-white hover:bg-indigo-700 shadow-indigo-200'
+                    : 'bg-gray-100 text-gray-400 cursor-not-allowed shadow-none'
+                }`}
               >
-                Guardar Proyecto
+                Guardar Proyecto <Check size={20} className="shrink-0" />
               </button>
             )}
           </div>
