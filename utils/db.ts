@@ -28,7 +28,9 @@ const ensureTablesExist = async (client: any) => {
         name TEXT NOT NULL,
         email TEXT UNIQUE NOT NULL,
         password_hash TEXT NOT NULL,
+        company_name TEXT,
         logo_url TEXT,
+        role TEXT DEFAULT 'Broker' CHECK (role IN ('Promotora', 'Broker')),
         created_at TIMESTAMP DEFAULT NOW()
       )
     `);
@@ -118,6 +120,9 @@ const ensureTablesExist = async (client: any) => {
         BEGIN
           IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'companies' AND column_name = 'plan') THEN
             ALTER TABLE companies ADD COLUMN plan TEXT DEFAULT 'Freshie' CHECK (plan IN ('Freshie', 'Wolf of Wallstreet'));
+          END IF;
+          IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'companies' AND column_name = 'role') THEN
+            ALTER TABLE companies ADD COLUMN role TEXT DEFAULT 'Broker' CHECK (role IN ('Promotora', 'Broker'));
           END IF;
         END $$;
       `);
@@ -408,6 +413,7 @@ export interface CompanyData {
   companyName: string;
   logoUrl?: string;
   zones: string[];
+  role: 'Promotora' | 'Broker';
 }
 
 export interface Company {
@@ -418,6 +424,7 @@ export interface Company {
   logoUrl?: string;
   zones: string[];
   plan?: 'Freshie' | 'Wolf of Wallstreet'; // Plan de la empresa
+  role?: 'Promotora' | 'Broker';
 }
 
 // Función simple para hash de contraseña (en producción usar bcrypt)
@@ -456,10 +463,10 @@ export const saveCompanyToDB = async (data: CompanyData): Promise<string | null>
 
     // Insertar empresa
     const companyResult = await client.query(`
-      INSERT INTO companies (name, email, password_hash, logo_url)
-      VALUES ($1, $2, $3, $4)
+      INSERT INTO companies (name, email, password_hash, company_name, logo_url, role)
+      VALUES ($1, $2, $3, $4, $5, $6)
       RETURNING id
-    `, [data.name, data.email, passwordHash, data.logoUrl || null]);
+    `, [data.name, data.email, passwordHash, data.companyName || data.name, data.logoUrl || null, data.role || 'Broker']);
 
     const companyId = companyResult.rows[0].id;
     console.log('✅ Empresa guardada con ID:', companyId);
@@ -608,7 +615,8 @@ export const verifyLogin = async (email: string, password: string): Promise<Comp
       companyName: company.name, // Asumiendo que name es el nombre de la empresa
       logoUrl: company.logo_url,
       zones: zones,
-      plan: (company.plan || 'Freshie') as 'Freshie' | 'Wolf of Wallstreet'
+      plan: (company.plan || 'Freshie') as 'Freshie' | 'Wolf of Wallstreet',
+      role: (company.role || 'Broker') as 'Promotora' | 'Broker'
     };
 
   } catch (error) {
@@ -655,7 +663,8 @@ export const getCompanyById = async (companyId: string): Promise<Company | null>
       companyName: company.name,
       logoUrl: company.logo_url,
       zones: zones,
-      plan: (company.plan || 'Freshie') as 'Freshie' | 'Wolf of Wallstreet'
+      plan: (company.plan || 'Freshie') as 'Freshie' | 'Wolf of Wallstreet',
+      role: (company.role || 'Broker') as 'Promotora' | 'Broker'
     };
 
   } catch (error) {

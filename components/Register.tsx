@@ -20,7 +20,8 @@ export const Register: React.FC<RegisterProps> = ({ onRegisterComplete, onGoToLo
     confirmPassword: '',
     companyName: '',
     logo: null as File | null,
-    zones: [...ZONES_PANAMA] // Start with default zones
+    zones: [...ZONES_PANAMA], // Start with default zones
+    role: 'Broker' as 'Promotora' | 'Broker'
   });
   const [newZone, setNewZone] = useState('');
   const [passwordError, setPasswordError] = useState('');
@@ -97,7 +98,8 @@ export const Register: React.FC<RegisterProps> = ({ onRegisterComplete, onGoToLo
         password: formData.password,
         companyName: formData.companyName || 'Tu Inmobiliaria',
         logoUrl: logoBase64, // Guardar como base64 en lugar de blob URL
-        zones: formData.zones // Asegurar que es un array
+        zones: formData.zones, // Asegurar que es un array
+        role: formData.role
       });
 
       console.log('📋 Resultado de saveCompanyToDB:', companyId);
@@ -295,6 +297,19 @@ export const Register: React.FC<RegisterProps> = ({ onRegisterComplete, onGoToLo
                   onChange={(e) => setFormData({...formData, companyName: e.target.value})}
                   className="w-full pl-12 pr-4 py-3.5 rounded-xl border border-gray-200 outline-none focus:border-indigo-500 focus:bg-indigo-50/10 transition-all text-gray-700 font-medium"
                 />
+              </div>
+
+              {/* Rol: Promotora o Broker */}
+              <div className="relative group">
+                <label className="text-sm font-semibold text-gray-700 block mb-2">Rol</label>
+                <select
+                  value={formData.role}
+                  onChange={(e) => setFormData({ ...formData, role: e.target.value as 'Promotora' | 'Broker' })}
+                  className="w-full px-4 py-4 rounded-2xl border border-gray-200 focus:border-indigo-500 outline-none bg-white transition-all focus:shadow-md text-gray-700"
+                >
+                  <option value="Broker">Broker</option>
+                  <option value="Promotora">Promotora</option>
+                </select>
               </div>
             </div>
 

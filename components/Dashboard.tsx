@@ -59,6 +59,8 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableZones, onUpdateZo
   const [logoError, setLogoError] = useState(false);
   const [isUpdatingLogo, setIsUpdatingLogo] = useState(false);
 
+  const isPromotora = companyData?.role === 'Promotora';
+
   // Load Data from Neon
   useEffect(() => {
     const fetchData = async () => {
@@ -579,7 +581,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableZones, onUpdateZo
                   : 'text-gray-400 hover:text-gray-600 hover:bg-gray-50'
               }`}
             >
-              <Building size={14} className="sm:w-4 sm:h-4" /> <span>Propiedades</span>
+              <Building size={14} className="sm:w-4 sm:h-4" /> <span>{isPromotora ? 'Proyectos' : 'Propiedades'}</span>
             </button>
             <button
               onClick={() => setActiveTab('settings')}
@@ -633,38 +635,40 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableZones, onUpdateZo
                <span className="mt-4 text-gray-400 text-[10px] font-medium">Potencial de cierre</span>
             </div>
 
-            {/* Card 4: Top Zones */}
-            <div className="bg-white rounded-[2.5rem] p-8 shadow-[0_10px_40px_-10px_rgba(0,0,0,0.05)] border border-gray-100 flex flex-col items-center justify-center text-center group hover:shadow-lg transition-all duration-500 cursor-pointer" onClick={() => hasMoreZones && setShowZonesModal(true)}>
-               <div className="w-16 h-16 rounded-3xl bg-orange-50 text-orange-600 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-500">
-                 <MapPin size={32} strokeWidth={1.5} />
-               </div>
-               <h3 className="text-gray-400 font-semibold uppercase tracking-wider text-xs mb-2">Zonas Más Buscadas</h3>
-               <p className="text-2xl font-bold text-gray-900 tracking-tight px-4 leading-tight">
-                 {isLoading ? (
-                   <Loader2 className="animate-spin mx-auto" />
-                 ) : sortedZones.length === 0 ? (
-                   'Aún no tenemos datos'
-                 ) : (
-                   <>
-                     {topTwoZones.join(', ')}
-                     {hasMoreZones && (
-                       <span 
-                         className="text-orange-600 hover:text-orange-700 cursor-pointer ml-1"
-                         onClick={(e) => {
-                           e.stopPropagation();
-                           setShowZonesModal(true);
-                         }}
-                       >
-                         y ...
-                       </span>
-                     )}
-                   </>
-                 )}
-               </p>
-               <span className="mt-4 px-3 py-1 bg-orange-50 text-orange-600 text-[10px] font-bold rounded-full">
-                 {totalZones > 0 ? `${totalZones} ${totalZones === 1 ? 'zona' : 'zonas'}` : '0 zonas'}
-               </span>
-            </div>
+            {/* Card 4: Top Zones (solo para Broker) */}
+            {!isPromotora && (
+              <div className="bg-white rounded-[2.5rem] p-8 shadow-[0_10px_40px_-10px_rgba(0,0,0,0.05)] border border-gray-100 flex flex-col items-center justify-center text-center group hover:shadow-lg transition-all duration-500 cursor-pointer" onClick={() => hasMoreZones && setShowZonesModal(true)}>
+                 <div className="w-16 h-16 rounded-3xl bg-orange-50 text-orange-600 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-500">
+                   <MapPin size={32} strokeWidth={1.5} />
+                 </div>
+                 <h3 className="text-gray-400 font-semibold uppercase tracking-wider text-xs mb-2">Zonas Más Buscadas</h3>
+                 <p className="text-2xl font-bold text-gray-900 tracking-tight px-4 leading-tight">
+                   {isLoading ? (
+                     <Loader2 className="animate-spin mx-auto" />
+                   ) : sortedZones.length === 0 ? (
+                     'Aún no tenemos datos'
+                   ) : (
+                     <>
+                       {topTwoZones.join(', ')}
+                       {hasMoreZones && (
+                         <span 
+                           className="text-orange-600 hover:text-orange-700 cursor-pointer ml-1"
+                           onClick={(e) => {
+                             e.stopPropagation();
+                             setShowZonesModal(true);
+                           }}
+                         >
+                           y ...
+                         </span>
+                       )}
+                     </>
+                   )}
+                 </p>
+                 <span className="mt-4 px-3 py-1 bg-orange-50 text-orange-600 text-[10px] font-bold rounded-full">
+                   {totalZones > 0 ? `${totalZones} ${totalZones === 1 ? 'zona' : 'zonas'}` : '0 zonas'}
+                 </span>
+              </div>
+            )}
           </div>
         ) : activeTab === 'properties' ? (
           <div className="space-y-6">

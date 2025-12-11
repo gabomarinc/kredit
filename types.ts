@@ -57,6 +57,7 @@ export interface Prospect {
 // SISTEMA DE PLANES
 // ============================================
 export type PlanType = 'Freshie' | 'Wolf of Wallstreet';
+export type RoleType = 'Promotora' | 'Broker';
 
 // ============================================
 // SISTEMA DE PROPIEDADES
