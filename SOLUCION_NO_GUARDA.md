@@ -101,3 +101,4 @@ Comparte conmigo:
 2. Una captura de pantalla de las variables de entorno en Vercel (ocultando la contraseña)
 3. Los Build Logs del último deployment en Vercel
 
+

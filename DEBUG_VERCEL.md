@@ -122,3 +122,4 @@ Si después de seguir estos pasos aún no funciona, comparte:
 - Los Build Logs de Vercel
 - Una captura de pantalla de las variables de entorno (ocultando la contraseña)
 
+

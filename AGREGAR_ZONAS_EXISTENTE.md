@@ -32,3 +32,4 @@ Después de agregar zonas:
 2. Deberías ver las zonas asociadas a tu `company_id`
 3. Recarga el Dashboard y las zonas deberían aparecer
 
+

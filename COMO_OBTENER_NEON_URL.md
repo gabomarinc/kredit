@@ -124,3 +124,4 @@ Settings
 - **Usa Pooled** si está disponible (mejor para producción)
 - Direct funciona también, pero Pooled es más eficiente
 
+

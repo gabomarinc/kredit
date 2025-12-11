@@ -50,6 +50,8 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableZones, onUpdateZo
   // Projects State (Promotora)
   const [projects, setProjects] = useState<Project[]>([]);
   const [showProjectModal, setShowProjectModal] = useState(false);
+  const [selectedProjectForEdit, setSelectedProjectForEdit] = useState<Project | null>(null);
+  const [showProjectSelectionModal, setShowProjectSelectionModal] = useState(false);
   
   const [notification, setNotification] = useState<{ isOpen: boolean; type: NotificationType; message: string; title?: string }>({
     isOpen: false,
@@ -773,9 +775,52 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableZones, onUpdateZo
                       {project.description && (
                         <p className="text-sm text-gray-600 mb-3 line-clamp-2">{project.description}</p>
                       )}
-                      <div className="pt-3 border-t border-gray-100">
+                      <div className="pt-3 border-t border-gray-100 mb-3">
                         <div className="text-xs text-gray-400 uppercase font-semibold mb-1">Modelos</div>
                         <div className="text-lg font-bold text-indigo-600">{project.models?.length || 0} {project.models?.length === 1 ? 'modelo' : 'modelos'}</div>
+                      </div>
+                      <div className="flex gap-2">
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setSelectedProjectForEdit(project);
+                            setShowProjectModal(true);
+                          }}
+                          className="flex-1 px-4 py-2 bg-indigo-50 text-indigo-600 rounded-xl font-semibold hover:bg-indigo-100 transition-colors text-sm"
+                        >
+                          Editar
+                        </button>
+                        <button
+                          onClick={async (e) => {
+                            e.stopPropagation();
+                            if (window.confirm('¿Estás seguro de que deseas eliminar este proyecto?')) {
+                              const success = await deleteProject(project.id);
+                              if (success) {
+                                const companyId = localStorage.getItem('companyId');
+                                if (companyId) {
+                                  const projs = await getProjectsByCompany(companyId);
+                                  setProjects(projs);
+                                  setNotification({
+                                    isOpen: true,
+                                    type: 'success',
+                                    message: 'Proyecto eliminado exitosamente',
+                                    title: 'Éxito'
+                                  });
+                                }
+                              } else {
+                                setNotification({
+                                  isOpen: true,
+                                  type: 'error',
+                                  message: 'Error al eliminar el proyecto',
+                                  title: 'Error'
+                                });
+                              }
+                            }
+                          }}
+                          className="px-4 py-2 bg-red-50 text-red-600 rounded-xl font-semibold hover:bg-red-100 transition-colors text-sm"
+                        >
+                          <Trash2 size={16} />
+                        </button>
                       </div>
                     </div>
                   </div>
@@ -2660,20 +2705,21 @@ const PropertyModal: React.FC<PropertyModalProps> = ({ property, zones, onClose,
 
 // Componente Modal para Crear/Editar Proyecto (Paso a Paso) - Promotora
 interface ProjectModalProps {
+  project?: Project | null;
   companyId: string;
   zones: string[];
   onClose: () => void;
   onSave: (project: Omit<Project, 'id' | 'createdAt' | 'updatedAt'>) => void;
 }
 
-const ProjectModal: React.FC<ProjectModalProps> = ({ zones, onClose, onSave }) => {
+const ProjectModal: React.FC<ProjectModalProps> = ({ project, zones, onClose, onSave }) => {
   const [step, setStep] = useState(1);
-  const [name, setName] = useState('');
-  const [description, setDescription] = useState('');
-  const [zone, setZone] = useState(zones[0] || '');
-  const [address, setAddress] = useState('');
-  const [projectImages, setProjectImages] = useState<string[]>([]);
-  const [status, setStatus] = useState<'Activo' | 'Inactivo'>('Activo');
+  const [name, setName] = useState(project?.name || '');
+  const [description, setDescription] = useState(project?.description || '');
+  const [zone, setZone] = useState(project?.zone || zones[0] || '');
+  const [address, setAddress] = useState(project?.address || '');
+  const [projectImages, setProjectImages] = useState<string[]>(project?.images || []);
+  const [status, setStatus] = useState<'Activo' | 'Inactivo'>(project?.status || 'Activo');
   const [models, setModels] = useState<ProjectModel[]>(project?.models || []);
   const [currentModel, setCurrentModel] = useState<ProjectModel>({
     name: '',
