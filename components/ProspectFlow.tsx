@@ -481,9 +481,9 @@ export const ProspectFlow: React.FC<ProspectFlowProps> = ({ availableZones, comp
                 </button>
                 <button
                   onClick={handleCalculateCapacity}
-                  disabled={financial.familyIncome < 800}
+                  disabled={financial.familyIncome < 800 || financial.familyIncome === 0}
                    className={`flex items-center justify-center gap-2 px-6 sm:px-8 py-4 sm:py-3 rounded-full font-semibold text-base sm:text-base transition-all duration-300 order-1 sm:order-2 flex-1 sm:flex-initial ${
-                    financial.familyIncome >= 800
+                    financial.familyIncome >= 800 && financial.familyIncome > 0
                       ? 'bg-gray-900 text-white hover:bg-gray-800 shadow-md'
                       : 'bg-gray-100 text-gray-300 cursor-not-allowed'
                   }`}
