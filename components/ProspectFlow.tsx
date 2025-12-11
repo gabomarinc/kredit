@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { PropertyType, UserPreferences, FinancialData, PersonalData, CalculationResult } from '../types';
 import { calculateAffordability, formatCurrency } from '../utils/calculator';
-import { saveProspectToDB, getCompanyById, getAvailablePropertiesForProspect, savePropertyInterest, getCompanyById as getCompany, saveProspectInitial, updateProspectToDB } from '../utils/db';
-import { Property, PlanType } from '../types';
+import { saveProspectToDB, getCompanyById, getAvailablePropertiesForProspect, savePropertyInterest, getCompanyById as getCompany, saveProspectInitial, updateProspectToDB, getAvailableProjectsForProspect } from '../utils/db';
+import { Property, PlanType, Project } from '../types';
 import { 
   Home, Building2, MapPin, User, Upload, FileCheck, ArrowRight, CheckCircle2, Download, HeartHandshake, ChevronLeft, Check, BedDouble, Bath, Star, TrendingDown, X, Loader2
 } from 'lucide-react';
@@ -83,7 +83,10 @@ export const ProspectFlow: React.FC<ProspectFlowProps> = ({ availableZones, comp
   const [prospectId, setProspectId] = useState<string | null>(null);
   const [availableProperties, setAvailableProperties] = useState<Property[]>([]);
   const [selectedProperty, setSelectedProperty] = useState<Property | null>(null);
+  const [availableProjects, setAvailableProjects] = useState<Project[]>([]);
+  const [selectedProject, setSelectedProject] = useState<Project | null>(null);
   const [companyPlan, setCompanyPlan] = useState<PlanType>('Freshie');
+  const [companyRole, setCompanyRole] = useState<'Promotora' | 'Broker'>('Broker');
   const [isLoadingProperties, setIsLoadingProperties] = useState(false);
   const [wantsValidation, setWantsValidation] = useState<boolean | null>(null); // null = no decidido, true = quiere validar, false = no quiere
   const [notification, setNotification] = useState<{ isOpen: boolean; type: NotificationType; message: string; title?: string }>({
@@ -243,23 +246,39 @@ export const ProspectFlow: React.FC<ProspectFlowProps> = ({ availableZones, comp
       if (success) {
         console.log('✅ Prospecto actualizado exitosamente');
         
-        // Cargar propiedades disponibles si la empresa tiene plan Premium
+        // Cargar propiedades/proyectos disponibles si la empresa tiene plan Premium
         if (companyId) {
           try {
             const company = await getCompanyById(companyId);
             if (company && company.plan === 'Wolf of Wallstreet') {
               setCompanyPlan('Wolf of Wallstreet');
+              setCompanyRole(company.role || 'Broker');
               setIsLoadingProperties(true);
-              const props = await getAvailablePropertiesForProspect(
-                companyId,
-                result.maxPropertyPrice,
-                Array.isArray(preferences.zone) ? preferences.zone : [preferences.zone]
-              );
-              setAvailableProperties(props);
+              
+              if (company.role === 'Promotora') {
+                // Cargar proyectos para Promotora
+                const projects = await getAvailableProjectsForProspect(
+                  companyId,
+                  result.maxPropertyPrice,
+                  Array.isArray(preferences.zone) ? preferences.zone : [preferences.zone]
+                );
+                setAvailableProjects(projects);
+                console.log('✅ Proyectos cargados:', projects.length);
+              } else {
+                // Cargar propiedades para Broker
+                const props = await getAvailablePropertiesForProspect(
+                  companyId,
+                  result.maxPropertyPrice,
+                  Array.isArray(preferences.zone) ? preferences.zone : [preferences.zone]
+                );
+                setAvailableProperties(props);
+                console.log('✅ Propiedades cargadas:', props.length);
+              }
+              
               setIsLoadingProperties(false);
             }
           } catch (e) {
-            console.error("Error cargando propiedades:", e);
+            console.error("Error cargando propiedades/proyectos:", e);
             setIsLoadingProperties(false);
           }
         }
@@ -796,15 +815,82 @@ export const ProspectFlow: React.FC<ProspectFlowProps> = ({ availableZones, comp
                     </div>
                   </div>
 
-                  {/* Propiedades Disponibles - Solo si hay plan Premium y propiedades */}
+                  {/* Propiedades/Proyectos Disponibles - Solo si hay plan Premium */}
                   {companyPlan === 'Wolf of Wallstreet' && (
                     <div className="mb-10">
                       {isLoadingProperties ? (
                         <div className="text-center py-8">
                           <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div>
-                          <p className="text-gray-500 mt-4 text-sm">Buscando propiedades disponibles...</p>
+                          <p className="text-gray-500 mt-4 text-sm">
+                            {companyRole === 'Promotora' ? 'Buscando proyectos disponibles...' : 'Buscando propiedades disponibles...'}
+                          </p>
                         </div>
-                      ) : availableProperties.length > 0 ? (
+                      ) : companyRole === 'Promotora' && availableProjects.length > 0 ? (
+                        <>
+                          <h3 className="text-2xl font-bold text-gray-900 mb-6 text-center">Proyectos que te pueden interesar</h3>
+                          <div className="grid md:grid-cols-2 gap-4 max-w-5xl mx-auto">
+                            {availableProjects.slice(0, 4).map((project) => (
+                              <div
+                                key={project.id}
+                                onClick={() => setSelectedProject(project)}
+                                className="bg-white rounded-2xl overflow-hidden border border-gray-100 shadow-sm hover:shadow-lg transition-all cursor-pointer group"
+                              >
+                                {/* Imagen del proyecto */}
+                                <div className="relative h-48 bg-gray-100 overflow-hidden">
+                                  {project.images && project.images.length > 0 ? (
+                                    <img
+                                      src={project.images[0]}
+                                      alt={project.name}
+                                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                                    />
+                                  ) : (
+                                    <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-indigo-50 to-purple-50">
+                                      <Building2 size={48} className="text-indigo-300" />
+                                    </div>
+                                  )}
+                                  
+                                  {/* Badge de estado */}
+                                  <div className={`absolute top-3 left-3 px-3 py-1 rounded-lg text-xs font-bold text-white ${
+                                    project.status === 'Activo' ? 'bg-green-600' : 'bg-gray-600'
+                                  }`}>
+                                    {project.status}
+                                  </div>
+                                </div>
+
+                                {/* Contenido */}
+                                <div className="p-5">
+                                  <h4 className="font-bold text-gray-900 mb-2 text-lg">{project.name}</h4>
+                                  <div className="flex items-center gap-1.5 text-gray-500 text-sm mb-4">
+                                    <MapPin size={14} />
+                                    <span>{project.zone || 'Zona no especificada'}</span>
+                                  </div>
+                                  
+                                  {project.description && (
+                                    <p className="text-sm text-gray-600 mb-4 line-clamp-2">{project.description}</p>
+                                  )}
+
+                                  <div className="pt-4 border-t border-gray-100">
+                                    <div className="text-xs text-gray-400 uppercase font-semibold mb-1">Modelos Disponibles</div>
+                                    <div className="text-lg font-bold text-indigo-600">
+                                      {project.models?.length || 0} {project.models?.length === 1 ? 'modelo' : 'modelos'}
+                                    </div>
+                                    {project.models && project.models.length > 0 && (
+                                      <div className="text-sm text-gray-500 mt-1">
+                                        Desde {formatCurrency(Math.min(...project.models.map(m => m.price)))}
+                                      </div>
+                                    )}
+                                  </div>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                          {availableProjects.length > 4 && (
+                            <p className="text-center text-gray-500 text-sm mt-4">
+                              Y {availableProjects.length - 4} proyectos más disponibles
+                            </p>
+                          )}
+                        </>
+                      ) : companyRole === 'Broker' && availableProperties.length > 0 ? (
                         <>
                           <h3 className="text-2xl font-bold text-gray-900 mb-6 text-center">Propiedades que te pueden interesar</h3>
                           <div className="grid md:grid-cols-2 gap-4 max-w-5xl mx-auto">
@@ -1061,6 +1147,144 @@ export const ProspectFlow: React.FC<ProspectFlowProps> = ({ availableZones, comp
                   )}
                 </div>
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal de Detalle de Proyecto */}
+      {selectedProject && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+          <div className="bg-white rounded-[2rem] w-full max-w-4xl max-h-[90vh] overflow-y-auto shadow-2xl relative animate-fade-in-up">
+            {/* Header con botón cerrar */}
+            <div className="sticky top-0 bg-white border-b border-gray-100 p-6 flex items-center justify-between z-10">
+              <h3 className="text-2xl font-bold text-gray-900">{selectedProject.name}</h3>
+              <button
+                onClick={() => setSelectedProject(null)}
+                className="w-10 h-10 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center transition-colors"
+              >
+                <X size={20} className="text-gray-600" />
+              </button>
+            </div>
+
+            {/* Imágenes */}
+            {selectedProject.images && selectedProject.images.length > 0 && (
+              <div className="relative h-64 bg-gray-100">
+                <img
+                  src={selectedProject.images[0]}
+                  alt={selectedProject.name}
+                  className="w-full h-full object-cover"
+                />
+              </div>
+            )}
+
+            {/* Contenido */}
+            <div className="p-6 space-y-6">
+              {/* Ubicación */}
+              <div className="flex items-center gap-2 text-gray-600">
+                <MapPin size={18} className="text-indigo-500" />
+                <span className="font-medium">{selectedProject.zone || 'Zona no especificada'}</span>
+                {selectedProject.address && (
+                  <span className="text-gray-400">• {selectedProject.address}</span>
+                )}
+              </div>
+
+              {/* Descripción */}
+              {selectedProject.description && (
+                <div>
+                  <h4 className="font-bold text-gray-900 mb-2">Descripción</h4>
+                  <p className="text-gray-600 leading-relaxed">{selectedProject.description}</p>
+                </div>
+              )}
+
+              {/* Modelos Disponibles */}
+              {selectedProject.models && selectedProject.models.length > 0 && (
+                <div>
+                  <h4 className="font-bold text-gray-900 mb-4">Modelos Disponibles</h4>
+                  <div className="space-y-4">
+                    {selectedProject.models.map((model) => (
+                      <div key={model.id || model.name} className="border border-gray-200 rounded-xl p-4 hover:border-indigo-300 transition-colors">
+                        <div className="flex items-start justify-between mb-3">
+                          <div>
+                            <h5 className="font-bold text-gray-900 text-lg">{model.name}</h5>
+                            <div className="flex items-center gap-4 mt-2 text-sm text-gray-600">
+                              {model.areaM2 && (
+                                <span>{model.areaM2}m²</span>
+                              )}
+                              {model.bedrooms && (
+                                <span className="flex items-center gap-1">
+                                  <BedDouble size={14} className="text-gray-400" />
+                                  {model.bedrooms}
+                                </span>
+                              )}
+                              {model.bathrooms && (
+                                <span className="flex items-center gap-1">
+                                  <Bath size={14} className="text-gray-400" />
+                                  {model.bathrooms}
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                          <div className="text-right">
+                            <div className="text-xs text-gray-400 uppercase font-semibold mb-1">Precio</div>
+                            <div className="text-xl font-bold text-gray-900">{formatCurrency(model.price)}</div>
+                            <div className="text-xs text-gray-500 mt-1">
+                              {model.unitsAvailable}/{model.unitsTotal} disponibles
+                            </div>
+                          </div>
+                        </div>
+                        
+                        {model.amenities && model.amenities.length > 0 && (
+                          <div className="mt-3 pt-3 border-t border-gray-100">
+                            <div className="text-xs text-gray-400 uppercase font-semibold mb-2">Amenidades</div>
+                            <div className="flex flex-wrap gap-2">
+                              {model.amenities.map((amenity, idx) => (
+                                <span key={idx} className="px-2 py-1 bg-indigo-50 text-indigo-700 rounded-lg text-xs font-medium">
+                                  {amenity}
+                                </span>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+
+                        {model.images && model.images.length > 0 && (
+                          <div className="mt-3 grid grid-cols-4 gap-2">
+                            {model.images.slice(0, 4).map((img, idx) => (
+                              <img key={idx} src={img} alt={`${model.name} ${idx + 1}`} className="w-full h-20 object-cover rounded-lg" />
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Botón "Me interesa" */}
+              {prospectId && (
+                <div className="pt-6 border-t border-gray-200">
+                  <label className="flex items-center gap-3 cursor-pointer group">
+                    <input
+                      type="checkbox"
+                      onChange={async (e) => {
+                        // TODO: Implementar guardado de interés en proyecto
+                        if (e.target.checked) {
+                          setNotification({
+                            isOpen: true,
+                            type: 'success',
+                            message: '¡Gracias por tu interés! Un agente se pondrá en contacto contigo pronto.',
+                            title: '¡Interés registrado!'
+                          });
+                        }
+                      }}
+                      className="w-5 h-5 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500 focus:ring-2 cursor-pointer"
+                    />
+                    <span className="text-lg font-semibold text-gray-700 group-hover:text-indigo-600 transition-colors">
+                      Me interesa este proyecto
+                    </span>
+                  </label>
+                </div>
+              )}
             </div>
           </div>
         </div>

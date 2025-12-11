@@ -1549,6 +1549,104 @@ export const saveProject = async (project: Omit<Project, 'id' | 'createdAt' | 'u
 };
 
 // Obtener proyectos de una empresa
+// Obtener proyectos disponibles para un prospecto (basado en precio máximo y zonas)
+export const getAvailableProjectsForProspect = async (
+  companyId: string,
+  maxPrice: number,
+  interestedZones: string[]
+): Promise<Project[]> => {
+  if (!pool) {
+    return [];
+  }
+
+  try {
+    const client = await pool.connect();
+    await ensureTablesExist(client);
+
+    // Buscar proyectos activos que:
+    // 1. Pertenezcan a la empresa
+    // 2. Estén en las zonas de interés del prospecto (si hay zonas especificadas)
+    // 3. Tengan al menos un modelo con precio <= maxPrice * 1.1
+    // 4. Estén activos
+
+    let query = `
+      SELECT DISTINCT p.*, 
+        COALESCE(
+          json_agg(
+            json_build_object(
+              'id', pm.id,
+              'name', pm.name,
+              'areaM2', pm.area_m2,
+              'bedrooms', pm.bedrooms,
+              'bathrooms', pm.bathrooms,
+              'amenities', pm.amenities,
+              'unitsTotal', pm.units_total,
+              'unitsAvailable', pm.units_available,
+              'price', pm.price,
+              'images', pm.images
+            ) ORDER BY pm.price ASC
+          ) FILTER (WHERE pm.id IS NOT NULL),
+          '[]'::json
+        ) as models
+      FROM projects p
+      LEFT JOIN project_models pm ON p.id = pm.project_id
+      WHERE p.company_id = $1 
+      AND p.status = 'Activo'
+      AND EXISTS (
+        SELECT 1 FROM project_models pm2 
+        WHERE pm2.project_id = p.id 
+        AND pm2.price <= $2 * 1.1
+        AND pm2.units_available > 0
+      )
+    `;
+
+    const values: any[] = [companyId, maxPrice];
+
+    // Si hay zonas de interés, filtrar por ellas
+    if (interestedZones && interestedZones.length > 0) {
+      query += ` AND (p.zone = ANY($3) OR p.zone IS NULL)`;
+      values.push(interestedZones);
+    }
+
+    query += ` 
+      GROUP BY p.id
+      ORDER BY p.created_at DESC
+      LIMIT 20`;
+
+    const res = await client.query(query, values);
+    client.release();
+
+    return res.rows.map((row: any) => ({
+      id: row.id,
+      companyId: row.company_id,
+      name: row.name,
+      description: row.description,
+      zone: row.zone,
+      address: row.address,
+      images: Array.isArray(row.images) ? row.images : [],
+      status: row.status as 'Activo' | 'Inactivo',
+      createdAt: row.created_at ? new Date(row.created_at).toISOString() : undefined,
+      updatedAt: row.updated_at ? new Date(row.updated_at).toISOString() : undefined,
+      models: Array.isArray(row.models) ? row.models.map((m: any) => ({
+        id: m.id,
+        name: m.name,
+        areaM2: m.areaM2 ? parseFloat(m.areaM2) : null,
+        bedrooms: m.bedrooms,
+        bathrooms: m.bathrooms ? parseFloat(m.bathrooms) : null,
+        amenities: Array.isArray(m.amenities) ? m.amenities : [],
+        unitsTotal: m.unitsTotal || 0,
+        unitsAvailable: m.unitsAvailable || 0,
+        price: parseFloat(m.price || 0),
+        images: Array.isArray(m.images) ? m.images : []
+      })) : []
+    }));
+
+  } catch (error) {
+    console.error('❌ Error obteniendo proyectos disponibles:', error);
+    return [];
+  }
+};
+
 export const getProjectsByCompany = async (companyId: string): Promise<Project[]> => {
   if (!pool) {
     return [];
