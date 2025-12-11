@@ -480,13 +480,14 @@ export const updateProspectToDB = async (
     });
 
     // Actualizar prospecto - SOLO archivos y calculation_result
+    // IMPORTANTE: Actualizar calculation_result siempre, y archivos solo si están presentes
     const query = `
       UPDATE prospects SET
         calculation_result = $1,
-        id_file_base64 = COALESCE(NULLIF($2, ''), id_file_base64),
-        ficha_file_base64 = COALESCE(NULLIF($3, ''), ficha_file_base64),
-        talonario_file_base64 = COALESCE(NULLIF($4, ''), talonario_file_base64),
-        signed_acp_file_base64 = COALESCE(NULLIF($5, ''), signed_acp_file_base64),
+        id_file_base64 = CASE WHEN $2 IS NOT NULL AND $2 != '' THEN $2 ELSE id_file_base64 END,
+        ficha_file_base64 = CASE WHEN $3 IS NOT NULL AND $3 != '' THEN $3 ELSE ficha_file_base64 END,
+        talonario_file_base64 = CASE WHEN $4 IS NOT NULL AND $4 != '' THEN $4 ELSE talonario_file_base64 END,
+        signed_acp_file_base64 = CASE WHEN $5 IS NOT NULL AND $5 != '' THEN $5 ELSE signed_acp_file_base64 END,
         updated_at = NOW()
       WHERE id = $6
     `;
@@ -501,11 +502,12 @@ export const updateProspectToDB = async (
     ];
 
     console.log('📤 Ejecutando UPDATE con valores:', {
-      calculation_result: values[0] ? 'presente' : 'vacío',
-      id_file: values[1] ? 'presente' : 'null',
-      ficha_file: values[2] ? 'presente' : 'null',
-      talonario_file: values[3] ? 'presente' : 'null',
-      signed_acp_file: values[4] ? 'presente' : 'null'
+      calculation_result: values[0] ? 'presente (' + values[0].substring(0, 50) + '...)' : 'vacío',
+      id_file: values[1] ? 'presente (' + (values[1] as string).substring(0, 50) + '...)' : 'null',
+      ficha_file: values[2] ? 'presente (' + (values[2] as string).substring(0, 50) + '...)' : 'null',
+      talonario_file: values[3] ? 'presente (' + (values[3] as string).substring(0, 50) + '...)' : 'null',
+      signed_acp_file: values[4] ? 'presente (' + (values[4] as string).substring(0, 50) + '...)' : 'null',
+      prospect_id: values[5]
     });
 
     const updateResult = await client.query(query, values);

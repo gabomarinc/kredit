@@ -236,6 +236,15 @@ export const ProspectFlow: React.FC<ProspectFlowProps> = ({ availableZones, comp
     const companyId = urlParams.get('company_id') || localStorage.getItem('companyId');
 
     try {
+      console.log('🔄 Iniciando actualización de prospecto...', {
+        prospectId,
+        hasIdFile: !!personal.idFile,
+        hasFichaFile: !!personal.fichaFile,
+        hasTalonarioFile: !!personal.talonarioFile,
+        hasSignedAcpFile: !!personal.signedAcpFile,
+        hasResult: !!result
+      });
+
       // Actualizar prospecto existente (solo archivos y calculation_result)
       const success = await updateProspectToDB(
         prospectId,
@@ -244,7 +253,7 @@ export const ProspectFlow: React.FC<ProspectFlowProps> = ({ availableZones, comp
       );
       
       if (success) {
-        console.log('✅ Prospecto actualizado exitosamente');
+        console.log('✅ Prospecto actualizado exitosamente en la base de datos');
         
         // Cargar propiedades/proyectos disponibles si la empresa tiene plan Premium
         if (companyId) {
@@ -283,10 +292,11 @@ export const ProspectFlow: React.FC<ProspectFlowProps> = ({ availableZones, comp
           }
         }
       } else {
-        console.error('❌ Error al actualizar prospecto');
+        console.error('❌ Error al actualizar prospecto - la función retornó false');
       }
     } catch (e) {
-      console.error("Failed to update prospect in DB, but showing results anyway", e);
+      console.error("❌ Error crítico al actualizar prospecto:", e);
+      console.error("Stack trace:", e instanceof Error ? e.stack : 'No stack available');
     }
     
     // Avanzar al siguiente paso después de un breve delay
