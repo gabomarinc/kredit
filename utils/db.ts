@@ -1457,3 +1457,90 @@ export const getProjectsByCompany = async (companyId: string): Promise<Project[]
     return [];
   }
 };
+
+// Actualizar proyecto
+export const updateProject = async (projectId: string, project: Omit<Project, 'id' | 'companyId' | 'createdAt' | 'updatedAt'>): Promise<boolean> => {
+  if (!pool) {
+    console.error('❌ Pool de base de datos no inicializado.');
+    return false;
+  }
+
+  try {
+    const client = await pool.connect();
+    await ensureTablesExist(client);
+
+    // Actualizar proyecto
+    await client.query(`
+      UPDATE projects 
+      SET name = $1, description = $2, zone = $3, address = $4, images = $5, status = $6, updated_at = NOW()
+      WHERE id = $7
+    `, [
+      project.name,
+      project.description || null,
+      project.zone || null,
+      project.address || null,
+      project.images || [],
+      project.status || 'Activo',
+      projectId
+    ]);
+
+    // Eliminar modelos existentes
+    await client.query('DELETE FROM project_models WHERE project_id = $1', [projectId]);
+
+    // Insertar nuevos modelos
+    if (project.models && project.models.length > 0) {
+      for (const model of project.models) {
+        await client.query(`
+          INSERT INTO project_models (
+            project_id, name, area_m2, bedrooms, bathrooms, amenities,
+            units_total, units_available, price, images
+          )
+          VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+        `, [
+          projectId,
+          model.name,
+          model.areaM2 || null,
+          model.bedrooms || null,
+          model.bathrooms || null,
+          model.amenities || [],
+          model.unitsTotal,
+          model.unitsAvailable,
+          model.price,
+          model.images || []
+        ]);
+      }
+    }
+
+    client.release();
+    console.log(`✅ Proyecto actualizado: ${projectId}`);
+    return true;
+
+  } catch (error) {
+    console.error('❌ Error actualizando proyecto:', error);
+    return false;
+  }
+};
+
+// Eliminar proyecto
+export const deleteProject = async (projectId: string): Promise<boolean> => {
+  if (!pool) {
+    console.error('❌ Pool de base de datos no inicializado.');
+    return false;
+  }
+
+  try {
+    const client = await pool.connect();
+    await ensureTablesExist(client);
+
+    // Los modelos se eliminarán automáticamente por CASCADE
+    await client.query('DELETE FROM projects WHERE id = $1', [projectId]);
+
+    client.release();
+    console.log(`✅ Proyecto eliminado: ${projectId}`);
+    return true;
+
+  } catch (error) {
+    console.error('❌ Error eliminando proyecto:', error);
+    return false;
+  }
+};

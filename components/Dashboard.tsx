@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { 
   Users, DollarSign, LayoutDashboard, FileText, Download, Filter, Calendar, CheckCircle2, X, ChevronDown, MapPin, Briefcase, Settings, Plus, Trash2, Building, Image as ImageIcon, Shield, Save, Code, Copy, ExternalLink, Loader2, User, Target, MessageCircle, ShieldCheck, TrendingUp, Eye, FileText as FileTextIcon, BedDouble, Bath, Heart, ArrowRight, Upload, Check, ChevronLeft
 } from 'lucide-react';
-import { getProspectsFromDB, getCompanyById, updateCompanyZones, updateCompanyLogo, Company, getPropertiesByCompany, saveProperty, updateProperty, deleteProperty, getPropertyInterestsByCompany, updateCompanyPlan, getPropertyInterestsByProspect, saveProject, getProjectsByCompany } from '../utils/db';
+import { getProspectsFromDB, getCompanyById, updateCompanyZones, updateCompanyLogo, Company, getPropertiesByCompany, saveProperty, updateProperty, deleteProperty, getPropertyInterestsByCompany, updateCompanyPlan, getPropertyInterestsByProspect, saveProject, getProjectsByCompany, updateProject, deleteProject } from '../utils/db';
 import { Prospect, Property, PropertyInterest, PlanType, Project, ProjectModel } from '../types';
 import { NotificationModal, NotificationType } from './ui/NotificationModal';
 import { formatCurrency } from '../utils/calculator';
@@ -36,7 +36,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableZones, onUpdateZo
   // DB Data State
   const [prospects, setProspects] = useState<Prospect[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  
+
   // Properties State
   const [properties, setProperties] = useState<Property[]>([]);
   const [propertyInterests, setPropertyInterests] = useState<PropertyInterest[]>([]);
@@ -651,9 +651,9 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableZones, onUpdateZo
             {/* Card 4: Top Zones (solo para Broker) */}
             {!isPromotora && (
               <div className="bg-white rounded-[2.5rem] p-8 shadow-[0_10px_40px_-10px_rgba(0,0,0,0.05)] border border-gray-100 flex flex-col items-center justify-center text-center group hover:shadow-lg transition-all duration-500 cursor-pointer" onClick={() => hasMoreZones && setShowZonesModal(true)}>
-                 <div className="w-16 h-16 rounded-3xl bg-orange-50 text-orange-600 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-500">
-                   <MapPin size={32} strokeWidth={1.5} />
-                 </div>
+               <div className="w-16 h-16 rounded-3xl bg-orange-50 text-orange-600 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-500">
+                 <MapPin size={32} strokeWidth={1.5} />
+               </div>
                  <h3 className="text-gray-400 font-semibold uppercase tracking-wider text-xs mb-2">Zonas Más Buscadas</h3>
                  <p className="text-2xl font-bold text-gray-900 tracking-tight px-4 leading-tight">
                    {isLoading ? (
@@ -680,7 +680,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableZones, onUpdateZo
                  <span className="mt-4 px-3 py-1 bg-orange-50 text-orange-600 text-[10px] font-bold rounded-full">
                    {totalZones > 0 ? `${totalZones} ${totalZones === 1 ? 'zona' : 'zonas'}` : '0 zonas'}
                  </span>
-              </div>
+            </div>
             )}
           </div>
         ) : activeTab === 'properties' ? (
@@ -1418,51 +1418,51 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableZones, onUpdateZo
                   {/* Desktop Table View */}
                   <div className="hidden md:block overflow-x-auto -mx-4 sm:mx-0">
                     <table className="w-full text-left border-collapse min-w-[600px]">
-                      <thead>
-                        <tr className="bg-gray-50/50 text-gray-400 text-xs uppercase tracking-wider">
+                  <thead>
+                    <tr className="bg-gray-50/50 text-gray-400 text-xs uppercase tracking-wider">
                           <th className="px-4 sm:px-8 py-4 sm:py-6 font-semibold rounded-tl-[2rem]">Prospecto</th>
                           <th className="px-3 sm:px-6 py-4 sm:py-6 font-semibold">Ingreso</th>
                           <th className="px-3 sm:px-6 py-4 sm:py-6 font-semibold">Capacidad</th>
                           <th className="px-3 sm:px-6 py-4 sm:py-6 font-semibold">Zona</th>
                           <th className="px-3 sm:px-6 py-4 sm:py-6 font-semibold">Fecha</th>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y divide-gray-50">
-                        {prospects.map((prospect) => (
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-50">
+                    {prospects.map((prospect) => (
                           <tr 
                             key={prospect.id} 
                             onClick={() => setSelectedProspect(prospect)}
                             className="hover:bg-indigo-50/30 transition-colors group cursor-pointer"
                           >
                             <td className="px-4 sm:px-8 py-4 sm:py-5">
-                              <div className="flex flex-col">
-                                <span className="font-bold text-gray-900 text-sm">{prospect.name}</span>
-                                <span className="text-xs text-gray-400">{prospect.email}</span>
-                              </div>
-                            </td>
+                          <div className="flex flex-col">
+                            <span className="font-bold text-gray-900 text-sm">{prospect.name}</span>
+                            <span className="text-xs text-gray-400">{prospect.email}</span>
+                          </div>
+                        </td>
                             <td className="px-3 sm:px-6 py-4 sm:py-5">
                               <span className="font-medium text-gray-700 text-sm">{formatCurrency(prospect.income)}</span>
-                            </td>
+                        </td>
                             <td className="px-3 sm:px-6 py-4 sm:py-5">
                               <span className="font-bold text-indigo-600 bg-indigo-50 px-2 sm:px-3 py-1 rounded-lg text-xs whitespace-nowrap">
-                                {formatCurrency(prospect.result?.maxPropertyPrice || 0)}
-                              </span>
-                            </td>
+                            {formatCurrency(prospect.result?.maxPropertyPrice || 0)}
+                          </span>
+                        </td>
                             <td className="px-3 sm:px-6 py-4 sm:py-5">
-                              <div className="flex items-center gap-2">
+                          <div className="flex items-center gap-2">
                                 <MapPin size={14} className="text-gray-400 shrink-0" />
                                 <span className="text-sm text-gray-600 font-medium truncate max-w-[150px]">
                                   {Array.isArray(prospect.zone) ? prospect.zone.join(', ') : (typeof prospect.zone === 'string' ? prospect.zone : 'Sin zona')}
                                 </span>
-                              </div>
-                            </td>
+                          </div>
+                        </td>
                             <td className="px-3 sm:px-6 py-4 sm:py-5">
                               <span className="text-sm text-gray-500 whitespace-nowrap">{prospect.dateDisplay || new Date(prospect.date).toLocaleDateString('es-PA')}</span>
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
                   </div>
                 </>
               )}
@@ -2233,24 +2233,123 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableZones, onUpdateZo
         />
       )}
 
+      {/* Modal de Selección: Manual o Importar (Proyectos) */}
+      {showProjectSelectionModal && isPromotora && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+          <div className="bg-white rounded-[3rem] p-8 md:p-12 shadow-[0_20px_60px_-15px_rgba(0,0,0,0.05)] w-full max-w-4xl animate-fade-in-up border border-white/50 backdrop-blur-sm relative overflow-hidden">
+            {/* Decorative Elements */}
+            <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-50 rounded-full blur-3xl -mr-20 -mt-20 opacity-60 pointer-events-none"></div>
+            <div className="absolute bottom-0 left-0 w-64 h-64 bg-purple-50 rounded-full blur-3xl -ml-20 -mb-20 opacity-60 pointer-events-none"></div>
+
+            {/* Close Button */}
+            <button
+              onClick={() => setShowProjectSelectionModal(false)}
+              className="absolute top-6 right-6 w-10 h-10 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center transition-colors z-20"
+            >
+              <X size={20} className="text-gray-600" />
+            </button>
+
+            <div className="relative z-10 flex flex-col items-center text-center mb-12">
+              {/* Logo */}
+              <div className="w-20 h-20 bg-gradient-to-br from-indigo-500 to-indigo-600 rounded-3xl flex items-center justify-center mb-6 shadow-xl shadow-indigo-200 transform rotate-3 hover:rotate-6 transition-transform duration-500">
+                <span className="text-3xl font-bold text-white tracking-tighter">ê</span>
+              </div>
+
+              <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-3 tracking-tight">Agregar Proyectos</h1>
+              <p className="text-gray-500 text-lg leading-relaxed max-w-lg mx-auto font-light">
+                Elige cómo deseas agregar proyectos a tu catálogo.
+              </p>
+            </div>
+
+            <div className="grid md:grid-cols-2 gap-6 relative z-10">
+              {/* Botón: Agregar Manualmente */}
+              <button
+                onClick={() => {
+                  setShowProjectSelectionModal(false);
+                  setTimeout(() => {
+                    setSelectedProjectForEdit(null);
+                    setShowProjectModal(true);
+                  }, 300);
+                }}
+                className="group text-left p-8 rounded-[2.5rem] border-2 border-gray-100 bg-white hover:border-indigo-200 hover:bg-indigo-50/30 hover:shadow-xl transition-all duration-300 relative overflow-hidden"
+              >
+                <div className="w-16 h-16 rounded-2xl bg-white border border-gray-100 text-gray-900 flex items-center justify-center mb-6 shadow-sm group-hover:scale-110 group-hover:bg-indigo-600 group-hover:text-white transition-all duration-300">
+                  <Plus size={28} strokeWidth={1.5} />
+                </div>
+                <h3 className="text-2xl font-bold text-gray-900 mb-2">Agregar Proyecto Manual</h3>
+                <p className="text-gray-500 leading-relaxed text-sm mb-4">
+                  Crea un proyecto nuevo completando el formulario paso a paso.
+                </p>
+
+                <div className="flex items-center gap-2 text-indigo-600 font-bold text-sm opacity-0 group-hover:opacity-100 transform translate-y-2 group-hover:translate-y-0 transition-all duration-300">
+                  Comenzar ahora <ArrowRight size={16} />
+                </div>
+
+                {/* Decoración sutil en hover */}
+                <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-100 rounded-full blur-3xl -mr-16 -mt-16 opacity-0 group-hover:opacity-20 transition-opacity"></div>
+              </button>
+
+              {/* Botón: Importar desde Excel/CSV */}
+              <button
+                onClick={() => {
+                  // TODO: Implementar importación de proyectos
+                  setNotification({
+                    isOpen: true,
+                    type: 'info',
+                    message: 'La importación de proyectos estará disponible pronto',
+                    title: 'Próximamente'
+                  });
+                  setShowProjectSelectionModal(false);
+                }}
+                className="group text-left p-8 rounded-[2.5rem] border-2 border-gray-100 bg-gray-50/30 hover:border-purple-500 hover:bg-purple-50/30 hover:shadow-xl transition-all duration-300 relative overflow-hidden"
+              >
+                <div className="w-16 h-16 rounded-2xl bg-purple-600 text-white flex items-center justify-center mb-6 shadow-lg shadow-purple-200 group-hover:bg-white group-hover:text-purple-600 transition-all duration-300 group-hover:scale-110">
+                  <Download size={28} strokeWidth={1.5} />
+                </div>
+                <h3 className="text-2xl font-bold text-gray-900 mb-2 group-hover:text-purple-900 transition-colors">Importar Proyectos</h3>
+                <p className="text-gray-500 leading-relaxed text-sm mb-4 group-hover:text-gray-600 transition-colors">
+                  Importa múltiples proyectos desde un archivo Excel o CSV.
+                </p>
+
+                <div className="flex items-center gap-2 text-purple-600 font-bold text-sm opacity-0 group-hover:opacity-100 transform translate-y-2 group-hover:translate-y-0 transition-all duration-300">
+                  Seleccionar archivo <ArrowRight size={16} />
+                </div>
+
+                {/* Decoración sutil en hover */}
+                <div className="absolute bottom-0 right-0 w-32 h-32 bg-purple-100 rounded-full blur-3xl -mr-16 -mb-16 opacity-0 group-hover:opacity-20 transition-opacity"></div>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Modal de Crear/Editar Proyecto (Promotora) */}
       {showProjectModal && isPromotora && (
         <ProjectModal
+          project={selectedProjectForEdit}
           companyId={localStorage.getItem('companyId') || ''}
           zones={availableZones}
           onClose={() => {
             setShowProjectModal(false);
+            setSelectedProjectForEdit(null);
           }}
           onSave={async (projectData) => {
             const companyId = localStorage.getItem('companyId');
             if (!companyId) return;
 
-            await saveProject({ ...projectData, companyId });
+            if (selectedProjectForEdit) {
+              // Actualizar
+              await updateProject(selectedProjectForEdit.id, projectData);
+            } else {
+              // Crear
+              await saveProject({ ...projectData, companyId });
+            }
             
             // Recargar proyectos
             const projs = await getProjectsByCompany(companyId);
             setProjects(projs);
             setShowProjectModal(false);
+            setSelectedProjectForEdit(null);
           }}
         />
       )}
@@ -2575,7 +2674,7 @@ const ProjectModal: React.FC<ProjectModalProps> = ({ zones, onClose, onSave }) =
   const [address, setAddress] = useState('');
   const [projectImages, setProjectImages] = useState<string[]>([]);
   const [status, setStatus] = useState<'Activo' | 'Inactivo'>('Activo');
-  const [models, setModels] = useState<ProjectModel[]>([]);
+  const [models, setModels] = useState<ProjectModel[]>(project?.models || []);
   const [currentModel, setCurrentModel] = useState<ProjectModel>({
     name: '',
     areaM2: null,
@@ -2690,7 +2789,7 @@ const ProjectModal: React.FC<ProjectModalProps> = ({ zones, onClose, onSave }) =
       <div className="bg-white rounded-[2.5rem] w-full max-w-4xl max-h-[90vh] overflow-y-auto shadow-2xl relative">
         <div className="sticky top-0 bg-white border-b border-gray-100 p-6 flex items-center justify-between z-10">
           <div>
-            <h3 className="text-2xl font-bold text-gray-900">Nuevo Proyecto</h3>
+            <h3 className="text-2xl font-bold text-gray-900">{project ? 'Editar Proyecto' : 'Nuevo Proyecto'}</h3>
             <div className="flex gap-2 mt-2">
               {Array.from({ length: totalSteps }).map((_, idx) => (
                 <div
