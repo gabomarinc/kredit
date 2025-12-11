@@ -84,6 +84,7 @@ export const ProspectFlow: React.FC<ProspectFlowProps> = ({ availableZones, comp
   const [selectedProperty, setSelectedProperty] = useState<Property | null>(null);
   const [companyPlan, setCompanyPlan] = useState<PlanType>('Freshie');
   const [isLoadingProperties, setIsLoadingProperties] = useState(false);
+  const [wantsValidation, setWantsValidation] = useState<boolean | null>(null); // null = no decidido, true = quiere validar, false = no quiere
   const [notification, setNotification] = useState<{ isOpen: boolean; type: NotificationType; message: string; title?: string }>({
     isOpen: false,
     type: 'success',
@@ -169,52 +170,67 @@ export const ProspectFlow: React.FC<ProspectFlowProps> = ({ availableZones, comp
     });
   };
 
-  const handleCalculate = async () => {
-    setIsCalculating(true);
-    
-    // 1. Calculate Results Locally
+  // Calcular capacidad (sin guardar aún)
+  const handleCalculateCapacity = () => {
     const res = calculateAffordability(financial.familyIncome);
     setResult(res);
+    handleNext(); // Ir al step 3 (datos básicos)
+  };
+
+  // Cuando el usuario decide validar o no
+  const handleValidationDecision = (wantsToValidate: boolean) => {
+    setWantsValidation(wantsToValidate);
+    if (wantsToValidate) {
+      handleNext(); // Ir a documentación (step 5)
+    } else {
+      // Si no quiere validar, ir directo a resultados (pero sin documentos)
+      handleFinalSubmit(false);
+    }
+  };
+
+  // Guardar todo y mostrar resultados finales
+  const handleFinalSubmit = async (hasDocuments: boolean = true) => {
+    if (!result) return;
+    
+    setIsCalculating(true);
 
     try {
-        // 2. Save to Neon Database
-        const savedId = await saveProspectToDB(personal, financial, preferences, res);
-        if (savedId) {
-          setProspectId(savedId.toString());
-          
-          // 3. Cargar propiedades disponibles si la empresa tiene plan Premium
-          const urlParams = new URLSearchParams(window.location.search);
-          const companyId = urlParams.get('company_id') || localStorage.getItem('companyId');
-          
-          if (companyId) {
-            try {
-              const company = await getCompanyById(companyId);
-              if (company && company.plan === 'Wolf of Wallstreet') {
-                setCompanyPlan('Wolf of Wallstreet');
-                setIsLoadingProperties(true);
-                const props = await getAvailablePropertiesForProspect(
-                  companyId,
-                  res.maxPropertyPrice,
-                  Array.isArray(preferences.zone) ? preferences.zone : [preferences.zone]
-                );
-                setAvailableProperties(props);
-                setIsLoadingProperties(false);
-              }
-            } catch (e) {
-              console.error("Error cargando propiedades:", e);
+      // Guardar a Neon Database
+      const savedId = await saveProspectToDB(personal, financial, preferences, result);
+      if (savedId) {
+        setProspectId(savedId.toString());
+        
+        // Cargar propiedades disponibles si la empresa tiene plan Premium
+        const urlParams = new URLSearchParams(window.location.search);
+        const companyId = urlParams.get('company_id') || localStorage.getItem('companyId');
+        
+        if (companyId) {
+          try {
+            const company = await getCompanyById(companyId);
+            if (company && company.plan === 'Wolf of Wallstreet') {
+              setCompanyPlan('Wolf of Wallstreet');
+              setIsLoadingProperties(true);
+              const props = await getAvailablePropertiesForProspect(
+                companyId,
+                result.maxPropertyPrice,
+                Array.isArray(preferences.zone) ? preferences.zone : [preferences.zone]
+              );
+              setAvailableProperties(props);
               setIsLoadingProperties(false);
             }
+          } catch (e) {
+            console.error("Error cargando propiedades:", e);
+            setIsLoadingProperties(false);
           }
         }
+      }
     } catch (e) {
-        console.error("Failed to save to DB, but showing results anyway", e);
-        // We continue even if DB fails so the user experience isn't broken
+      console.error("Failed to save to DB, but showing results anyway", e);
     }
     
-    // 4. Fake delay for emotional effect (reduced slightly since DB call takes time)
     setTimeout(() => {
       setIsCalculating(false);
-      handleNext();
+      handleNext(); // Ir a resultados finales (step 6)
     }, 1500);
   };
 
@@ -235,7 +251,7 @@ export const ProspectFlow: React.FC<ProspectFlowProps> = ({ availableZones, comp
         )}
 
         {/* Progress Dots */}
-        {step < 5 && <ProgressDots currentStep={step} totalSteps={4} />}
+        {step < 6 && <ProgressDots currentStep={step} totalSteps={5} />}
 
         {/* STEP 1: PREFERENCES */}
         {step === 1 && (
@@ -456,7 +472,7 @@ export const ProspectFlow: React.FC<ProspectFlowProps> = ({ availableZones, comp
                   <ChevronLeft size={20} /> Atrás
                 </button>
                 <button
-                  onClick={handleNext}
+                  onClick={handleCalculateCapacity}
                   disabled={financial.familyIncome < 800}
                    className={`flex items-center justify-center gap-2 px-6 sm:px-8 py-4 sm:py-3 rounded-full font-semibold text-base sm:text-base transition-all duration-300 order-1 sm:order-2 flex-1 sm:flex-initial ${
                     financial.familyIncome >= 800
@@ -470,103 +486,171 @@ export const ProspectFlow: React.FC<ProspectFlowProps> = ({ availableZones, comp
             </div>
         )}
 
-        {/* STEP 3: IDENTITY & DOCS */}
+        {/* STEP 3: DATOS BÁSICOS (Nombre, Email, Teléfono) */}
         {step === 3 && (
-            <div className="animate-fade-in-up">
+            <div className="animate-fade-in-up max-w-2xl mx-auto">
               <div className="text-center mb-10">
-                <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-3 tracking-tight">Casi listos</h1>
-                <p className="text-gray-500 text-lg font-light">Validemos tus datos para proteger tu información.</p>
+                <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-3 tracking-tight">Datos de Contacto</h1>
+                <p className="text-gray-500 text-lg font-light">Necesitamos tus datos para continuar.</p>
               </div>
 
-              <div className="grid md:grid-cols-2 gap-8">
-                <div className="space-y-6">
-                  <div className="bg-gray-50/50 p-6 rounded-[2rem] border border-gray-100 space-y-4">
-                    <h3 className="font-bold text-gray-900 flex items-center gap-2 text-lg">
-                      <div className="w-8 h-8 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center"><User size={16} /></div>
-                      Datos Personales
-                    </h3>
-                    <div className="space-y-4">
-                       <input
-                          type="text"
-                          placeholder="Nombre Completo"
-                          value={personal.fullName}
-                          onChange={(e) => setPersonal({...personal, fullName: e.target.value})}
-                          className="w-full px-5 py-4 rounded-xl border border-gray-200 focus:border-indigo-500 outline-none bg-white transition-all focus:shadow-sm"
-                        />
-                        <input
-                          type="email"
-                          placeholder="Correo Electrónico"
-                          value={personal.email}
-                          onChange={(e) => setPersonal({...personal, email: e.target.value})}
-                          className="w-full px-5 py-4 rounded-xl border border-gray-200 focus:border-indigo-500 outline-none bg-white transition-all focus:shadow-sm"
-                        />
-                        <input
-                          type="tel"
-                          placeholder="Teléfono de Contacto"
-                          value={personal.phone}
-                          onChange={(e) => setPersonal({...personal, phone: e.target.value})}
-                          className="w-full px-5 py-4 rounded-xl border border-gray-200 focus:border-indigo-500 outline-none bg-white transition-all focus:shadow-sm"
-                        />
-                    </div>
-                  </div>
-                </div>
-
+              <div className="bg-gray-50/50 p-8 rounded-[2rem] border border-gray-100 space-y-6 mb-8">
+                <h3 className="font-bold text-gray-900 flex items-center gap-2 text-lg mb-6">
+                  <div className="w-8 h-8 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center"><User size={16} /></div>
+                  Información Personal
+                </h3>
                 <div className="space-y-4">
-                  <div className="bg-white p-6 rounded-[2rem] border border-gray-100 shadow-sm space-y-3">
-                     <h3 className="font-bold text-gray-900 flex items-center gap-2 text-lg mb-4">
-                       <div className="w-8 h-8 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center"><FileCheck size={16} /></div>
-                      Documentación
-                    </h3>
-                    <FileUpload label="Foto de Cédula / ID" file={personal.idFile} setFile={(f) => setPersonal({...personal, idFile: f})} />
-                    <FileUpload label="Ficha de Seguro Social" file={personal.fichaFile} setFile={(f) => setPersonal({...personal, fichaFile: f})} />
-                    <FileUpload label="Talonario de Pago" file={personal.talonarioFile} setFile={(f) => setPersonal({...personal, talonarioFile: f})} />
-                  </div>
-
-                  <div className="bg-indigo-50/50 p-6 rounded-[2rem] border border-indigo-100 space-y-3">
-                    <div className="flex justify-between items-start">
-                      <h3 className="font-bold text-indigo-900 flex items-center gap-2 text-sm">
-                        Autorización APC
-                      </h3>
-                      <a 
-                         href="/apc.pdf"
-                         download="apc.pdf"
-                         target="_blank"
-                         rel="noopener noreferrer"
-                         className="text-xs font-semibold text-indigo-500 hover:text-indigo-700 flex items-center gap-1 transition-colors"
-                       >
-                         <Download size={12} /> Descargar PDF
-                       </a>
-                    </div>
-                    <FileUpload label="Subir APC Firmada" file={personal.signedAcpFile} setFile={(f) => setPersonal({...personal, signedAcpFile: f})} />
-                  </div>
+                  <input
+                    type="text"
+                    placeholder="Nombre Completo"
+                    value={personal.fullName}
+                    onChange={(e) => setPersonal({...personal, fullName: e.target.value})}
+                    className="w-full px-5 py-4 rounded-xl border border-gray-200 focus:border-indigo-500 outline-none bg-white transition-all focus:shadow-sm"
+                  />
+                  <input
+                    type="email"
+                    placeholder="Correo Electrónico"
+                    value={personal.email}
+                    onChange={(e) => setPersonal({...personal, email: e.target.value})}
+                    className="w-full px-5 py-4 rounded-xl border border-gray-200 focus:border-indigo-500 outline-none bg-white transition-all focus:shadow-sm"
+                  />
+                  <input
+                    type="tel"
+                    placeholder="Teléfono de Contacto"
+                    value={personal.phone}
+                    onChange={(e) => setPersonal({...personal, phone: e.target.value})}
+                    className="w-full px-5 py-4 rounded-xl border border-gray-200 focus:border-indigo-500 outline-none bg-white transition-all focus:shadow-sm"
+                  />
                 </div>
               </div>
 
-              <div className="mt-10 flex flex-col sm:flex-row justify-between items-stretch sm:items-center gap-4 px-4">
+              <div className="flex flex-col sm:flex-row justify-between items-stretch sm:items-center gap-4 px-4">
                 <button 
                   onClick={handleBack} 
                   className="text-gray-400 hover:text-gray-600 font-medium flex items-center justify-center gap-2 py-3 sm:py-0 order-2 sm:order-1"
                 >
-                   <ChevronLeft size={20} /> Atrás
+                  <ChevronLeft size={20} /> Atrás
                 </button>
                 <button
-                  onClick={handleCalculate}
-                  disabled={!personal.fullName || !personal.email || !personal.phone || !personal.signedAcpFile}
-                  className={`flex items-center justify-center gap-3 px-6 sm:px-10 py-4 rounded-full font-bold text-base sm:text-lg transition-all duration-300 shadow-xl order-1 sm:order-2 flex-1 sm:flex-initial ${
-                    !personal.fullName || !personal.email || !personal.phone || !personal.signedAcpFile || isCalculating
-                    ? 'bg-gray-100 text-gray-400 cursor-not-allowed shadow-none'
-                    : 'bg-indigo-600 text-white hover:bg-indigo-700 shadow-indigo-200'
+                  onClick={handleNext}
+                  disabled={!personal.fullName || !personal.email || !personal.phone}
+                  className={`flex items-center justify-center gap-2 px-6 sm:px-8 py-4 sm:py-3 rounded-full font-semibold text-base transition-all duration-300 order-1 sm:order-2 flex-1 sm:flex-initial ${
+                    !personal.fullName || !personal.email || !personal.phone
+                      ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                      : 'bg-indigo-600 text-white hover:bg-indigo-700 shadow-lg shadow-indigo-200'
                   }`}
                 >
-                  {isCalculating ? 'Analizando...' : 'Ver Resultados'} 
+                  Continuar <ArrowRight size={18} className="shrink-0" />
+                </button>
+              </div>
+            </div>
+        )}
+
+        {/* STEP 4: VALIDACIÓN PROMPT (Mostrar monto + botón validar) */}
+        {step === 4 && result && (
+            <div className="animate-fade-in-up text-center max-w-3xl mx-auto">
+              <div className="mb-10">
+                <div className="w-20 h-20 bg-green-50 text-green-500 rounded-3xl flex items-center justify-center mx-auto mb-6 shadow-sm transform -rotate-3">
+                  <CheckCircle2 size={40} />
+                </div>
+                <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4 tracking-tight">¡Excelente, {personal.fullName.split(' ')[0]}!</h2>
+                <p className="text-gray-500 text-lg mb-8">Basado en tu capacidad, puedes aplicar a:</p>
+
+                {/* Monto destacado */}
+                <div className="bg-gradient-to-br from-indigo-50 to-purple-50 p-8 rounded-[2rem] border-2 border-indigo-200 mb-8">
+                  <p className="text-indigo-400 text-sm uppercase tracking-bold font-bold mb-2">Monto Total al que Puedes Aplicar</p>
+                  <p className="text-5xl md:text-6xl font-bold text-indigo-900 mb-2">{formatCurrency(result.maxPropertyPrice)}</p>
+                  <p className="text-gray-500 text-sm">Letra mensual estimada: {formatCurrency(result.monthlyPayment)}</p>
+                </div>
+
+                {/* Prompt de Validación */}
+                <div className="bg-white p-8 rounded-[2rem] border border-gray-100 shadow-lg mb-8">
+                  <h3 className="text-2xl font-bold text-gray-900 mb-4">¿Quieres validar tu pre-aprobación bancaria?</h3>
+                  <p className="text-gray-600 mb-6 leading-relaxed">
+                    Para obtener una pre-aprobación oficial, necesitamos validar tu información con documentos adicionales.
+                  </p>
+                  <button
+                    onClick={() => handleValidationDecision(true)}
+                    className="bg-gradient-to-r from-indigo-600 to-purple-600 text-white px-12 py-5 rounded-full font-bold text-lg hover:from-indigo-700 hover:to-purple-700 transition-all duration-300 shadow-xl shadow-indigo-200 hover:shadow-2xl hover:shadow-indigo-300 transform hover:scale-105 animate-pulse hover:animate-none"
+                  >
+                    Validar Pre-Aprobación
+                  </button>
+                </div>
+
+                {/* Opción de continuar sin validar */}
+                <button
+                  onClick={() => handleValidationDecision(false)}
+                  className="text-gray-400 hover:text-indigo-600 font-medium transition-colors text-sm"
+                >
+                  Continuar sin validar
+                </button>
+              </div>
+            </div>
+        )}
+
+        {/* STEP 5: DOCUMENTACIÓN (Solo si quiere validar) */}
+        {step === 5 && wantsValidation && (
+            <div className="animate-fade-in-up">
+              <div className="text-center mb-10">
+                <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-3 tracking-tight">Validación Bancaria</h1>
+                <p className="text-gray-500 text-lg font-light">Sube los documentos necesarios para validar tu pre-aprobación.</p>
+              </div>
+
+              <div className="grid md:grid-cols-2 gap-6 max-w-4xl mx-auto">
+                <div className="bg-white p-6 rounded-[2rem] border border-gray-100 shadow-sm space-y-3">
+                  <h3 className="font-bold text-gray-900 flex items-center gap-2 text-lg mb-4">
+                    <div className="w-8 h-8 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center"><FileCheck size={16} /></div>
+                    Documentación
+                  </h3>
+                  <FileUpload label="Foto de Cédula / ID" file={personal.idFile} setFile={(f) => setPersonal({...personal, idFile: f})} />
+                  <FileUpload label="Ficha de Seguro Social" file={personal.fichaFile} setFile={(f) => setPersonal({...personal, fichaFile: f})} />
+                  <FileUpload label="Talonario de Pago" file={personal.talonarioFile} setFile={(f) => setPersonal({...personal, talonarioFile: f})} />
+                </div>
+
+                <div className="bg-indigo-50/50 p-6 rounded-[2rem] border border-indigo-100 space-y-3">
+                  <div className="flex justify-between items-start">
+                    <h3 className="font-bold text-indigo-900 flex items-center gap-2 text-sm">
+                      Autorización APC
+                    </h3>
+                    <a 
+                      href="/apc.pdf"
+                      download="apc.pdf"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-xs font-semibold text-indigo-500 hover:text-indigo-700 flex items-center gap-1 transition-colors"
+                    >
+                      <Download size={12} /> Descargar PDF
+                    </a>
+                  </div>
+                  <FileUpload label="Subir APC Firmada" file={personal.signedAcpFile} setFile={(f) => setPersonal({...personal, signedAcpFile: f})} />
+                </div>
+              </div>
+
+              <div className="mt-10 flex flex-col sm:flex-row justify-between items-stretch sm:items-center gap-4 px-4 max-w-4xl mx-auto">
+                <button 
+                  onClick={handleBack} 
+                  className="text-gray-400 hover:text-gray-600 font-medium flex items-center justify-center gap-2 py-3 sm:py-0 order-2 sm:order-1"
+                >
+                  <ChevronLeft size={20} /> Atrás
+                </button>
+                <button
+                  onClick={() => handleFinalSubmit(true)}
+                  disabled={!personal.idFile || !personal.fichaFile || !personal.talonarioFile || !personal.signedAcpFile}
+                  className={`flex items-center justify-center gap-3 px-6 sm:px-10 py-4 rounded-full font-bold text-base sm:text-lg transition-all duration-300 shadow-xl order-1 sm:order-2 flex-1 sm:flex-initial ${
+                    !personal.idFile || !personal.fichaFile || !personal.talonarioFile || !personal.signedAcpFile || isCalculating
+                      ? 'bg-gray-100 text-gray-400 cursor-not-allowed shadow-none'
+                      : 'bg-indigo-600 text-white hover:bg-indigo-700 shadow-indigo-200'
+                  }`}
+                >
+                  {isCalculating ? 'Procesando...' : 'Enviar Validación'} 
                   {!isCalculating && <ArrowRight size={20} className="shrink-0" />}
                 </button>
               </div>
             </div>
         )}
 
-        {/* STEP 4: RESULT */}
-        {step === 4 && result && (
+        {/* STEP 6: RESULTADOS FINALES */}
+        {step === 6 && result && (
             <div className="animate-fade-in-up text-center max-w-3xl mx-auto">
               {/* Check if not eligible */}
               {result.maxPropertyPrice === 0 ? (
