@@ -542,21 +542,24 @@ export const ProspectFlow: React.FC<ProspectFlowProps> = ({ availableZones, comp
                 </div>
               </div>
 
-              <div className="mt-10 flex justify-between items-center px-4">
-                <button onClick={handleBack} className="text-gray-400 hover:text-gray-600 font-medium flex items-center gap-2">
+              <div className="mt-10 flex flex-col sm:flex-row justify-between items-stretch sm:items-center gap-4 px-4">
+                <button 
+                  onClick={handleBack} 
+                  className="text-gray-400 hover:text-gray-600 font-medium flex items-center justify-center gap-2 py-3 sm:py-0 order-2 sm:order-1"
+                >
                    <ChevronLeft size={20} /> Atrás
                 </button>
                 <button
                   onClick={handleCalculate}
                   disabled={!personal.fullName || !personal.email || !personal.phone || !personal.signedAcpFile}
-                  className={`flex items-center gap-3 px-10 py-4 rounded-full font-bold text-lg transition-all duration-300 shadow-xl ${
+                  className={`flex items-center justify-center gap-3 px-6 sm:px-10 py-4 rounded-full font-bold text-base sm:text-lg transition-all duration-300 shadow-xl order-1 sm:order-2 flex-1 sm:flex-initial ${
                     !personal.fullName || !personal.email || !personal.phone || !personal.signedAcpFile || isCalculating
                     ? 'bg-gray-100 text-gray-400 cursor-not-allowed shadow-none'
                     : 'bg-indigo-600 text-white hover:bg-indigo-700 shadow-indigo-200'
                   }`}
                 >
                   {isCalculating ? 'Analizando...' : 'Ver Resultados'} 
-                  {!isCalculating && <ArrowRight size={20} />}
+                  {!isCalculating && <ArrowRight size={20} className="shrink-0" />}
                 </button>
               </div>
             </div>
