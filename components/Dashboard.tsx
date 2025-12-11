@@ -1036,11 +1036,14 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableZones, onUpdateZo
                     />
                     <button 
                       onClick={handleAddZone}
-                      disabled={isSavingZones}
-                      disabled={!newZone.trim()}
-                      className="bg-gray-900 text-white p-2.5 rounded-xl hover:bg-gray-800 disabled:opacity-50 transition-colors"
+                      disabled={isSavingZones || !newZone.trim()}
+                      className="bg-gray-900 text-white p-2.5 rounded-xl hover:bg-gray-800 disabled:opacity-50 transition-colors flex items-center justify-center"
                     >
-                      <Plus size={20} />
+                      {isSavingZones ? (
+                        <Loader2 size={20} className="animate-spin" />
+                      ) : (
+                        <Plus size={20} />
+                      )}
                     </button>
                   </div>
                 </div>
