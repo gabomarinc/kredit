@@ -673,6 +673,9 @@ export const getProspectDocuments = async (prospectId: string): Promise<{
     const client = await pool.connect();
     await ensureTablesExist(client);
 
+    // Convertir prospectId a número si es necesario (la tabla usa SERIAL)
+    const prospectIdNum = parseInt(prospectId, 10);
+    
     const res = await client.query(`
       SELECT 
         id_file_base64, 
@@ -681,7 +684,7 @@ export const getProspectDocuments = async (prospectId: string): Promise<{
         signed_acp_file_base64
       FROM prospects 
       WHERE id = $1
-    `, [prospectId]);
+    `, [isNaN(prospectIdNum) ? prospectId : prospectIdNum]);
 
     client.release();
 
