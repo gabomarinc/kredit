@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { PropertyType, UserPreferences, FinancialData, PersonalData, CalculationResult } from '../types';
 import { calculateAffordability, formatCurrency } from '../utils/calculator';
 import { saveProspectToDB, getCompanyById, getAvailablePropertiesForProspect, savePropertyInterest, getCompanyById as getCompany, saveProspectInitial, updateProspectToDB, getAvailableProjectsForProspect } from '../utils/db';
@@ -161,30 +161,31 @@ export const ProspectFlow: React.FC<ProspectFlowProps> = ({ availableZones, comp
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }, [step]);
 
-  // Guardar automáticamente los datos cuando se llega al paso 6 (pantalla de Felicidades)
+  // Guardar automáticamente los datos cuando se llega al paso 6 (BACKUP - por si handleFinalSubmit no guardó)
   useEffect(() => {
     const saveFinalDataAutomatically = async () => {
-      // Solo ejecutar si estamos en el paso 6, hay datos para guardar, y aún no se han guardado
-      if (step === 6 && result && !hasSavedFinalData) {
-        console.log('🔄 Paso 6 detectado - Guardando datos automáticamente...');
+      // Solo ejecutar si:
+      // 1. Estamos en el paso 6
+      // 2. Hay datos para guardar
+      // 3. Aún no se han guardado
+      // 4. No hay un guardado en progreso
+      if (step === 6 && result && !hasSavedFinalData && !isSavingRef.current) {
+        console.log('🔄 [BACKUP] Paso 6 detectado - Guardando datos automáticamente como respaldo...');
         
         // Verificar que tenemos prospectId
         if (!prospectId) {
-          console.error('❌ No hay prospectId disponible. No se pueden guardar los datos finales.');
+          console.error('❌ [BACKUP] No hay prospectId disponible. No se pueden guardar los datos finales.');
           return;
         }
 
-        // Verificar que tenemos los archivos necesarios
-        if (!personal.idFile || !personal.fichaFile || !personal.talonarioFile || !personal.signedAcpFile) {
-          console.warn('⚠️ Faltan algunos archivos, pero intentando guardar lo que hay disponible...');
-        }
-
+        // Marcar que estamos guardando para evitar guardados simultáneos
+        isSavingRef.current = true;
         setIsSaving(true);
         const urlParams = new URLSearchParams(window.location.search);
         const companyId = urlParams.get('company_id') || localStorage.getItem('companyId');
 
         try {
-          console.log('🔄 Guardando datos finales automáticamente...', {
+          console.log('🔄 [BACKUP] Guardando datos finales automáticamente...', {
             prospectId,
             hasIdFile: !!personal.idFile,
             hasFichaFile: !!personal.fichaFile,
@@ -201,7 +202,7 @@ export const ProspectFlow: React.FC<ProspectFlowProps> = ({ availableZones, comp
           );
           
           if (success) {
-            console.log('✅ Datos finales guardados automáticamente en la base de datos');
+            console.log('✅ [BACKUP] Datos finales guardados automáticamente en la base de datos');
             setHasSavedFinalData(true);
             
             // Cargar propiedades/proyectos disponibles si la empresa tiene plan Premium
@@ -241,19 +242,20 @@ export const ProspectFlow: React.FC<ProspectFlowProps> = ({ availableZones, comp
               }
             }
           } else {
-            console.error('❌ Error al guardar datos finales automáticamente');
+            console.error('❌ [BACKUP] Error al guardar datos finales automáticamente');
           }
         } catch (e) {
-          console.error("❌ Error crítico al guardar datos finales automáticamente:", e);
+          console.error("❌ [BACKUP] Error crítico al guardar datos finales automáticamente:", e);
           console.error("Stack trace:", e instanceof Error ? e.stack : 'No stack available');
         } finally {
           setIsSaving(false);
+          isSavingRef.current = false;
         }
       }
     };
 
     saveFinalDataAutomatically();
-  }, [step, result, prospectId, personal, hasSavedFinalData, preferences]);
+  }, [step, result, prospectId, hasSavedFinalData]);
 
   const handleNext = () => setStep(prev => prev + 1);
   const handleBack = () => {
@@ -288,7 +290,7 @@ export const ProspectFlow: React.FC<ProspectFlowProps> = ({ availableZones, comp
     handleNext(); // Ir a documentación (step 5)
   };
 
-  // Avanzar a resultados finales (el guardado se hace automáticamente en el useEffect cuando se llega al paso 6)
+  // Guardar datos finales y avanzar a resultados
   const handleFinalSubmit = async (hasDocuments: boolean = true) => {
     if (!result) {
       console.error('❌ No hay resultado de cálculo disponible');
@@ -330,11 +332,82 @@ export const ProspectFlow: React.FC<ProspectFlowProps> = ({ availableZones, comp
       }
     }
     
-    // Simplemente avanzar al paso 6 - el guardado automático se hará en el useEffect
-    console.log('🔄 Avanzando al paso 6 - el guardado automático se ejecutará al llegar');
-    setIsCalculating(false);
-    setIsSaving(false);
-    handleNext(); // Ir a resultados finales (step 6) - el useEffect guardará automáticamente
+    // GUARDAR INMEDIATAMENTE antes de avanzar al paso 6
+    isSavingRef.current = true;
+    setIsSaving(true);
+    const urlParams = new URLSearchParams(window.location.search);
+    const companyId = urlParams.get('company_id') || localStorage.getItem('companyId');
+
+    try {
+      console.log('🔄 [PRINCIPAL] Guardando datos finales ANTES de mostrar resultados...', {
+        prospectId,
+        hasIdFile: !!personal.idFile,
+        hasFichaFile: !!personal.fichaFile,
+        hasTalonarioFile: !!personal.talonarioFile,
+        hasSignedAcpFile: !!personal.signedAcpFile,
+        hasResult: !!result
+      });
+
+      // Actualizar prospecto existente (solo archivos y calculation_result)
+      const success = await updateProspectToDB(
+        prospectId,
+        personal,
+        result
+      );
+      
+      if (success) {
+        console.log('✅ [PRINCIPAL] Datos finales guardados exitosamente ANTES de mostrar resultados');
+        setHasSavedFinalData(true);
+        
+        // Cargar propiedades/proyectos disponibles si la empresa tiene plan Premium
+        if (companyId) {
+          try {
+            const company = await getCompanyById(companyId);
+            if (company && company.plan === 'Wolf of Wallstreet') {
+              setCompanyPlan('Wolf of Wallstreet');
+              setCompanyRole(company.role || 'Broker');
+              setIsLoadingProperties(true);
+              
+              if (company.role === 'Promotora') {
+                // Cargar proyectos para Promotora
+                const projects = await getAvailableProjectsForProspect(
+                  companyId,
+                  result.maxPropertyPrice,
+                  Array.isArray(preferences.zone) ? preferences.zone : [preferences.zone]
+                );
+                setAvailableProjects(projects);
+                console.log('✅ Proyectos cargados:', projects.length);
+              } else {
+                // Cargar propiedades para Broker
+                const props = await getAvailablePropertiesForProspect(
+                  companyId,
+                  result.maxPropertyPrice,
+                  Array.isArray(preferences.zone) ? preferences.zone : [preferences.zone]
+                );
+                setAvailableProperties(props);
+                console.log('✅ Propiedades cargadas:', props.length);
+              }
+              
+              setIsLoadingProperties(false);
+            }
+          } catch (e) {
+            console.error("Error cargando propiedades/proyectos:", e);
+            setIsLoadingProperties(false);
+          }
+        }
+      } else {
+        console.error('❌ Error al guardar datos finales - la función retornó false');
+      }
+    } catch (e) {
+      console.error("❌ [PRINCIPAL] Error crítico al guardar datos finales:", e);
+      console.error("Stack trace:", e instanceof Error ? e.stack : 'No stack available');
+    } finally {
+      setIsSaving(false);
+      isSavingRef.current = false;
+    }
+    
+    // Avanzar al paso 6 después de guardar
+    handleNext(); // Ir a resultados finales (step 6)
   };
 
   return (
