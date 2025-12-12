@@ -37,6 +37,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableZones, onUpdateZo
   // DB Data State
   const [prospects, setProspects] = useState<Prospect[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
   // Properties State
   const [properties, setProperties] = useState<Property[]>([]);
