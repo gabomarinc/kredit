@@ -409,7 +409,14 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableZones, onUpdateZo
         // Cargar documentos Base64 bajo demanda (lazy loading)
         setLoadingProspectDocuments(true);
         try {
+          console.log('🔄 Cargando documentos del prospecto:', selectedProspect.id);
           const documents = await getProspectDocuments(selectedProspect.id);
+          console.log('✅ Documentos cargados:', {
+            hasIdFile: !!documents.idFileBase64,
+            hasFichaFile: !!documents.fichaFileBase64,
+            hasTalonarioFile: !!documents.talonarioFileBase64,
+            hasSignedAcpFile: !!documents.signedAcpFileBase64
+          });
           setSelectedProspect(prev => prev ? {
             ...prev,
             idFileBase64: documents.idFileBase64,
@@ -419,7 +426,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableZones, onUpdateZo
           } : null);
           setProspectDocumentsLoaded(true);
         } catch (e) {
-          console.error("Error loading prospect documents:", e);
+          console.error("❌ Error loading prospect documents:", e);
         } finally {
           setLoadingProspectDocuments(false);
         }
@@ -2127,6 +2134,14 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableZones, onUpdateZo
                   <FileTextIcon size={20} className="text-indigo-600" />
                   Documentación
                 </h3>
+                {loadingProspectDocuments ? (
+                  <div className="flex justify-center items-center py-8">
+                    <div className="flex flex-col items-center gap-2">
+                      <Loader2 size={32} className="animate-spin text-indigo-500" />
+                      <p className="text-sm text-gray-500">Cargando documentos...</p>
+                    </div>
+                  </div>
+                ) : (
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   {/* Foto de Cédula */}
                   {selectedProspect.idFileBase64 && (
@@ -2249,6 +2264,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableZones, onUpdateZo
                     </div>
                   )}
                 </div>
+                )}
               </div>
 
               {/* Interés en Propiedades Section */}
