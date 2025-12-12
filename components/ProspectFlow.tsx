@@ -95,6 +95,7 @@ export const ProspectFlow: React.FC<ProspectFlowProps> = ({ availableZones, comp
     message: ''
   });
   const [hasSavedFinalData, setHasSavedFinalData] = useState(false); // Para rastrear si ya se guardaron los datos finales
+  const isSavingRef = useRef(false); // Ref para evitar guardados simultáneos
 
   // Cargar logo y zonas de la empresa si hay company_id en la URL o localStorage
   useEffect(() => {
