@@ -1,6 +1,6 @@
 # Krêdit - Kônsul
 
-Aplicación de gestión de prospectos inmobiliarios con cálculo de crédito hipotecario.
+Aplicación de gestión: de prospectos inmobiliarios con cálculo de crédito hipotecario.
 
 View your app in AI Studio: https://ai.studio/apps/drive/1PBf2S63H7pbaWkTg9hPSHce_ILPrIPBg
 
