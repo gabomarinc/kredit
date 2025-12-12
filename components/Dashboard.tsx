@@ -26,6 +26,8 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableZones, onUpdateZo
   const [newZone, setNewZone] = useState('');
   const [copied, setCopied] = useState(false);
   const [isSavingCompanyName, setIsSavingCompanyName] = useState(false);
+  const [loadingProspectDocuments, setLoadingProspectDocuments] = useState(false);
+  const [prospectDocumentsLoaded, setProspectDocumentsLoaded] = useState(false);
 
   // Export Modal State
   const [exportFilterType, setExportFilterType] = useState<'all' | 'dateRange'>('all');
