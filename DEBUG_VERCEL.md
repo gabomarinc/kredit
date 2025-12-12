@@ -123,3 +123,4 @@ Si después de seguir estos pasos aún no funciona, comparte:
 - Una captura de pantalla de las variables de entorno (ocultando la contraseña)
 
 
+

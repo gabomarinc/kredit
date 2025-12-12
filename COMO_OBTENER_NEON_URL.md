@@ -125,3 +125,4 @@ Settings
 - Direct funciona también, pero Pooled es más eficiente
 
 
+

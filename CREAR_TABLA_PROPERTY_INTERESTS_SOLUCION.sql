@@ -48,3 +48,4 @@ WHERE table_name = 'property_interests'
 ORDER BY ordinal_position;
 
 
+

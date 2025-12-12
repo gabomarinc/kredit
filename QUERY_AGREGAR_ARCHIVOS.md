@@ -14,3 +14,4 @@ ADD COLUMN IF NOT EXISTS signed_acp_file_base64 TEXT;
 **Nota:** Los archivos se guardarán como Base64 (texto) para poder almacenar tanto imágenes como PDFs.
 
 
+

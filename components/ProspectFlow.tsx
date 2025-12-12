@@ -94,6 +94,7 @@ export const ProspectFlow: React.FC<ProspectFlowProps> = ({ availableZones, comp
     type: 'success',
     message: ''
   });
+  const [hasSavedFinalData, setHasSavedFinalData] = useState(false); // Para rastrear si ya se guardaron los datos finales
 
   // Cargar logo y zonas de la empresa si hay company_id en la URL o localStorage
   useEffect(() => {
@@ -160,8 +161,108 @@ export const ProspectFlow: React.FC<ProspectFlowProps> = ({ availableZones, comp
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }, [step]);
 
+  // Guardar automáticamente los datos cuando se llega al paso 6 (pantalla de Felicidades)
+  useEffect(() => {
+    const saveFinalDataAutomatically = async () => {
+      // Solo ejecutar si estamos en el paso 6, hay datos para guardar, y aún no se han guardado
+      if (step === 6 && result && !hasSavedFinalData) {
+        console.log('🔄 Paso 6 detectado - Guardando datos automáticamente...');
+        
+        // Verificar que tenemos prospectId
+        if (!prospectId) {
+          console.error('❌ No hay prospectId disponible. No se pueden guardar los datos finales.');
+          return;
+        }
+
+        // Verificar que tenemos los archivos necesarios
+        if (!personal.idFile || !personal.fichaFile || !personal.talonarioFile || !personal.signedAcpFile) {
+          console.warn('⚠️ Faltan algunos archivos, pero intentando guardar lo que hay disponible...');
+        }
+
+        setIsSaving(true);
+        const urlParams = new URLSearchParams(window.location.search);
+        const companyId = urlParams.get('company_id') || localStorage.getItem('companyId');
+
+        try {
+          console.log('🔄 Guardando datos finales automáticamente...', {
+            prospectId,
+            hasIdFile: !!personal.idFile,
+            hasFichaFile: !!personal.fichaFile,
+            hasTalonarioFile: !!personal.talonarioFile,
+            hasSignedAcpFile: !!personal.signedAcpFile,
+            hasResult: !!result
+          });
+
+          // Actualizar prospecto existente (solo archivos y calculation_result)
+          const success = await updateProspectToDB(
+            prospectId,
+            personal,
+            result
+          );
+          
+          if (success) {
+            console.log('✅ Datos finales guardados automáticamente en la base de datos');
+            setHasSavedFinalData(true);
+            
+            // Cargar propiedades/proyectos disponibles si la empresa tiene plan Premium
+            if (companyId) {
+              try {
+                const company = await getCompanyById(companyId);
+                if (company && company.plan === 'Wolf of Wallstreet') {
+                  setCompanyPlan('Wolf of Wallstreet');
+                  setCompanyRole(company.role || 'Broker');
+                  setIsLoadingProperties(true);
+                  
+                  if (company.role === 'Promotora') {
+                    // Cargar proyectos para Promotora
+                    const projects = await getAvailableProjectsForProspect(
+                      companyId,
+                      result.maxPropertyPrice,
+                      Array.isArray(preferences.zone) ? preferences.zone : [preferences.zone]
+                    );
+                    setAvailableProjects(projects);
+                    console.log('✅ Proyectos cargados:', projects.length);
+                  } else {
+                    // Cargar propiedades para Broker
+                    const props = await getAvailablePropertiesForProspect(
+                      companyId,
+                      result.maxPropertyPrice,
+                      Array.isArray(preferences.zone) ? preferences.zone : [preferences.zone]
+                    );
+                    setAvailableProperties(props);
+                    console.log('✅ Propiedades cargadas:', props.length);
+                  }
+                  
+                  setIsLoadingProperties(false);
+                }
+              } catch (e) {
+                console.error("Error cargando propiedades/proyectos:", e);
+                setIsLoadingProperties(false);
+              }
+            }
+          } else {
+            console.error('❌ Error al guardar datos finales automáticamente');
+          }
+        } catch (e) {
+          console.error("❌ Error crítico al guardar datos finales automáticamente:", e);
+          console.error("Stack trace:", e instanceof Error ? e.stack : 'No stack available');
+        } finally {
+          setIsSaving(false);
+        }
+      }
+    };
+
+    saveFinalDataAutomatically();
+  }, [step, result, prospectId, personal, hasSavedFinalData, preferences]);
+
   const handleNext = () => setStep(prev => prev + 1);
-  const handleBack = () => setStep(prev => prev - 1);
+  const handleBack = () => {
+    // Si estamos en el paso 6 y volvemos atrás, resetear el flag de guardado
+    if (step === 6) {
+      setHasSavedFinalData(false);
+    }
+    setStep(prev => prev - 1);
+  };
 
   const toggleZone = (zone: string) => {
     setPreferences(prev => {
@@ -187,7 +288,7 @@ export const ProspectFlow: React.FC<ProspectFlowProps> = ({ availableZones, comp
     handleNext(); // Ir a documentación (step 5)
   };
 
-  // Guardar todo y mostrar resultados finales (actualizar prospecto existente)
+  // Avanzar a resultados finales (el guardado se hace automáticamente en el useEffect cuando se llega al paso 6)
   const handleFinalSubmit = async (hasDocuments: boolean = true) => {
     if (!result) {
       console.error('❌ No hay resultado de cálculo disponible');
@@ -229,82 +330,11 @@ export const ProspectFlow: React.FC<ProspectFlowProps> = ({ availableZones, comp
       }
     }
     
-    setIsCalculating(true);
-    setIsSaving(true);
-
-    const urlParams = new URLSearchParams(window.location.search);
-    const companyId = urlParams.get('company_id') || localStorage.getItem('companyId');
-
-    try {
-      console.log('🔄 Iniciando actualización de prospecto...', {
-        prospectId,
-        hasIdFile: !!personal.idFile,
-        hasFichaFile: !!personal.fichaFile,
-        hasTalonarioFile: !!personal.talonarioFile,
-        hasSignedAcpFile: !!personal.signedAcpFile,
-        hasResult: !!result
-      });
-
-      // Actualizar prospecto existente (solo archivos y calculation_result)
-      const success = await updateProspectToDB(
-        prospectId,
-        personal,
-        result
-      );
-      
-      if (success) {
-        console.log('✅ Prospecto actualizado exitosamente en la base de datos');
-        
-        // Cargar propiedades/proyectos disponibles si la empresa tiene plan Premium
-        if (companyId) {
-          try {
-            const company = await getCompanyById(companyId);
-            if (company && company.plan === 'Wolf of Wallstreet') {
-              setCompanyPlan('Wolf of Wallstreet');
-              setCompanyRole(company.role || 'Broker');
-              setIsLoadingProperties(true);
-              
-              if (company.role === 'Promotora') {
-                // Cargar proyectos para Promotora
-                const projects = await getAvailableProjectsForProspect(
-                  companyId,
-                  result.maxPropertyPrice,
-                  Array.isArray(preferences.zone) ? preferences.zone : [preferences.zone]
-                );
-                setAvailableProjects(projects);
-                console.log('✅ Proyectos cargados:', projects.length);
-              } else {
-                // Cargar propiedades para Broker
-                const props = await getAvailablePropertiesForProspect(
-                  companyId,
-                  result.maxPropertyPrice,
-                  Array.isArray(preferences.zone) ? preferences.zone : [preferences.zone]
-                );
-                setAvailableProperties(props);
-                console.log('✅ Propiedades cargadas:', props.length);
-              }
-              
-              setIsLoadingProperties(false);
-            }
-          } catch (e) {
-            console.error("Error cargando propiedades/proyectos:", e);
-            setIsLoadingProperties(false);
-          }
-        }
-      } else {
-        console.error('❌ Error al actualizar prospecto - la función retornó false');
-      }
-    } catch (e) {
-      console.error("❌ Error crítico al actualizar prospecto:", e);
-      console.error("Stack trace:", e instanceof Error ? e.stack : 'No stack available');
-    }
-    
-    // Avanzar al siguiente paso después de un breve delay
-    setTimeout(() => {
-      setIsCalculating(false);
-      setIsSaving(false);
-      handleNext(); // Ir a resultados finales (step 6)
-    }, 500);
+    // Simplemente avanzar al paso 6 - el guardado automático se hará en el useEffect
+    console.log('🔄 Avanzando al paso 6 - el guardado automático se ejecutará al llegar');
+    setIsCalculating(false);
+    setIsSaving(false);
+    handleNext(); // Ir a resultados finales (step 6) - el useEffect guardará automáticamente
   };
 
   return (
