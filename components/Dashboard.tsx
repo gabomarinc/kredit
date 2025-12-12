@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { 
-  Users, DollarSign, LayoutDashboard, FileText, Download, Filter, Calendar, CheckCircle2, X, ChevronDown, MapPin, Briefcase, Settings, Plus, Trash2, Building, Image as ImageIcon, Shield, Save, Code, Copy, ExternalLink, Loader2, User, Target, MessageCircle, ShieldCheck, TrendingUp, Eye, FileText as FileTextIcon, BedDouble, Bath, Heart, ArrowRight, Upload, Check, ChevronLeft
+  Users, DollarSign, LayoutDashboard, FileText, Download, Filter, Calendar, CheckCircle2, X, ChevronDown, MapPin, Briefcase, Settings, Plus, Trash2, Building, Image as ImageIcon, Shield, Save, Code, Copy, ExternalLink, Loader2, User, Target, MessageCircle, ShieldCheck, TrendingUp, Eye, FileText as FileTextIcon, BedDouble, Bath, Heart, ArrowRight, Upload, Check, ChevronLeft, RefreshCw
 } from 'lucide-react';
 import { getProspectsFromDB, getCompanyById, updateCompanyZones, updateCompanyLogo, Company, getPropertiesByCompany, saveProperty, updateProperty, deleteProperty, getPropertyInterestsByCompany, updateCompanyPlan, getPropertyInterestsByProspect, saveProject, getProjectsByCompany, updateProject, deleteProject, updateCompanyName } from '../utils/db';
 import { Prospect, Property, PropertyInterest, PlanType, Project, ProjectModel } from '../types';
@@ -70,14 +70,24 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableZones, onUpdateZo
   const [isSavingZones, setIsSavingZones] = useState(false);
 
 
+  // Función para cargar prospectos (reutilizable)
+  const loadProspects = async () => {
+    try {
+      const data = await getProspectsFromDB();
+      setProspects(data);
+      console.log('✅ Prospectos cargados:', data.length);
+    } catch (error) {
+      console.error('❌ Error cargando prospectos:', error);
+    }
+  };
+
   // Load Data from Neon
   useEffect(() => {
     const fetchData = async () => {
       setIsLoading(true);
       try {
         // Cargar prospectos
-        const data = await getProspectsFromDB();
-        setProspects(data);
+        await loadProspects();
 
         // Cargar datos de la empresa
         const companyId = localStorage.getItem('companyId');
@@ -1043,7 +1053,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableZones, onUpdateZo
                       {isSavingZones ? (
                         <Loader2 size={20} className="animate-spin" />
                       ) : (
-                        <Plus size={20} />
+                      <Plus size={20} />
                       )}
                     </button>
                   </div>
@@ -1384,7 +1394,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableZones, onUpdateZo
                             </>
                           ) : (
                             <>
-                              <Save size={16} /> Guardar Cambios
+                          <Save size={16} /> Guardar Cambios
                             </>
                           )}
                         </button>
@@ -1453,12 +1463,33 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableZones, onUpdateZo
                 <p className="text-gray-500 text-sm">Gestiona y analiza los datos capturados.</p>
               </div>
               
+              <div className="flex items-center gap-3">
+                <button 
+                  onClick={async () => {
+                    setIsRefreshing(true);
+                    await loadProspects();
+                    setIsRefreshing(false);
+                  }}
+                  disabled={isRefreshing}
+                  className="bg-indigo-600 hover:bg-indigo-700 disabled:bg-indigo-400 text-white px-6 py-3 rounded-xl font-semibold text-sm flex items-center gap-2 transition-all shadow-lg shadow-indigo-200 disabled:cursor-not-allowed"
+                >
+                  {isRefreshing ? (
+                    <>
+                      <Loader2 size={16} className="animate-spin" /> Actualizando...
+                    </>
+                  ) : (
+                    <>
+                      <RefreshCw size={16} /> Actualizar
+                    </>
+                  )}
+                </button>
               <button 
                 onClick={() => setShowExportModal(true)}
                 className="bg-gray-900 hover:bg-gray-800 text-white px-6 py-3 rounded-xl font-semibold text-sm flex items-center gap-2 transition-all shadow-lg shadow-gray-200"
               >
                 <Download size={16} /> Exportar Data
               </button>
+              </div>
             </div>
 
             {/* Table / Cards */}
