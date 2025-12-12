@@ -83,7 +83,8 @@ const ensureTablesExist = async (client: any) => {
         ficha_file_base64 TEXT,
         talonario_file_base64 TEXT,
         signed_acp_file_base64 TEXT,
-        created_at TIMESTAMP DEFAULT NOW()
+        created_at TIMESTAMP DEFAULT NOW(),
+        updated_at TIMESTAMP DEFAULT NOW()
       )
     `);
     
@@ -107,9 +108,12 @@ const ensureTablesExist = async (client: any) => {
           IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'prospects' AND column_name = 'company_id') THEN
             ALTER TABLE prospects ADD COLUMN company_id UUID REFERENCES companies(id) ON DELETE SET NULL;
           END IF;
+          IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'prospects' AND column_name = 'updated_at') THEN
+            ALTER TABLE prospects ADD COLUMN updated_at TIMESTAMP DEFAULT NOW();
+          END IF;
         END $$;
-      `);
-    } catch (e) {
+    `);
+  } catch (e) {
       console.warn('Nota: No se pudieron agregar las columnas de archivos (puede que ya existan):', e);
     }
 
