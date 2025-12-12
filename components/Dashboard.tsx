@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { 
   Users, DollarSign, LayoutDashboard, FileText, Download, Filter, Calendar, CheckCircle2, X, ChevronDown, MapPin, Briefcase, Settings, Plus, Trash2, Building, Image as ImageIcon, Shield, Save, Code, Copy, ExternalLink, Loader2, User, Target, MessageCircle, ShieldCheck, TrendingUp, Eye, FileText as FileTextIcon, BedDouble, Bath, Heart, ArrowRight, Upload, Check, ChevronLeft, RefreshCw, ChevronRight
 } from 'lucide-react';
-import { getProspectsFromDB, getCompanyById, updateCompanyZones, updateCompanyLogo, Company, getPropertiesByCompany, saveProperty, updateProperty, deleteProperty, getPropertyInterestsByCompany, updateCompanyPlan, getPropertyInterestsByProspect, saveProject, getProjectsByCompany, updateProject, deleteProject, updateCompanyName } from '../utils/db';
+import { getProspectsFromDB, getCompanyById, updateCompanyZones, updateCompanyLogo, Company, getPropertiesByCompany, saveProperty, updateProperty, deleteProperty, getPropertyInterestsByCompany, updateCompanyPlan, getPropertyInterestsByProspect, saveProject, getProjectsByCompany, updateProject, deleteProject, updateCompanyName, getProspectDocuments, getPropertyImages, getProjectImages } from '../utils/db';
 import { Prospect, Property, PropertyInterest, PlanType, Project, ProjectModel } from '../types';
 import { NotificationModal, NotificationType } from './ui/NotificationModal';
 import { formatCurrency } from '../utils/calculator';
@@ -75,12 +75,46 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableZones, onUpdateZo
   const [isSavingZones, setIsSavingZones] = useState(false);
 
 
-  // Función para cargar prospectos (reutilizable)
-  const loadProspects = async () => {
+  // Función para cargar prospectos (reutilizable) con caché
+  const loadProspects = async (forceRefresh: boolean = false) => {
+    const cacheKey = 'prospects_cache';
+    const cacheTime = 5 * 60 * 1000; // 5 minutos
+
+    // Verificar caché si no es refresh forzado
+    if (!forceRefresh) {
+      try {
+        const cached = localStorage.getItem(cacheKey);
+        if (cached) {
+          const { data, timestamp } = JSON.parse(cached);
+          if (Date.now() - timestamp < cacheTime) {
+            console.log('✅ Usando prospectos desde caché');
+            setProspects(data);
+            setCurrentPage(1);
+            return;
+          }
+        }
+      } catch (e) {
+        console.warn('⚠️ Error leyendo caché de prospectos:', e);
+      }
+    }
+
     try {
+      console.log('🔄 Cargando prospectos desde BD...');
       const data = await getProspectsFromDB();
       setProspects(data);
       console.log('✅ Prospectos cargados:', data.length);
+      
+      // Guardar en caché
+      try {
+        localStorage.setItem(cacheKey, JSON.stringify({
+          data,
+          timestamp: Date.now()
+        }));
+        console.log('✅ Prospectos guardados en caché');
+      } catch (e) {
+        console.warn('⚠️ Error guardando en caché:', e);
+      }
+      
       // Resetear a la primera página cuando se cargan nuevos datos
       setCurrentPage(1);
     } catch (error) {
@@ -135,24 +169,105 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableZones, onUpdateZo
     fetchData();
   }, []); // Run once on mount
 
+  // Función para cargar propiedades con caché
+  const loadProperties = async (forceRefresh: boolean = false) => {
+    const companyId = localStorage.getItem('companyId');
+    if (!companyId) return;
+
+    const cacheKey = `properties_cache_${companyId}`;
+    const cacheTime = 5 * 60 * 1000; // 5 minutos
+
+    if (!forceRefresh) {
+      try {
+        const cached = localStorage.getItem(cacheKey);
+        if (cached) {
+          const { data, timestamp } = JSON.parse(cached);
+          if (Date.now() - timestamp < cacheTime) {
+            console.log('✅ Usando propiedades desde caché');
+            setProperties(data);
+            return;
+          }
+        }
+      } catch (e) {
+        console.warn('⚠️ Error leyendo caché de propiedades:', e);
+      }
+    }
+
+    try {
+      console.log('🔄 Cargando propiedades desde BD...');
+      const props = await getPropertiesByCompany(companyId);
+      setProperties(props);
+      console.log('✅ Propiedades cargadas:', props.length);
+      
+      try {
+        localStorage.setItem(cacheKey, JSON.stringify({
+          data: props,
+          timestamp: Date.now()
+        }));
+      } catch (e) {
+        console.warn('⚠️ Error guardando en caché:', e);
+      }
+    } catch (e) {
+      console.error("Error loading properties:", e);
+    }
+  };
+
+  // Función para cargar proyectos con caché
+  const loadProjects = async (forceRefresh: boolean = false) => {
+    const companyId = localStorage.getItem('companyId');
+    if (!companyId) return;
+
+    const cacheKey = `projects_cache_${companyId}`;
+    const cacheTime = 5 * 60 * 1000; // 5 minutos
+
+    if (!forceRefresh) {
+      try {
+        const cached = localStorage.getItem(cacheKey);
+        if (cached) {
+          const { data, timestamp } = JSON.parse(cached);
+          if (Date.now() - timestamp < cacheTime) {
+            console.log('✅ Usando proyectos desde caché');
+            setProjects(data);
+            return;
+          }
+        }
+      } catch (e) {
+        console.warn('⚠️ Error leyendo caché de proyectos:', e);
+      }
+    }
+
+    try {
+      console.log('🔄 Cargando proyectos desde BD...');
+      const projs = await getProjectsByCompany(companyId);
+      setProjects(projs);
+      console.log('✅ Proyectos cargados:', projs.length);
+      
+      try {
+        localStorage.setItem(cacheKey, JSON.stringify({
+          data: projs,
+          timestamp: Date.now()
+        }));
+      } catch (e) {
+        console.warn('⚠️ Error guardando en caché:', e);
+      }
+    } catch (e) {
+      console.error("Error loading projects:", e);
+    }
+  };
+
   // Load Properties/Projects when tab changes to properties
   useEffect(() => {
     const loadData = async () => {
       if (activeTab === 'properties') {
         setIsLoadingProperties(true);
         try {
-          const companyId = localStorage.getItem('companyId');
-          if (companyId) {
-            if (isPromotora) {
-              // Cargar proyectos para Promotora
-              const projs = await getProjectsByCompany(companyId);
-              setProjects(projs);
-            } else {
-              // Cargar propiedades para Broker
-              const props = await getPropertiesByCompany(companyId);
-              setProperties(props);
-              
-              // Also load property interests
+          if (isPromotora) {
+            await loadProjects();
+          } else {
+            await loadProperties();
+            // Also load property interests
+            const companyId = localStorage.getItem('companyId');
+            if (companyId) {
               const interests = await getPropertyInterestsByCompany(companyId);
               setPropertyInterests(interests);
             }
@@ -258,9 +373,8 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableZones, onUpdateZo
         }
       }
 
-      // Recargar propiedades
-      const props = await getPropertiesByCompany(companyId);
-      setProperties(props);
+      // Recargar propiedades (invalidar caché)
+      await loadProperties(true);
 
       setIsLoadingProperties(false);
 
@@ -287,9 +401,30 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableZones, onUpdateZo
 
   // Load properties for selected prospect
   useEffect(() => {
-    const loadProspectProperties = async () => {
+    const loadProspectData = async () => {
       if (selectedProspect) {
         setIsLoadingProspectProperties(true);
+        setProspectDocumentsLoaded(false);
+        
+        // Cargar documentos Base64 bajo demanda (lazy loading)
+        setLoadingProspectDocuments(true);
+        try {
+          const documents = await getProspectDocuments(selectedProspect.id);
+          setSelectedProspect(prev => prev ? {
+            ...prev,
+            idFileBase64: documents.idFileBase64,
+            fichaFileBase64: documents.fichaFileBase64,
+            talonarioFileBase64: documents.talonarioFileBase64,
+            signedAcpFileBase64: documents.signedAcpFileBase64
+          } : null);
+          setProspectDocumentsLoaded(true);
+        } catch (e) {
+          console.error("Error loading prospect documents:", e);
+        } finally {
+          setLoadingProspectDocuments(false);
+        }
+
+        // Cargar propiedades de interés
         try {
           const props = await getPropertyInterestsByProspect(selectedProspect.id);
           setProspectInterestedProperties(props);
@@ -302,7 +437,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableZones, onUpdateZo
         setProspectInterestedProperties([]);
       }
     };
-    loadProspectProperties();
+    loadProspectData();
   }, [selectedProspect]);
 
   // Calculate KPIs based on REAL prospects
@@ -830,8 +965,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableZones, onUpdateZo
                               if (success) {
                                 const companyId = localStorage.getItem('companyId');
                                 if (companyId) {
-                                  const projs = await getProjectsByCompany(companyId);
-                                  setProjects(projs);
+                                  await loadProjects(true);
                                   setNotification({
                                     isOpen: true,
                                     type: 'success',
@@ -1121,8 +1255,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableZones, onUpdateZo
                             setCompanyData({ ...companyData, plan: 'Wolf of Wallstreet' });
                             // Recargar propiedades si cambia a premium
                             if (activeTab === 'properties') {
-                              const props = await getPropertiesByCompany(companyId);
-                              setProperties(props);
+                              await loadProperties(true);
                             }
                           }
                         }
@@ -1458,7 +1591,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableZones, onUpdateZo
                 <button 
                   onClick={async () => {
                     setIsRefreshing(true);
-                    await loadProspects();
+                    await loadProspects(true); // forceRefresh = true
                     setIsRefreshing(false);
                   }}
                   disabled={isRefreshing}

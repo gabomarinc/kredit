@@ -2,6 +2,7 @@
 import { Pool } from '@neondatabase/serverless';
 import { CalculationResult, Prospect, PersonalData, FinancialData, UserPreferences, Project, ProjectModel } from '../types';
 import { MOCK_PROSPECTS } from '../constants';
+import pako from 'pako';
 
 // Usar variable de entorno para la conexión a Neon
 // En Vercel, configurar VITE_DATABASE_URL en las variables de entorno del proyecto
@@ -263,6 +264,43 @@ const fileToBase64 = (file: File | null): Promise<string | null> => {
   });
 };
 
+// Función helper para comprimir JSON (optimización de red)
+const compressJSON = (data: any): string => {
+  try {
+    const jsonString = JSON.stringify(data);
+    const compressed = pako.deflate(jsonString);
+    // Convertir Uint8Array a string base64
+    const binaryString = String.fromCharCode(...compressed);
+    const base64 = btoa(binaryString);
+    return base64;
+  } catch (error) {
+    console.error('❌ Error comprimiendo JSON:', error);
+    return JSON.stringify(data); // Fallback a JSON sin comprimir
+  }
+};
+
+// Función helper para descomprimir JSON
+const decompressJSON = (compressedBase64: string | null | undefined): any => {
+  if (!compressedBase64) return {};
+  
+  try {
+    // Intentar descomprimir primero (nuevo formato)
+    try {
+      const binaryString = atob(compressedBase64);
+      const bytes = Uint8Array.from(binaryString, c => c.charCodeAt(0));
+      const decompressed = pako.inflate(bytes);
+      const jsonString = String.fromCharCode(...decompressed);
+      return JSON.parse(jsonString);
+    } catch {
+      // Si falla, intentar parsear como JSON normal (formato antiguo)
+      return JSON.parse(compressedBase64);
+    }
+  } catch (error) {
+    console.error('❌ Error descomprimiendo JSON:', error);
+    return {};
+  }
+};
+
 export const saveProspectToDB = async (
   personal: PersonalData,
   financial: FinancialData,
@@ -488,7 +526,7 @@ export const updateProspectToDB = async (
     // Usar CAST para especificar el tipo cuando los valores pueden ser null
     const query = `
       UPDATE prospects SET
-        calculation_result = $1::jsonb,
+        calculation_result = $1::text, // Guardado como texto comprimido
         id_file_base64 = CASE WHEN $2::text IS NOT NULL AND $2::text != '' THEN $2::text ELSE id_file_base64 END,
         ficha_file_base64 = CASE WHEN $3::text IS NOT NULL AND $3::text != '' THEN $3::text ELSE ficha_file_base64 END,
         talonario_file_base64 = CASE WHEN $4::text IS NOT NULL AND $4::text != '' THEN $4::text ELSE talonario_file_base64 END,
@@ -553,9 +591,13 @@ export const getProspectsFromDB = async (): Promise<Prospect[]> => {
     // Aseguramos que las tablas existan antes de consultar
     await ensureTablesExist(client);
     
-    // Obtenemos los últimos 50 prospectos
+    // Obtenemos los últimos 50 prospectos SIN los archivos Base64 (optimización de red)
     const res = await client.query(`
-      SELECT * FROM prospects 
+      SELECT 
+        id, company_id, full_name, email, phone, monthly_income, 
+        property_type, bedrooms, bathrooms, interested_zones, 
+        calculation_result, status, created_at, updated_at
+      FROM prospects 
       ORDER BY created_at DESC 
       LIMIT 50
     `);
@@ -590,23 +632,83 @@ export const getProspectsFromDB = async (): Promise<Prospect[]> => {
             ? row.interested_zones 
             : (typeof row.interested_zones === 'string' ? [row.interested_zones.replace(/[{}"\\]/g, '')] : []),
       // Ensure result is an object
-      result: safeParseJSON(row.calculation_result) || {
+      result: decompressJSON(row.calculation_result) || {
         maxPropertyPrice: 0,
         monthlyPayment: 0,
         downPaymentPercent: 0,
         downPaymentAmount: 0
       },
-      // Archivos en Base64
-      idFileBase64: row.id_file_base64 || null,
-      fichaFileBase64: row.ficha_file_base64 || null,
-      talonarioFileBase64: row.talonario_file_base64 || null,
-      signedAcpFileBase64: row.signed_acp_file_base64 || null
+      // Archivos en Base64 - NO se cargan por defecto (lazy loading)
+      idFileBase64: null,
+      fichaFileBase64: null,
+      talonarioFileBase64: null,
+      signedAcpFileBase64: null
     }));
 
   } catch (error) {
     console.warn('Usando datos de demostración debido a error de conexión:', error);
     // FALLBACK: Si falla la DB, retornamos los datos mockeados para que la UI no se rompa
     return MOCK_PROSPECTS;
+  }
+};
+
+// Obtener documentos Base64 de un prospecto específico (lazy loading)
+export const getProspectDocuments = async (prospectId: string): Promise<{
+  idFileBase64: string | null;
+  fichaFileBase64: string | null;
+  talonarioFileBase64: string | null;
+  signedAcpFileBase64: string | null;
+}> => {
+  if (!pool) {
+    console.error('❌ Pool de base de datos no inicializado.');
+    return {
+      idFileBase64: null,
+      fichaFileBase64: null,
+      talonarioFileBase64: null,
+      signedAcpFileBase64: null
+    };
+  }
+
+  try {
+    const client = await pool.connect();
+    await ensureTablesExist(client);
+
+    const res = await client.query(`
+      SELECT 
+        id_file_base64, 
+        ficha_file_base64, 
+        talonario_file_base64, 
+        signed_acp_file_base64
+      FROM prospects 
+      WHERE id = $1
+    `, [prospectId]);
+
+    client.release();
+
+    if (res.rows.length === 0) {
+      return {
+        idFileBase64: null,
+        fichaFileBase64: null,
+        talonarioFileBase64: null,
+        signedAcpFileBase64: null
+      };
+    }
+
+    const row = res.rows[0];
+    return {
+      idFileBase64: row.id_file_base64 || null,
+      fichaFileBase64: row.ficha_file_base64 || null,
+      talonarioFileBase64: row.talonario_file_base64 || null,
+      signedAcpFileBase64: row.signed_acp_file_base64 || null
+    };
+  } catch (error) {
+    console.error('❌ Error obteniendo documentos del prospecto:', error);
+    return {
+      idFileBase64: null,
+      fichaFileBase64: null,
+      talonarioFileBase64: null,
+      signedAcpFileBase64: null
+    };
   }
 };
 
@@ -1050,6 +1152,34 @@ export const getPropertiesByCompany = async (companyId: string): Promise<Propert
   }
 };
 
+// Obtener todas las imágenes de una propiedad específica (lazy loading)
+export const getPropertyImages = async (propertyId: string): Promise<string[]> => {
+  if (!pool) {
+    return [];
+  }
+
+  try {
+    const client = await pool.connect();
+    await ensureTablesExist(client);
+
+    const res = await client.query(
+      'SELECT images FROM properties WHERE id = $1',
+      [propertyId]
+    );
+
+    client.release();
+
+    if (res.rows.length === 0) {
+      return [];
+    }
+
+    return Array.isArray(res.rows[0].images) ? res.rows[0].images : [];
+  } catch (error) {
+    console.error('❌ Error obteniendo imágenes de propiedad:', error);
+    return [];
+  }
+};
+
 // Obtener propiedades disponibles para un prospecto (basado en precio máximo y zona)
 export const getAvailablePropertiesForProspect = async (
   companyId: string,
@@ -1426,7 +1556,7 @@ export const getPropertyInterestsByCompany = async (companyId: string): Promise<
         date: new Date().toISOString(),
         dateDisplay: '',
         status: 'Nuevo',
-        result: safeParseJSON(row.calculation_result) || {
+        result: decompressJSON(row.calculation_result) || {
           maxPropertyPrice: 0,
           monthlyPayment: 0,
           downPaymentPercent: 0,
@@ -1446,7 +1576,8 @@ export const getPropertyInterestsByCompany = async (companyId: string): Promise<
         bedrooms: row.bedrooms,
         bathrooms: row.bathrooms ? parseFloat(row.bathrooms) : null,
         areaM2: row.area_m2 ? parseFloat(row.area_m2) : null,
-        images: Array.isArray(row.images) ? row.images : [],
+        // Solo primera imagen para lazy loading (optimización de red)
+        images: Array.isArray(row.images) && row.images.length > 0 ? [row.images[0]] : [],
         address: row.address,
         features: Array.isArray(row.features) ? row.features : [],
         status: row.status as 'Activa' | 'Inactiva' | 'Vendida' | 'Alquilada',
@@ -1724,7 +1855,8 @@ export const getProjectsByCompany = async (companyId: string): Promise<Project[]
         unitsTotal: modelRow.units_total,
         unitsAvailable: modelRow.units_available,
         price: parseFloat(modelRow.price || 0),
-        images: Array.isArray(modelRow.images) ? modelRow.images : []
+        // Solo primera imagen para lazy loading (optimización de red)
+        images: Array.isArray(modelRow.images) && modelRow.images.length > 0 ? [modelRow.images[0]] : []
       }));
 
       projects.push({
@@ -1734,7 +1866,8 @@ export const getProjectsByCompany = async (companyId: string): Promise<Project[]
         description: row.description,
         zone: row.zone || '',
         address: row.address,
-        images: Array.isArray(row.images) ? row.images : [],
+        // Solo primera imagen para lazy loading (optimización de red)
+        images: Array.isArray(row.images) && row.images.length > 0 ? [row.images[0]] : [],
         status: row.status as 'Activo' | 'Inactivo',
         models: models,
         createdAt: row.created_at ? new Date(row.created_at).toISOString() : undefined,
@@ -1748,6 +1881,46 @@ export const getProjectsByCompany = async (companyId: string): Promise<Project[]
   } catch (error) {
     console.error('❌ Error obteniendo proyectos:', error);
     return [];
+  }
+};
+
+// Obtener todas las imágenes de un proyecto específico (lazy loading)
+export const getProjectImages = async (projectId: string): Promise<{ projectImages: string[]; modelImages: { modelId: string; images: string[] }[] }> => {
+  if (!pool) {
+    return { projectImages: [], modelImages: [] };
+  }
+
+  try {
+    const client = await pool.connect();
+    await ensureTablesExist(client);
+
+    // Obtener imágenes del proyecto
+    const projectRes = await client.query(
+      'SELECT images FROM projects WHERE id = $1',
+      [projectId]
+    );
+
+    // Obtener imágenes de todos los modelos
+    const modelsRes = await client.query(
+      'SELECT id, images FROM project_models WHERE project_id = $1',
+      [projectId]
+    );
+
+    client.release();
+
+    const projectImages = projectRes.rows.length > 0 && Array.isArray(projectRes.rows[0].images) 
+      ? projectRes.rows[0].images 
+      : [];
+
+    const modelImages = modelsRes.rows.map((row: any) => ({
+      modelId: row.id,
+      images: Array.isArray(row.images) ? row.images : []
+    }));
+
+    return { projectImages, modelImages };
+  } catch (error) {
+    console.error('❌ Error obteniendo imágenes de proyecto:', error);
+    return { projectImages: [], modelImages: [] };
   }
 };
 
