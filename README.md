@@ -1,4 +1,4 @@
-# Krêdit
+# Krêdit - Kônsul
 
 Aplicación de gestión de prospectos inmobiliarios con cálculo de crédito hipotecario.
 
