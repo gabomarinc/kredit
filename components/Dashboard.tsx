@@ -958,28 +958,6 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableZones, onUpdateZo
                 ))}
               </div>
             )}
-
-            {/* Property Interests Section */}
-            {propertyInterests.length > 0 && (
-              <div className="mt-12 bg-white rounded-[2rem] p-8 border border-gray-100">
-                <h3 className="text-xl font-bold text-gray-900 mb-6">Intereses de Prospectos</h3>
-                <div className="space-y-4">
-                  {propertyInterests.map((interest) => (
-                    <div key={interest.id} className="flex items-center justify-between p-4 bg-gray-50 rounded-xl">
-                      <div className="flex-1">
-                        <div className="font-semibold text-gray-900">{interest.prospect?.name}</div>
-                        <div className="text-sm text-gray-500">{interest.prospect?.email}</div>
-                        <div className="text-xs text-gray-400 mt-1">Interesado en: {interest.property?.title}</div>
-                      </div>
-                      <div className="text-right">
-                        <div className="text-sm font-semibold text-indigo-600">{formatCurrency(interest.property?.price || 0)}</div>
-                        <div className="text-xs text-gray-400">{new Date(interest.createdAt || '').toLocaleDateString('es-PA')}</div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
           </div>
         ) : activeTab === 'settings' ? (
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
