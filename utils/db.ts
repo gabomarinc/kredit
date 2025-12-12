@@ -485,23 +485,25 @@ export const updateProspectToDB = async (
 
     // Actualizar prospecto - SOLO archivos y calculation_result
     // IMPORTANTE: Actualizar calculation_result siempre, y archivos solo si están presentes
+    // Usar CAST para especificar el tipo cuando los valores pueden ser null
     const query = `
       UPDATE prospects SET
-        calculation_result = $1,
-        id_file_base64 = CASE WHEN $2 IS NOT NULL AND $2 != '' THEN $2 ELSE id_file_base64 END,
-        ficha_file_base64 = CASE WHEN $3 IS NOT NULL AND $3 != '' THEN $3 ELSE ficha_file_base64 END,
-        talonario_file_base64 = CASE WHEN $4 IS NOT NULL AND $4 != '' THEN $4 ELSE talonario_file_base64 END,
-        signed_acp_file_base64 = CASE WHEN $5 IS NOT NULL AND $5 != '' THEN $5 ELSE signed_acp_file_base64 END,
+        calculation_result = $1::jsonb,
+        id_file_base64 = CASE WHEN $2::text IS NOT NULL AND $2::text != '' THEN $2::text ELSE id_file_base64 END,
+        ficha_file_base64 = CASE WHEN $3::text IS NOT NULL AND $3::text != '' THEN $3::text ELSE ficha_file_base64 END,
+        talonario_file_base64 = CASE WHEN $4::text IS NOT NULL AND $4::text != '' THEN $4::text ELSE talonario_file_base64 END,
+        signed_acp_file_base64 = CASE WHEN $5::text IS NOT NULL AND $5::text != '' THEN $5::text ELSE signed_acp_file_base64 END,
         updated_at = NOW()
       WHERE id = $6
     `;
 
+    // Asegurar que los valores siempre sean strings o null explícitamente
     const values = [
       JSON.stringify(result || {}),
-      idFileBase64 || null,
-      fichaFileBase64 || null,
-      talonarioFileBase64 || null,
-      signedAcpFileBase64 || null,
+      idFileBase64 ? String(idFileBase64) : null,
+      fichaFileBase64 ? String(fichaFileBase64) : null,
+      talonarioFileBase64 ? String(talonarioFileBase64) : null,
+      signedAcpFileBase64 ? String(signedAcpFileBase64) : null,
       prospectId
     ];
 
