@@ -405,35 +405,39 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableZones, onUpdateZo
   useEffect(() => {
     const loadProspectData = async () => {
       if (selectedProspect) {
-        setIsLoadingProspectProperties(true);
-        setProspectDocumentsLoaded(false);
-        
-        // Cargar documentos Base64 bajo demanda (lazy loading)
-        setLoadingProspectDocuments(true);
-        try {
-          console.log('🔄 Cargando documentos del prospecto:', selectedProspect.id);
-          const documents = await getProspectDocuments(selectedProspect.id);
-          console.log('✅ Documentos cargados:', {
-            hasIdFile: !!documents.idFileBase64,
-            hasFichaFile: !!documents.fichaFileBase64,
-            hasTalonarioFile: !!documents.talonarioFileBase64,
-            hasSignedAcpFile: !!documents.signedAcpFileBase64
-          });
-          setSelectedProspect(prev => prev ? {
-            ...prev,
-            idFileBase64: documents.idFileBase64,
-            fichaFileBase64: documents.fichaFileBase64,
-            talonarioFileBase64: documents.talonarioFileBase64,
-            signedAcpFileBase64: documents.signedAcpFileBase64
-          } : null);
-          setProspectDocumentsLoaded(true);
-        } catch (e) {
-          console.error("❌ Error loading prospect documents:", e);
-        } finally {
-          setLoadingProspectDocuments(false);
+        // Solo cargar documentos si aún no se han cargado (evitar loop infinito)
+        if (!prospectDocumentsLoaded && !loadingProspectDocuments) {
+          setIsLoadingProspectProperties(true);
+          setProspectDocumentsLoaded(false);
+          
+          // Cargar documentos Base64 bajo demanda (lazy loading)
+          setLoadingProspectDocuments(true);
+          try {
+            console.log('🔄 Cargando documentos del prospecto:', selectedProspect.id);
+            const documents = await getProspectDocuments(selectedProspect.id);
+            console.log('✅ Documentos cargados:', {
+              hasIdFile: !!documents.idFileBase64,
+              hasFichaFile: !!documents.fichaFileBase64,
+              hasTalonarioFile: !!documents.talonarioFileBase64,
+              hasSignedAcpFile: !!documents.signedAcpFileBase64
+            });
+            setSelectedProspect(prev => prev ? {
+              ...prev,
+              idFileBase64: documents.idFileBase64,
+              fichaFileBase64: documents.fichaFileBase64,
+              talonarioFileBase64: documents.talonarioFileBase64,
+              signedAcpFileBase64: documents.signedAcpFileBase64
+            } : null);
+            setProspectDocumentsLoaded(true);
+          } catch (e) {
+            console.error("❌ Error loading prospect documents:", e);
+          } finally {
+            setLoadingProspectDocuments(false);
+          }
         }
 
         // Cargar propiedades de interés
+        setIsLoadingProspectProperties(true);
         try {
           const props = await getPropertyInterestsByProspect(selectedProspect.id);
           setProspectInterestedProperties(props);
@@ -444,10 +448,11 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableZones, onUpdateZo
         }
       } else {
         setProspectInterestedProperties([]);
+        setProspectDocumentsLoaded(false);
       }
     };
     loadProspectData();
-  }, [selectedProspect]);
+  }, [selectedProspect?.id]); // Solo depender del ID, no del objeto completo
 
   // Calculate KPIs based on REAL prospects
   const totalForms = prospects.length;
