@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { 
-  Users, DollarSign, LayoutDashboard, FileText, Download, Filter, Calendar, CheckCircle2, X, ChevronDown, MapPin, Briefcase, Settings, Plus, Trash2, Building, Image as ImageIcon, Shield, Save, Code, Copy, ExternalLink, Loader2, User, Target, MessageCircle, ShieldCheck, TrendingUp, Eye, FileText as FileTextIcon, BedDouble, Bath, Heart, ArrowRight, Upload, Check, ChevronLeft, RefreshCw
+  Users, DollarSign, LayoutDashboard, FileText, Download, Filter, Calendar, CheckCircle2, X, ChevronDown, MapPin, Briefcase, Settings, Plus, Trash2, Building, Image as ImageIcon, Shield, Save, Code, Copy, ExternalLink, Loader2, User, Target, MessageCircle, ShieldCheck, TrendingUp, Eye, FileText as FileTextIcon, BedDouble, Bath, Heart, ArrowRight, Upload, Check, ChevronLeft, RefreshCw, ChevronRight
 } from 'lucide-react';
 import { getProspectsFromDB, getCompanyById, updateCompanyZones, updateCompanyLogo, Company, getPropertiesByCompany, saveProperty, updateProperty, deleteProperty, getPropertyInterestsByCompany, updateCompanyPlan, getPropertyInterestsByProspect, saveProject, getProjectsByCompany, updateProject, deleteProject, updateCompanyName } from '../utils/db';
 import { Prospect, Property, PropertyInterest, PlanType, Project, ProjectModel } from '../types';
@@ -38,6 +38,10 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableZones, onUpdateZo
   const [prospects, setProspects] = useState<Prospect[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
+  
+  // Pagination State
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
 
   // Properties State
   const [properties, setProperties] = useState<Property[]>([]);
@@ -77,10 +81,18 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableZones, onUpdateZo
       const data = await getProspectsFromDB();
       setProspects(data);
       console.log('✅ Prospectos cargados:', data.length);
+      // Resetear a la primera página cuando se cargan nuevos datos
+      setCurrentPage(1);
     } catch (error) {
       console.error('❌ Error cargando prospectos:', error);
     }
   };
+
+  // Calcular prospectos paginados
+  const totalPages = Math.ceil(prospects.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const paginatedProspects = prospects.slice(startIndex, endIndex);
 
   // Load Data from Neon
   useEffect(() => {
@@ -1510,7 +1522,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableZones, onUpdateZo
                 <>
                   {/* Mobile Cards View */}
                   <div className="block md:hidden space-y-4 p-4">
-                    {prospects.map((prospect) => (
+                    {paginatedProspects.map((prospect) => (
                       <div
                         key={prospect.id}
                         onClick={() => setSelectedProspect(prospect)}
@@ -1565,7 +1577,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableZones, onUpdateZo
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-50">
-                    {prospects.map((prospect) => (
+                    {paginatedProspects.map((prospect) => (
                           <tr 
                             key={prospect.id} 
                             onClick={() => setSelectedProspect(prospect)}
@@ -1601,6 +1613,63 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableZones, onUpdateZo
                   </tbody>
                 </table>
                   </div>
+
+                  {/* Pagination Controls */}
+                  {totalPages > 1 && (
+                    <div className="px-8 py-6 border-t border-gray-100 flex flex-col sm:flex-row items-center justify-between gap-4">
+                      <div className="text-sm text-gray-500">
+                        Mostrando {startIndex + 1} - {Math.min(endIndex, prospects.length)} de {prospects.length} prospectos
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <button
+                          onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                          disabled={currentPage === 1}
+                          className="px-4 py-2 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-2"
+                        >
+                          <ChevronLeft size={16} /> Anterior
+                        </button>
+                        
+                        <div className="flex items-center gap-1">
+                          {Array.from({ length: totalPages }, (_, i) => i + 1)
+                            .filter(page => {
+                              // Mostrar primera página, última página, página actual y páginas adyacentes
+                              return page === 1 || 
+                                     page === totalPages || 
+                                     (page >= currentPage - 1 && page <= currentPage + 1);
+                            })
+                            .map((page, index, array) => {
+                              // Agregar "..." si hay un gap
+                              const showEllipsis = index > 0 && array[index] - array[index - 1] > 1;
+                              return (
+                                <React.Fragment key={page}>
+                                  {showEllipsis && (
+                                    <span className="px-2 text-gray-400">...</span>
+                                  )}
+                                  <button
+                                    onClick={() => setCurrentPage(page)}
+                                    className={`px-4 py-2 rounded-lg border transition-colors ${
+                                      currentPage === page
+                                        ? 'bg-indigo-600 text-white border-indigo-600'
+                                        : 'border-gray-300 text-gray-700 hover:bg-gray-50'
+                                    }`}
+                                  >
+                                    {page}
+                                  </button>
+                                </React.Fragment>
+                              );
+                            })}
+                        </div>
+
+                        <button
+                          onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                          disabled={currentPage === totalPages}
+                          className="px-4 py-2 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-2"
+                        >
+                          Siguiente <ChevronRight size={16} />
+                        </button>
+                      </div>
+                    </div>
+                  )}
                 </>
               )}
             </div>
