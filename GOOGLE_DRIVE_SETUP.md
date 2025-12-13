@@ -102,8 +102,21 @@ Cuando cada empresa se registra y se autentica con Google, obtiene sus propios t
    - Selecciona: `https://www.googleapis.com/auth/drive.metadata.readonly`
    - Haz clic en **"Update"** y luego **"Save and Continue"**
 
-7. **Paso 3 - Test users (si estás en modo de prueba):**
-   - En la siguiente pantalla, haz clic en la pestaña **"Test users"**
+7. **Paso 3 - Test users (OBLIGATORIO si estás en modo de prueba):**
+   
+   **IMPORTANTE:** Si tu app está en modo "Testing", DEBES agregar test users o verás el error "Access blocked".
+   
+   **Opción A - Desde Google Auth Platform (nueva interfaz):**
+   - En el menú lateral izquierdo, haz clic en **"Audience"**
+   - Busca la sección **"Test users"**
+   - Haz clic en **"+ ADD USERS"** o **"Add test users"**
+   - Agrega tu email: `gabomarinc@gmail.com`
+   - Agrega también los emails de tus clientes que vayan a usar la app
+   - Haz clic en **"Add"** o **"Save"**
+   
+   **Opción B - Desde OAuth consent screen (página clásica):**
+   - Ve a la página de OAuth consent screen
+   - Haz clic en la pestaña **"Test users"**
    - Haz clic en **"+ ADD USERS"**
    - Agrega tu email y los emails de tus clientes
    - Haz clic en **"Save and Continue"**

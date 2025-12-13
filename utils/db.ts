@@ -590,29 +590,42 @@ const safeParseJSON = (input: any) => {
   return input || {};
 };
 
-export const getProspectsFromDB = async (): Promise<Prospect[]> => {
+export const getProspectsFromDB = async (companyId?: string | null): Promise<Prospect[]> => {
   if (!pool) {
-    console.error('❌ Pool de base de datos no inicializado. Retornando datos mockeados.');
-    return MOCK_PROSPECTS;
+    console.error('❌ Pool de base de datos no inicializado. Retornando array vacío.');
+    return [];
   }
   
   try {
-    console.log('🔄 Consultando base de datos...');
+    console.log('🔄 Consultando base de datos...', { companyId });
     const client = await pool.connect();
     
     // Aseguramos que las tablas existan antes de consultar
     await ensureTablesExist(client);
     
-    // Obtenemos los últimos 50 prospectos SIN los archivos Base64 (optimización de red)
-    const res = await client.query(`
+    // Obtenemos los prospectos filtrados por company_id (si se proporciona)
+    // IMPORTANTE: Solo mostrar prospectos de la empresa actual
+    let query = `
       SELECT 
         id, company_id, full_name, email, phone, monthly_income, 
         property_type, bedrooms, bathrooms, interested_zones, 
         calculation_result, status, created_at, updated_at
       FROM prospects 
-      ORDER BY created_at DESC 
-      LIMIT 50
-    `);
+    `;
+    
+    const queryParams: any[] = [];
+    
+    if (companyId) {
+      query += ` WHERE company_id = $1`;
+      queryParams.push(companyId);
+    } else {
+      // Si no hay companyId, solo retornar prospectos sin company_id (por seguridad)
+      query += ` WHERE company_id IS NULL`;
+    }
+    
+    query += ` ORDER BY created_at DESC LIMIT 50`;
+    
+    const res = await client.query(query, queryParams);
     
     client.release();
 
@@ -658,9 +671,9 @@ export const getProspectsFromDB = async (): Promise<Prospect[]> => {
     }));
 
   } catch (error) {
-    console.warn('Usando datos de demostración debido a error de conexión:', error);
-    // FALLBACK: Si falla la DB, retornamos los datos mockeados para que la UI no se rompa
-    return MOCK_PROSPECTS;
+    console.error('❌ Error consultando prospectos:', error);
+    // Retornar array vacío en lugar de mockups para evitar mostrar datos incorrectos
+    return [];
   }
 };
 

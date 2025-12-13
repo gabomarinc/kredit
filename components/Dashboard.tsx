@@ -79,7 +79,9 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableZones, onUpdateZo
 
   // Función para cargar prospectos (reutilizable) con caché
   const loadProspects = async (forceRefresh: boolean = false) => {
-    const cacheKey = 'prospects_cache';
+    // Obtener companyId para filtrar prospectos y usar en caché
+    const companyId = localStorage.getItem('companyId');
+    const cacheKey = `prospects_cache_${companyId || 'no_company'}`;
     const cacheTime = 5 * 60 * 1000; // 5 minutos
 
     // Verificar caché si no es refresh forzado
@@ -89,7 +91,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableZones, onUpdateZo
         if (cached) {
           const { data, timestamp } = JSON.parse(cached);
           if (Date.now() - timestamp < cacheTime) {
-            console.log('✅ Usando prospectos desde caché');
+            console.log('✅ Usando prospectos desde caché para companyId:', companyId);
             setProspects(data);
             setCurrentPage(1);
             return;
@@ -101,10 +103,10 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableZones, onUpdateZo
     }
 
     try {
-      console.log('🔄 Cargando prospectos desde BD...');
-      const data = await getProspectsFromDB();
+      console.log('🔄 Cargando prospectos desde BD para companyId:', companyId);
+      const data = await getProspectsFromDB(companyId || undefined);
       setProspects(data);
-      console.log('✅ Prospectos cargados:', data.length);
+      console.log('✅ Prospectos cargados:', data.length, 'para companyId:', companyId);
       
       // Guardar en caché
       try {
