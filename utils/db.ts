@@ -310,21 +310,43 @@ const compressJSON = (data: any): string => {
 };
 
 // Función helper para descomprimir JSON
-const decompressJSON = (compressedBase64: string | null | undefined): any => {
-  if (!compressedBase64) return {};
+const decompressJSON = (data: any): any => {
+  if (!data) return {};
   
   try {
-    // Intentar descomprimir primero (nuevo formato)
-    try {
+    // Si es un string, intentar parsearlo primero
+    let parsed: any = data;
+    if (typeof data === 'string') {
+      parsed = JSON.parse(data);
+    }
+    
+    // Si es un objeto con propiedad 'compressed', extraer el valor comprimido
+    if (parsed && typeof parsed === 'object' && 'compressed' in parsed) {
+      const compressedBase64 = parsed.compressed;
+      // Descomprimir el string base64
       const binaryString = atob(compressedBase64);
       const bytes = Uint8Array.from(binaryString, c => c.charCodeAt(0));
       const decompressed = pako.inflate(bytes);
       const jsonString = String.fromCharCode(...decompressed);
       return JSON.parse(jsonString);
-    } catch {
-      // Si falla, intentar parsear como JSON normal (formato antiguo)
-      return JSON.parse(compressedBase64);
     }
+    
+    // Si es un string base64 directo (formato antiguo sin wrapper)
+    if (typeof parsed === 'string') {
+      try {
+        const binaryString = atob(parsed);
+        const bytes = Uint8Array.from(binaryString, c => c.charCodeAt(0));
+        const decompressed = pako.inflate(bytes);
+        const jsonString = String.fromCharCode(...decompressed);
+        return JSON.parse(jsonString);
+      } catch {
+        // Si falla, intentar parsear como JSON normal
+        return JSON.parse(parsed);
+      }
+    }
+    
+    // Si ya es un objeto JSON (formato muy antiguo sin compresión)
+    return parsed;
   } catch (error) {
     console.error('❌ Error descomprimiendo JSON:', error);
     return {};
@@ -595,6 +617,7 @@ export const updateProspectToDB = async (
       console.log('🔄 Subiendo archivos a Google Drive...');
       
       // Intentar subir archivos (con renovación automática de token si expira)
+      let retryWithNewToken = false;
       try {
         driveFileIds = await uploadProspectFilesToDrive(
           accessToken,
@@ -611,41 +634,59 @@ export const updateProspectToDB = async (
         console.log('✅ Archivos subidos a Drive:', driveFileIds);
       } catch (error: any) {
         console.error('❌ Error subiendo archivos a Drive:', error);
+        console.error('Error details:', {
+          status: error?.status,
+          message: error?.message,
+          hasRefreshToken: !!refreshToken
+        });
         
         // Si es error 401 (token expirado) y tenemos refresh token, intentar renovar
-        if (refreshToken && (error?.status === 401 || error?.message?.includes('401') || error?.message?.includes('expired'))) {
-          console.log('🔄 Token expirado, intentando renovar...');
+        if (refreshToken && (error?.status === 401 || error?.message?.includes('401') || error?.message?.includes('expired') || error?.message?.includes('Token expired'))) {
+          console.log('🔄 Token expirado detectado, intentando renovar...');
           try {
             const newAccessToken = await refreshAccessToken(refreshToken);
             if (newAccessToken) {
-              console.log('✅ Token renovado exitosamente, reintentando subida...');
+              console.log('✅ Token renovado exitosamente, actualizando en BD y reintentando subida...');
               // Actualizar token en BD primero
               await client.query(
                 'UPDATE companies SET google_drive_access_token = $1 WHERE id = $2',
                 [newAccessToken, companyId]
               );
+              // Actualizar accessToken local para el reintento
+              accessToken = newAccessToken;
               // Reintentar subida con nuevo token
-              driveFileIds = await uploadProspectFilesToDrive(
-                newAccessToken,
-                folderId,
-                prospectName,
-                prospectId,
-                {
-                  idFile: personal.idFile || undefined,
-                  fichaFile: personal.fichaFile || undefined,
-                  talonarioFile: personal.talonarioFile || undefined,
-                  signedAcpFile: personal.signedAcpFile || undefined
-                }
-              );
-              console.log('✅ Archivos subidos a Drive después de renovar token:', driveFileIds);
+              try {
+                driveFileIds = await uploadProspectFilesToDrive(
+                  newAccessToken,
+                  folderId,
+                  prospectName,
+                  prospectId,
+                  {
+                    idFile: personal.idFile || undefined,
+                    fichaFile: personal.fichaFile || undefined,
+                    talonarioFile: personal.talonarioFile || undefined,
+                    signedAcpFile: personal.signedAcpFile || undefined
+                  }
+                );
+                console.log('✅ Archivos subidos a Drive después de renovar token:', driveFileIds);
+                retryWithNewToken = true;
+              } catch (retryError) {
+                console.error('❌ Error en reintento después de renovar token:', retryError);
+              }
             } else {
-              console.error('❌ No se pudo renovar el token');
+              console.error('❌ No se pudo renovar el token - refreshAccessToken retornó null');
             }
           } catch (refreshError) {
             console.error('❌ Error renovando token:', refreshError);
           }
+        } else {
+          console.warn('⚠️ Token expirado pero no hay refresh token o el error no es 401');
         }
-        // Continuar sin los archivos si falla la subida después de todos los intentos
+        
+        // Si no se pudo renovar, continuar sin los archivos
+        if (!retryWithNewToken) {
+          console.warn('⚠️ Continuando sin subir archivos a Drive debido a error');
+        }
       }
     }
 
@@ -653,9 +694,13 @@ export const updateProspectToDB = async (
     const compressedResult = compressJSON(result || {});
 
     // 5. Actualizar prospecto con calculation_result y IDs de Drive
+    // Nota: calculation_result es JSONB, pero guardamos texto comprimido
+    // Envolvemos el string comprimido en un objeto JSON válido
+    const compressedResultJson = JSON.stringify({ compressed: compressedResult });
+
     const query = `
       UPDATE prospects SET
-        calculation_result = $1::text,
+        calculation_result = $1::jsonb,
         id_file_drive_id = CASE WHEN $2::text IS NOT NULL AND $2::text != '' THEN $2::text ELSE id_file_drive_id END,
         ficha_file_drive_id = CASE WHEN $3::text IS NOT NULL AND $3::text != '' THEN $3::text ELSE ficha_file_drive_id END,
         talonario_file_drive_id = CASE WHEN $4::text IS NOT NULL AND $4::text != '' THEN $4::text ELSE talonario_file_drive_id END,
@@ -665,7 +710,7 @@ export const updateProspectToDB = async (
     `;
 
     const values = [
-      compressedResult,
+      compressedResultJson,
       driveFileIds.idFileUrl || null,
       driveFileIds.fichaFileUrl || null,
       driveFileIds.talonarioFileUrl || null,
