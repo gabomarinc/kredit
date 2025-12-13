@@ -418,17 +418,19 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableZones, onUpdateZo
             console.log('🔄 Cargando documentos del prospecto:', selectedProspect.id);
             const documents = await getProspectDocuments(selectedProspect.id);
             console.log('✅ Documentos cargados:', {
-              hasIdFile: !!documents.idFileBase64,
-              hasFichaFile: !!documents.fichaFileBase64,
-              hasTalonarioFile: !!documents.talonarioFileBase64,
-              hasSignedAcpFile: !!documents.signedAcpFileBase64
+              hasIdFile: !!(documents.idFileBase64 || documents.idFileDriveUrl),
+              hasFichaFile: !!(documents.fichaFileBase64 || documents.fichaFileDriveUrl),
+              hasTalonarioFile: !!(documents.talonarioFileBase64 || documents.talonarioFileDriveUrl),
+              hasSignedAcpFile: !!(documents.signedAcpFileBase64 || documents.signedAcpFileDriveUrl),
+              usingDrive: !!(documents.idFileDriveUrl || documents.fichaFileDriveUrl || documents.talonarioFileDriveUrl || documents.signedAcpFileDriveUrl)
             });
             setSelectedProspect(prev => prev ? {
               ...prev,
-              idFileBase64: documents.idFileBase64,
-              fichaFileBase64: documents.fichaFileBase64,
-              talonarioFileBase64: documents.talonarioFileBase64,
-              signedAcpFileBase64: documents.signedAcpFileBase64
+              // Priorizar URLs de Drive sobre Base64
+              idFileBase64: documents.idFileDriveUrl || documents.idFileBase64,
+              fichaFileBase64: documents.fichaFileDriveUrl || documents.fichaFileBase64,
+              talonarioFileBase64: documents.talonarioFileDriveUrl || documents.talonarioFileBase64,
+              signedAcpFileBase64: documents.signedAcpFileDriveUrl || documents.signedAcpFileBase64
             } : null);
             setProspectDocumentsLoaded(true);
           } catch (e) {
@@ -2158,13 +2160,13 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableZones, onUpdateZo
                       <h4 className="text-sm font-semibold text-gray-700 mb-2">Foto de Cédula / ID</h4>
                       <div 
                         onClick={() => setSelectedDocument({ 
-                          type: selectedProspect.idFileBase64!.startsWith('data:image/') ? 'image' : 'pdf',
+                          type: selectedProspect.idFileBase64!.startsWith('data:image/') || selectedProspect.idFileBase64!.startsWith('http') ? 'image' : 'pdf',
                           url: selectedProspect.idFileBase64!,
                           name: 'Foto de Cédula / ID'
                         })}
                         className="cursor-pointer hover:opacity-80 transition-opacity"
                       >
-                        {selectedProspect.idFileBase64.startsWith('data:image/') ? (
+                        {(selectedProspect.idFileBase64.startsWith('data:image/') || selectedProspect.idFileBase64.startsWith('http')) ? (
                           <img 
                             src={selectedProspect.idFileBase64} 
                             alt="Cédula" 
@@ -2186,13 +2188,13 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableZones, onUpdateZo
                       <h4 className="text-sm font-semibold text-gray-700 mb-2">Ficha de Seguro Social</h4>
                       <div 
                         onClick={() => setSelectedDocument({ 
-                          type: selectedProspect.fichaFileBase64!.startsWith('data:image/') ? 'image' : 'pdf',
+                          type: selectedProspect.fichaFileBase64!.startsWith('data:image/') || selectedProspect.fichaFileBase64!.startsWith('http') ? 'image' : 'pdf',
                           url: selectedProspect.fichaFileBase64!,
                           name: 'Ficha de Seguro Social'
                         })}
                         className="cursor-pointer hover:opacity-80 transition-opacity"
                       >
-                        {selectedProspect.fichaFileBase64.startsWith('data:image/') ? (
+                        {(selectedProspect.fichaFileBase64.startsWith('data:image/') || selectedProspect.fichaFileBase64.startsWith('http')) ? (
                           <img 
                             src={selectedProspect.fichaFileBase64} 
                             alt="Ficha Seguro Social" 
@@ -2214,13 +2216,13 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableZones, onUpdateZo
                       <h4 className="text-sm font-semibold text-gray-700 mb-2">Talonario de Pago</h4>
                       <div 
                         onClick={() => setSelectedDocument({ 
-                          type: selectedProspect.talonarioFileBase64!.startsWith('data:image/') ? 'image' : 'pdf',
+                          type: selectedProspect.talonarioFileBase64!.startsWith('data:image/') || selectedProspect.talonarioFileBase64!.startsWith('http') ? 'image' : 'pdf',
                           url: selectedProspect.talonarioFileBase64!,
                           name: 'Talonario de Pago'
                         })}
                         className="cursor-pointer hover:opacity-80 transition-opacity"
                       >
-                        {selectedProspect.talonarioFileBase64.startsWith('data:image/') ? (
+                        {(selectedProspect.talonarioFileBase64.startsWith('data:image/') || selectedProspect.talonarioFileBase64.startsWith('http')) ? (
                           <img 
                             src={selectedProspect.talonarioFileBase64} 
                             alt="Talonario" 
@@ -2242,13 +2244,13 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableZones, onUpdateZo
                       <h4 className="text-sm font-semibold text-gray-700 mb-2">APC Firmada</h4>
                       <div 
                         onClick={() => setSelectedDocument({ 
-                          type: selectedProspect.signedAcpFileBase64!.startsWith('data:image/') ? 'image' : 'pdf',
+                          type: selectedProspect.signedAcpFileBase64!.startsWith('data:image/') || selectedProspect.signedAcpFileBase64!.startsWith('http') ? 'image' : 'pdf',
                           url: selectedProspect.signedAcpFileBase64!,
                           name: 'APC Firmada'
                         })}
                         className="cursor-pointer hover:opacity-80 transition-opacity"
                       >
-                        {selectedProspect.signedAcpFileBase64.startsWith('data:image/') ? (
+                        {(selectedProspect.signedAcpFileBase64.startsWith('data:image/') || selectedProspect.signedAcpFileBase64.startsWith('http')) ? (
                           <img 
                             src={selectedProspect.signedAcpFileBase64} 
                             alt="APC Firmada" 

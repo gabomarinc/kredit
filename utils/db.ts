@@ -3,6 +3,7 @@ import { Pool } from '@neondatabase/serverless';
 import { CalculationResult, Prospect, PersonalData, FinancialData, UserPreferences, Project, ProjectModel } from '../types';
 import { MOCK_PROSPECTS } from '../constants';
 import pako from 'pako';
+import { uploadProspectFilesToDrive, refreshAccessToken } from './googleDrive';
 
 // Usar variable de entorno para la conexión a Neon
 // En Vercel, configurar VITE_DATABASE_URL en las variables de entorno del proyecto
@@ -87,6 +88,10 @@ const ensureTablesExist = async (client: any) => {
         ficha_file_base64 TEXT,
         talonario_file_base64 TEXT,
         signed_acp_file_base64 TEXT,
+        id_file_drive_id TEXT,
+        ficha_file_drive_id TEXT,
+        talonario_file_drive_id TEXT,
+        signed_acp_file_drive_id TEXT,
         created_at TIMESTAMP DEFAULT NOW(),
         updated_at TIMESTAMP DEFAULT NOW()
       )
@@ -114,6 +119,19 @@ const ensureTablesExist = async (client: any) => {
           END IF;
           IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'prospects' AND column_name = 'updated_at') THEN
             ALTER TABLE prospects ADD COLUMN updated_at TIMESTAMP DEFAULT NOW();
+          END IF;
+          -- Columnas para Google Drive (nuevo sistema)
+          IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'prospects' AND column_name = 'id_file_drive_id') THEN
+            ALTER TABLE prospects ADD COLUMN id_file_drive_id TEXT;
+          END IF;
+          IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'prospects' AND column_name = 'ficha_file_drive_id') THEN
+            ALTER TABLE prospects ADD COLUMN ficha_file_drive_id TEXT;
+          END IF;
+          IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'prospects' AND column_name = 'talonario_file_drive_id') THEN
+            ALTER TABLE prospects ADD COLUMN talonario_file_drive_id TEXT;
+          END IF;
+          IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'prospects' AND column_name = 'signed_acp_file_drive_id') THEN
+            ALTER TABLE prospects ADD COLUMN signed_acp_file_drive_id TEXT;
           END IF;
         END $$;
     `);
@@ -494,6 +512,7 @@ export const saveProspectInitial = async (
 };
 
 // Actualizar prospecto existente (solo archivos y calculation_result)
+// NUEVO: Los archivos se suben a Google Drive en lugar de guardarse como Base64
 export const updateProspectToDB = async (
   prospectId: string,
   personal: PersonalData,
@@ -517,52 +536,149 @@ export const updateProspectToDB = async (
     const client = await pool.connect();
     await ensureTablesExist(client);
 
-    // Convertir archivos a Base64
-    console.log('🔄 Convirtiendo archivos a Base64...');
-    const [idFileBase64, fichaFileBase64, talonarioFileBase64, signedAcpFileBase64] = await Promise.all([
-      fileToBase64(personal.idFile),
-      fileToBase64(personal.fichaFile),
-      fileToBase64(personal.talonarioFile),
-      fileToBase64(personal.signedAcpFile)
-    ]);
+    // 1. Obtener información del prospecto (company_id, nombre)
+    const prospectResult = await client.query(
+      'SELECT company_id, full_name FROM prospects WHERE id = $1',
+      [prospectId]
+    );
 
-    console.log('✅ Archivos convertidos:', {
-      hasIdFile: !!idFileBase64,
-      hasFichaFile: !!fichaFileBase64,
-      hasTalonarioFile: !!talonarioFileBase64,
-      hasSignedAcpFile: !!signedAcpFileBase64
-    });
+    if (prospectResult.rows.length === 0) {
+      console.error('❌ Prospecto no encontrado:', prospectId);
+      client.release();
+      return false;
+    }
 
-    // Actualizar prospecto - SOLO archivos y calculation_result
-    // IMPORTANTE: Actualizar calculation_result siempre, y archivos solo si están presentes
-    // Usar CAST para especificar el tipo cuando los valores pueden ser null
+    const prospect = prospectResult.rows[0];
+    const companyId = prospect.company_id;
+    const prospectName = prospect.full_name || 'Prospecto';
+
+    if (!companyId) {
+      console.error('❌ El prospecto no tiene company_id asociado');
+      client.release();
+      return false;
+    }
+
+    // 2. Obtener credenciales de Google Drive de la empresa
+    const companyResult = await client.query(
+      'SELECT google_drive_access_token, google_drive_refresh_token, google_drive_folder_id FROM companies WHERE id = $1',
+      [companyId]
+    );
+
+    if (companyResult.rows.length === 0 || !companyResult.rows[0].google_drive_folder_id) {
+      console.error('❌ Empresa no encontrada o sin configuración de Google Drive');
+      client.release();
+      return false;
+    }
+
+    const company = companyResult.rows[0];
+    let accessToken = company.google_drive_access_token;
+    const refreshToken = company.google_drive_refresh_token;
+    const folderId = company.google_drive_folder_id;
+
+    if (!accessToken || !folderId) {
+      console.error('❌ Faltan credenciales de Google Drive para la empresa');
+      client.release();
+      return false;
+    }
+
+    // 3. Si hay archivos para subir, subirlos a Google Drive
+    let driveFileIds: {
+      idFileUrl?: string | null;
+      fichaFileUrl?: string | null;
+      talonarioFileUrl?: string | null;
+      signedAcpFileUrl?: string | null;
+    } = {};
+
+    const hasFilesToUpload = personal.idFile || personal.fichaFile || personal.talonarioFile || personal.signedAcpFile;
+
+    if (hasFilesToUpload) {
+      console.log('🔄 Subiendo archivos a Google Drive...');
+      
+      // Intentar subir archivos (con renovación automática de token si expira)
+      try {
+        driveFileIds = await uploadProspectFilesToDrive(
+          accessToken,
+          folderId,
+          prospectName,
+          prospectId,
+          {
+            idFile: personal.idFile || undefined,
+            fichaFile: personal.fichaFile || undefined,
+            talonarioFile: personal.talonarioFile || undefined,
+            signedAcpFile: personal.signedAcpFile || undefined
+          }
+        );
+        console.log('✅ Archivos subidos a Drive:', driveFileIds);
+      } catch (error: any) {
+        console.error('❌ Error subiendo archivos a Drive:', error);
+        
+        // Si es error 401 (token expirado) y tenemos refresh token, intentar renovar
+        if (refreshToken && (error?.status === 401 || error?.message?.includes('401') || error?.message?.includes('expired'))) {
+          console.log('🔄 Token expirado, intentando renovar...');
+          try {
+            const newAccessToken = await refreshAccessToken(refreshToken);
+            if (newAccessToken) {
+              console.log('✅ Token renovado exitosamente, reintentando subida...');
+              // Actualizar token en BD primero
+              await client.query(
+                'UPDATE companies SET google_drive_access_token = $1 WHERE id = $2',
+                [newAccessToken, companyId]
+              );
+              // Reintentar subida con nuevo token
+              driveFileIds = await uploadProspectFilesToDrive(
+                newAccessToken,
+                folderId,
+                prospectName,
+                prospectId,
+                {
+                  idFile: personal.idFile || undefined,
+                  fichaFile: personal.fichaFile || undefined,
+                  talonarioFile: personal.talonarioFile || undefined,
+                  signedAcpFile: personal.signedAcpFile || undefined
+                }
+              );
+              console.log('✅ Archivos subidos a Drive después de renovar token:', driveFileIds);
+            } else {
+              console.error('❌ No se pudo renovar el token');
+            }
+          } catch (refreshError) {
+            console.error('❌ Error renovando token:', refreshError);
+          }
+        }
+        // Continuar sin los archivos si falla la subida después de todos los intentos
+      }
+    }
+
+    // 4. Comprimir calculation_result
+    const compressedResult = compressJSON(result || {});
+
+    // 5. Actualizar prospecto con calculation_result y IDs de Drive
     const query = `
       UPDATE prospects SET
-        calculation_result = $1::text, // Guardado como texto comprimido
-        id_file_base64 = CASE WHEN $2::text IS NOT NULL AND $2::text != '' THEN $2::text ELSE id_file_base64 END,
-        ficha_file_base64 = CASE WHEN $3::text IS NOT NULL AND $3::text != '' THEN $3::text ELSE ficha_file_base64 END,
-        talonario_file_base64 = CASE WHEN $4::text IS NOT NULL AND $4::text != '' THEN $4::text ELSE talonario_file_base64 END,
-        signed_acp_file_base64 = CASE WHEN $5::text IS NOT NULL AND $5::text != '' THEN $5::text ELSE signed_acp_file_base64 END,
+        calculation_result = $1::text,
+        id_file_drive_id = CASE WHEN $2::text IS NOT NULL AND $2::text != '' THEN $2::text ELSE id_file_drive_id END,
+        ficha_file_drive_id = CASE WHEN $3::text IS NOT NULL AND $3::text != '' THEN $3::text ELSE ficha_file_drive_id END,
+        talonario_file_drive_id = CASE WHEN $4::text IS NOT NULL AND $4::text != '' THEN $4::text ELSE talonario_file_drive_id END,
+        signed_acp_file_drive_id = CASE WHEN $5::text IS NOT NULL AND $5::text != '' THEN $5::text ELSE signed_acp_file_drive_id END,
         updated_at = NOW()
       WHERE id = $6
     `;
 
-    // Asegurar que los valores siempre sean strings o null explícitamente
     const values = [
-      JSON.stringify(result || {}),
-      idFileBase64 ? String(idFileBase64) : null,
-      fichaFileBase64 ? String(fichaFileBase64) : null,
-      talonarioFileBase64 ? String(talonarioFileBase64) : null,
-      signedAcpFileBase64 ? String(signedAcpFileBase64) : null,
+      compressedResult,
+      driveFileIds.idFileUrl || null,
+      driveFileIds.fichaFileUrl || null,
+      driveFileIds.talonarioFileUrl || null,
+      driveFileIds.signedAcpFileUrl || null,
       prospectId
     ];
 
     console.log('📤 Ejecutando UPDATE con valores:', {
-      calculation_result: values[0] ? 'presente (' + values[0].substring(0, 50) + '...)' : 'vacío',
-      id_file: values[1] ? 'presente (' + (values[1] as string).substring(0, 50) + '...)' : 'null',
-      ficha_file: values[2] ? 'presente (' + (values[2] as string).substring(0, 50) + '...)' : 'null',
-      talonario_file: values[3] ? 'presente (' + (values[3] as string).substring(0, 50) + '...)' : 'null',
-      signed_acp_file: values[4] ? 'presente (' + (values[4] as string).substring(0, 50) + '...)' : 'null',
+      calculation_result: 'presente (comprimido)',
+      id_file_drive_id: values[1] || 'null',
+      ficha_file_drive_id: values[2] || 'null',
+      talonario_file_drive_id: values[3] || 'null',
+      signed_acp_file_drive_id: values[4] || 'null',
       prospect_id: values[5]
     });
 
@@ -677,12 +793,17 @@ export const getProspectsFromDB = async (companyId?: string | null): Promise<Pro
   }
 };
 
-// Obtener documentos Base64 de un prospecto específico (lazy loading)
+// Obtener documentos de un prospecto específico (lazy loading)
+// NUEVO: Retorna URLs de Google Drive si están disponibles, sino retorna Base64 (backward compatibility)
 export const getProspectDocuments = async (prospectId: string): Promise<{
   idFileBase64: string | null;
   fichaFileBase64: string | null;
   talonarioFileBase64: string | null;
   signedAcpFileBase64: string | null;
+  idFileDriveUrl?: string | null;
+  fichaFileDriveUrl?: string | null;
+  talonarioFileDriveUrl?: string | null;
+  signedAcpFileDriveUrl?: string | null;
 }> => {
   if (!pool) {
     console.error('❌ Pool de base de datos no inicializado.');
@@ -690,7 +811,11 @@ export const getProspectDocuments = async (prospectId: string): Promise<{
       idFileBase64: null,
       fichaFileBase64: null,
       talonarioFileBase64: null,
-      signedAcpFileBase64: null
+      signedAcpFileBase64: null,
+      idFileDriveUrl: null,
+      fichaFileDriveUrl: null,
+      talonarioFileDriveUrl: null,
+      signedAcpFileDriveUrl: null
     };
   }
 
@@ -706,7 +831,11 @@ export const getProspectDocuments = async (prospectId: string): Promise<{
         id_file_base64, 
         ficha_file_base64, 
         talonario_file_base64, 
-        signed_acp_file_base64
+        signed_acp_file_base64,
+        id_file_drive_id,
+        ficha_file_drive_id,
+        talonario_file_drive_id,
+        signed_acp_file_drive_id
       FROM prospects 
       WHERE id = $1
     `, [isNaN(prospectIdNum) ? prospectId : prospectIdNum]);
@@ -718,16 +847,33 @@ export const getProspectDocuments = async (prospectId: string): Promise<{
         idFileBase64: null,
         fichaFileBase64: null,
         talonarioFileBase64: null,
-        signedAcpFileBase64: null
+        signedAcpFileBase64: null,
+        idFileDriveUrl: null,
+        fichaFileDriveUrl: null,
+        talonarioFileDriveUrl: null,
+        signedAcpFileDriveUrl: null
       };
     }
 
     const row = res.rows[0];
+    
+    // Función helper para generar URLs de Drive
+    const getFileDownloadUrl = (fileId: string): string => {
+      return `https://drive.google.com/uc?export=view&id=${fileId}`;
+    };
+    
+    // Generar URLs de Drive si hay IDs, sino usar Base64 (backward compatibility)
     return {
-      idFileBase64: row.id_file_base64 || null,
-      fichaFileBase64: row.ficha_file_base64 || null,
-      talonarioFileBase64: row.talonario_file_base64 || null,
-      signedAcpFileBase64: row.signed_acp_file_base64 || null
+      // Base64 (para compatibilidad con datos antiguos)
+      idFileBase64: row.id_file_drive_id ? null : (row.id_file_base64 || null),
+      fichaFileBase64: row.ficha_file_drive_id ? null : (row.ficha_file_base64 || null),
+      talonarioFileBase64: row.talonario_file_drive_id ? null : (row.talonario_file_base64 || null),
+      signedAcpFileBase64: row.signed_acp_file_drive_id ? null : (row.signed_acp_file_base64 || null),
+      // URLs de Google Drive (nuevo sistema)
+      idFileDriveUrl: row.id_file_drive_id ? getFileDownloadUrl(row.id_file_drive_id) : null,
+      fichaFileDriveUrl: row.ficha_file_drive_id ? getFileDownloadUrl(row.ficha_file_drive_id) : null,
+      talonarioFileDriveUrl: row.talonario_file_drive_id ? getFileDownloadUrl(row.talonario_file_drive_id) : null,
+      signedAcpFileDriveUrl: row.signed_acp_file_drive_id ? getFileDownloadUrl(row.signed_acp_file_drive_id) : null
     };
   } catch (error) {
     console.error('❌ Error obteniendo documentos del prospecto:', error);
@@ -764,6 +910,9 @@ export interface Company {
   zones: string[];
   plan?: 'Freshie' | 'Wolf of Wallstreet'; // Plan de la empresa
   role?: 'Promotora' | 'Broker';
+  googleDriveAccessToken?: string;
+  googleDriveRefreshToken?: string;
+  googleDriveFolderId?: string;
 }
 
 // Función simple para hash de contraseña (en producción usar bcrypt)
@@ -1009,11 +1158,14 @@ export const getCompanyById = async (companyId: string): Promise<Company | null>
       id: company.id,
       name: company.name,
       email: company.email,
-      companyName: company.name,
+      companyName: company.company_name || company.name,
       logoUrl: company.logo_url,
       zones: zones,
       plan: (company.plan || 'Freshie') as 'Freshie' | 'Wolf of Wallstreet',
-      role: (company.role || 'Broker') as 'Promotora' | 'Broker'
+      role: (company.role || 'Broker') as 'Promotora' | 'Broker',
+      googleDriveAccessToken: company.google_drive_access_token || undefined,
+      googleDriveRefreshToken: company.google_drive_refresh_token || undefined,
+      googleDriveFolderId: company.google_drive_folder_id || undefined
     };
 
   } catch (error) {
