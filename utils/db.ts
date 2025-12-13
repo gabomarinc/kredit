@@ -719,7 +719,8 @@ export const updateProspectToDB = async (
     ];
 
     console.log('📤 Ejecutando UPDATE con valores:', {
-      calculation_result: 'presente (comprimido)',
+      calculation_result: compressedResultJson ? `presente (${compressedResultJson.length} chars, comprimido)` : 'vacío',
+      calculation_result_preview: compressedResultJson ? compressedResultJson.substring(0, 100) + '...' : 'null',
       id_file_drive_id: values[1] || 'null',
       ficha_file_drive_id: values[2] || 'null',
       talonario_file_drive_id: values[3] || 'null',
@@ -727,14 +728,34 @@ export const updateProspectToDB = async (
       prospect_id: values[5]
     });
 
-    const updateResult = await client.query(query, values);
-    client.release();
-    
-    console.log('✅ Prospecto actualizado exitosamente. Filas afectadas:', updateResult.rowCount);
-    return true;
+    try {
+      const updateResult = await client.query(query, values);
+      client.release();
+      
+      if (updateResult.rowCount === 0) {
+        console.error('⚠️ UPDATE ejecutado pero ninguna fila fue afectada. Prospecto puede no existir:', prospectId);
+        return false;
+      }
+      
+      console.log('✅ Prospecto actualizado exitosamente. Filas afectadas:', updateResult.rowCount);
+      return true;
+    } catch (updateError: any) {
+      client.release();
+      console.error('❌ Error ejecutando UPDATE:', updateError);
+      console.error('Query:', query);
+      console.error('Values:', values.map((v, i) => `${i}: ${v ? (typeof v === 'string' ? v.substring(0, 50) + '...' : String(v)) : 'null'}`));
+      throw updateError; // Re-lanzar para que el catch externo lo maneje
+    }
 
-  } catch (error) {
+  } catch (error: any) {
     console.error('❌ Error actualizando prospecto:', error);
+    console.error('Error details:', {
+      message: error?.message,
+      code: error?.code,
+      detail: error?.detail,
+      hint: error?.hint,
+      stack: error?.stack
+    });
     return false;
   }
 };
