@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "@neondatabase/serverless": "0.9.4",
+    "browser-image-compression": "^2.0.2",
     "lucide-react": "0.344.0",
     "pako": "^2.1.0",
     "react": "^19.2.1",

@@ -1,4 +1,42 @@
 // Utilidades para Google Drive OAuth y operaciones
+import imageCompression from 'browser-image-compression';
+
+/**
+ * Comprime una imagen si es necesario (solo para imágenes, no PDFs)
+ */
+export const compressImageIfNeeded = async (file: File): Promise<File> => {
+  // Solo comprimir si es una imagen
+  if (!file.type.startsWith('image/')) {
+    console.log('📄 Archivo no es imagen, omitiendo compresión:', file.name);
+    return file;
+  }
+
+  try {
+    console.log('🔄 Comprimiendo imagen:', file.name, `(${(file.size / 1024 / 1024).toFixed(2)} MB)`);
+    
+    const options = {
+      maxSizeMB: 1, // Tamaño máximo: 1MB
+      maxWidthOrHeight: 1920, // Resolución máxima: 1920px
+      useWebWorker: true, // Usar web worker para no bloquear la UI
+      fileType: file.type, // Mantener el tipo de archivo original
+      initialQuality: 0.8 // Calidad inicial (0.8 = 80% de calidad, buen balance)
+    };
+
+    const compressedFile = await imageCompression(file, options);
+    
+    const originalSize = (file.size / 1024 / 1024).toFixed(2);
+    const compressedSize = (compressedFile.size / 1024 / 1024).toFixed(2);
+    const reduction = ((1 - compressedFile.size / file.size) * 100).toFixed(1);
+    
+    console.log(`✅ Imagen comprimida: ${originalSize} MB → ${compressedSize} MB (${reduction}% reducción)`);
+    
+    return compressedFile;
+  } catch (error) {
+    console.error('❌ Error comprimiendo imagen:', error);
+    // Si falla la compresión, retornar archivo original
+    return file;
+  }
+};
 
 /**
  * Inicia el flujo de OAuth de Google Drive
@@ -248,36 +286,54 @@ export const uploadProspectFilesToDrive = async (
       return {};
     }
 
-    // Subir archivos en paralelo (solo los que existen)
+    // Comprimir imágenes antes de subir (solo imágenes, no PDFs)
+    console.log('🔄 Comprimiendo imágenes antes de subir...');
+    const [compressedIdFile, compressedFichaFile, compressedTalonarioFile, compressedSignedAcpFile] = await Promise.all([
+      files.idFile ? compressImageIfNeeded(files.idFile) : Promise.resolve(null),
+      files.fichaFile ? compressImageIfNeeded(files.fichaFile) : Promise.resolve(null),
+      files.talonarioFile ? compressImageIfNeeded(files.talonarioFile) : Promise.resolve(null),
+      files.signedAcpFile ? compressImageIfNeeded(files.signedAcpFile) : Promise.resolve(null)
+    ]);
+
+    // Subir archivos en paralelo (solo los que existen, ya comprimidos si eran imágenes)
     const uploadPromises: Promise<{ fileId: string; webViewLink: string } | null>[] = [];
 
-    if (files.idFile) {
+    if (compressedIdFile) {
+      // Determinar extensión original del archivo
+      const originalName = files.idFile?.name || 'ID_Cedula';
+      const extension = originalName.split('.').pop() || 'pdf';
       uploadPromises.push(
-        uploadFileToDrive(accessToken, files.idFile, prospectFolderId, 'ID_Cedula.pdf')
+        uploadFileToDrive(accessToken, compressedIdFile, prospectFolderId, `ID_Cedula.${extension}`)
       );
     } else {
       uploadPromises.push(Promise.resolve(null));
     }
 
-    if (files.fichaFile) {
+    if (compressedFichaFile) {
+      const originalName = files.fichaFile?.name || 'Ficha';
+      const extension = originalName.split('.').pop() || 'pdf';
       uploadPromises.push(
-        uploadFileToDrive(accessToken, files.fichaFile, prospectFolderId, 'Ficha.pdf')
+        uploadFileToDrive(accessToken, compressedFichaFile, prospectFolderId, `Ficha.${extension}`)
       );
     } else {
       uploadPromises.push(Promise.resolve(null));
     }
 
-    if (files.talonarioFile) {
+    if (compressedTalonarioFile) {
+      const originalName = files.talonarioFile?.name || 'Talonario';
+      const extension = originalName.split('.').pop() || 'pdf';
       uploadPromises.push(
-        uploadFileToDrive(accessToken, files.talonarioFile, prospectFolderId, 'Talonario.pdf')
+        uploadFileToDrive(accessToken, compressedTalonarioFile, prospectFolderId, `Talonario.${extension}`)
       );
     } else {
       uploadPromises.push(Promise.resolve(null));
     }
 
-    if (files.signedAcpFile) {
+    if (compressedSignedAcpFile) {
+      const originalName = files.signedAcpFile?.name || 'ACP_Firmado';
+      const extension = originalName.split('.').pop() || 'pdf';
       uploadPromises.push(
-        uploadFileToDrive(accessToken, files.signedAcpFile, prospectFolderId, 'ACP_Firmado.pdf')
+        uploadFileToDrive(accessToken, compressedSignedAcpFile, prospectFolderId, `ACP_Firmado.${extension}`)
       );
     } else {
       uploadPromises.push(Promise.resolve(null));
