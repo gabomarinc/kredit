@@ -699,9 +699,22 @@ export const updateProspectToDB = async (
         
         // Si no se pudo renovar, continuar sin los archivos
         if (!retryWithNewToken) {
-          console.warn('⚠️ Continuando sin subir archivos a Drive debido a error');
+          console.error('❌ NO SE PUDIERON SUBIR ARCHIVOS A DRIVE. Continuando sin archivos.');
+          console.error('Esto puede deberse a:');
+          console.error('1. Token expirado y refresh token no funcionó');
+          console.error('2. Error de permisos en Google Drive');
+          console.error('3. Error de red o conexión');
+          // No lanzar error, pero sí reportar claramente que no se subieron
         }
       }
+      
+      // Verificar si realmente se subieron archivos
+      const filesUploaded = !!(driveFileIds.idFileUrl || driveFileIds.fichaFileUrl || driveFileIds.talonarioFileUrl || driveFileIds.signedAcpFileUrl);
+      if (hasFilesToUpload && !filesUploaded) {
+        console.error('❌ CRÍTICO: Se intentaron subir archivos pero ninguno se subió exitosamente');
+      }
+    } else {
+      console.log('ℹ️ No hay archivos para subir a Drive');
     }
 
     // 4. Guardar calculation_result en formato JSON directo (sin comprimir para mantener consistencia)
