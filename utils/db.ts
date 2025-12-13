@@ -615,6 +615,14 @@ export const updateProspectToDB = async (
 
     if (hasFilesToUpload) {
       console.log('🔄 Subiendo archivos a Google Drive...');
+      console.log('📋 Archivos a subir:', {
+        hasIdFile: !!personal.idFile,
+        hasFichaFile: !!personal.fichaFile,
+        hasTalonarioFile: !!personal.talonarioFile,
+        hasSignedAcpFile: !!personal.signedAcpFile,
+        accessToken: accessToken ? `${accessToken.substring(0, 20)}...` : 'null',
+        folderId: folderId || 'null'
+      });
       
       // Intentar subir archivos (con renovación automática de token si expira)
       let retryWithNewToken = false;
@@ -632,6 +640,12 @@ export const updateProspectToDB = async (
           }
         );
         console.log('✅ Archivos subidos a Drive:', driveFileIds);
+        console.log('📊 Resumen de subida:', {
+          idFileId: driveFileIds.idFileUrl || 'no subido',
+          fichaFileId: driveFileIds.fichaFileUrl || 'no subido',
+          talonarioFileId: driveFileIds.talonarioFileUrl || 'no subido',
+          signedAcpFileId: driveFileIds.signedAcpFileUrl || 'no subido'
+        });
       } catch (error: any) {
         console.error('❌ Error subiendo archivos a Drive:', error);
         console.error('Error details:', {
@@ -690,13 +704,9 @@ export const updateProspectToDB = async (
       }
     }
 
-    // 4. Comprimir calculation_result
-    const compressedResult = compressJSON(result || {});
-
-    // 5. Actualizar prospecto con calculation_result y IDs de Drive
-    // Nota: calculation_result es JSONB, pero guardamos texto comprimido
-    // Envolvemos el string comprimido en un objeto JSON válido
-    const compressedResultJson = JSON.stringify({ compressed: compressedResult });
+    // 4. Guardar calculation_result en formato JSON directo (sin comprimir para mantener consistencia)
+    // Nota: calculation_result es JSONB, guardamos el objeto JSON directamente
+    const calculationResultJson = JSON.stringify(result || {});
 
     const query = `
       UPDATE prospects SET
@@ -710,7 +720,7 @@ export const updateProspectToDB = async (
     `;
 
     const values = [
-      compressedResultJson,
+      calculationResultJson,
       driveFileIds.idFileUrl || null,
       driveFileIds.fichaFileUrl || null,
       driveFileIds.talonarioFileUrl || null,
@@ -719,8 +729,8 @@ export const updateProspectToDB = async (
     ];
 
     console.log('📤 Ejecutando UPDATE con valores:', {
-      calculation_result: compressedResultJson ? `presente (${compressedResultJson.length} chars, comprimido)` : 'vacío',
-      calculation_result_preview: compressedResultJson ? compressedResultJson.substring(0, 100) + '...' : 'null',
+      calculation_result: calculationResultJson ? `presente (${calculationResultJson.length} chars, JSON directo)` : 'vacío',
+      calculation_result_preview: calculationResultJson ? calculationResultJson.substring(0, 100) + '...' : 'null',
       id_file_drive_id: values[1] || 'null',
       ficha_file_drive_id: values[2] || 'null',
       talonario_file_drive_id: values[3] || 'null',
