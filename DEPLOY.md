@@ -106,3 +106,4 @@ CREATE TABLE IF NOT EXISTS prospects (
 
 Asegúrate de que tu usuario de Neon tenga permisos para crear tablas.
 
+

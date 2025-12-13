@@ -32,6 +32,9 @@ const ensureTablesExist = async (client: any) => {
         company_name TEXT,
         logo_url TEXT,
         role TEXT DEFAULT 'Broker' CHECK (role IN ('Promotora', 'Broker')),
+        google_drive_access_token TEXT,
+        google_drive_refresh_token TEXT,
+        google_drive_folder_id TEXT,
         created_at TIMESTAMP DEFAULT NOW()
       )
     `);
@@ -118,7 +121,7 @@ const ensureTablesExist = async (client: any) => {
       console.warn('Nota: No se pudieron agregar las columnas de archivos (puede que ya existan):', e);
     }
 
-    // Agregar columna de plan a companies si no existe
+    // Agregar columna de plan, role y Google Drive a companies si no existe
     try {
       await client.query(`
         DO $$
@@ -129,10 +132,19 @@ const ensureTablesExist = async (client: any) => {
           IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'companies' AND column_name = 'role') THEN
             ALTER TABLE companies ADD COLUMN role TEXT DEFAULT 'Broker' CHECK (role IN ('Promotora', 'Broker'));
           END IF;
+          IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'companies' AND column_name = 'google_drive_access_token') THEN
+            ALTER TABLE companies ADD COLUMN google_drive_access_token TEXT;
+          END IF;
+          IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'companies' AND column_name = 'google_drive_refresh_token') THEN
+            ALTER TABLE companies ADD COLUMN google_drive_refresh_token TEXT;
+          END IF;
+          IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'companies' AND column_name = 'google_drive_folder_id') THEN
+            ALTER TABLE companies ADD COLUMN google_drive_folder_id TEXT;
+          END IF;
         END $$;
       `);
     } catch (e) {
-      console.warn('Nota: No se pudo agregar la columna plan (puede que ya exista):', e);
+      console.warn('Nota: No se pudo agregar las columnas (puede que ya existan):', e);
     }
 
     // Tabla de propiedades
@@ -725,6 +737,9 @@ export interface CompanyData {
   logoUrl?: string;
   zones: string[];
   role: 'Promotora' | 'Broker';
+  googleDriveAccessToken?: string;
+  googleDriveRefreshToken?: string;
+  googleDriveFolderId?: string;
 }
 
 export interface Company {
@@ -774,10 +789,20 @@ export const saveCompanyToDB = async (data: CompanyData): Promise<string | null>
 
     // Insertar empresa
     const companyResult = await client.query(`
-      INSERT INTO companies (name, email, password_hash, company_name, logo_url, role)
-      VALUES ($1, $2, $3, $4, $5, $6)
+      INSERT INTO companies (name, email, password_hash, company_name, logo_url, role, google_drive_access_token, google_drive_refresh_token, google_drive_folder_id)
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
       RETURNING id
-    `, [data.name, data.email, passwordHash, data.companyName || data.name, data.logoUrl || null, data.role || 'Broker']);
+    `, [
+      data.name, 
+      data.email, 
+      passwordHash, 
+      data.companyName || data.name, 
+      data.logoUrl || null, 
+      data.role || 'Broker',
+      data.googleDriveAccessToken || null,
+      data.googleDriveRefreshToken || null,
+      data.googleDriveFolderId || null
+    ]);
 
     const companyId = companyResult.rows[0].id;
     console.log('✅ Empresa guardada con ID:', companyId);

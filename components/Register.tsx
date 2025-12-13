@@ -1,10 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
-  User, Mail, Lock, Building, Image as ImageIcon, MapPin, ArrowRight, ChevronLeft, Check, Plus, X, Upload, Loader2
+  User, Mail, Lock, Building, Image as ImageIcon, MapPin, ArrowRight, ChevronLeft, Check, Plus, X, Upload, Loader2, Cloud, AlertCircle
 } from 'lucide-react';
 import { ZONES_PANAMA } from '../constants';
 import { saveCompanyToDB } from '../utils/db';
 import { NotificationModal, NotificationType } from './ui/NotificationModal';
+import { initiateGoogleDriveAuth } from '../utils/googleDrive';
 
 // Componente de registro de empresas - Vercel deploy test
 
@@ -23,8 +24,12 @@ export const Register: React.FC<RegisterProps> = ({ onRegisterComplete, onGoToLo
     companyName: '',
     logo: null as File | null,
     zones: [...ZONES_PANAMA], // Start with default zones
-    role: 'Broker' as 'Promotora' | 'Broker'
+    role: 'Broker' as 'Promotora' | 'Broker',
+    googleDriveAccessToken: '',
+    googleDriveRefreshToken: '',
+    googleDriveFolderId: ''
   });
+  const [isGoogleDriveConnected, setIsGoogleDriveConnected] = useState(false);
   const [newZone, setNewZone] = useState('');
   const [passwordError, setPasswordError] = useState('');
   const [notification, setNotification] = useState<{ isOpen: boolean; type: NotificationType; message: string; title?: string }>({
@@ -33,6 +38,89 @@ export const Register: React.FC<RegisterProps> = ({ onRegisterComplete, onGoToLo
     message: ''
   });
   const [isLoading, setIsLoading] = useState(false);
+
+  // Manejar callback de OAuth de Google Drive
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const googleDriveAuth = urlParams.get('google_drive_auth');
+    
+    if (googleDriveAuth === 'success') {
+      const accessToken = urlParams.get('access_token');
+      const refreshToken = urlParams.get('refresh_token');
+      const folderId = urlParams.get('folder_id');
+
+      if (accessToken && refreshToken) {
+        // Guardar tokens en el estado
+        setFormData(prev => ({
+          ...prev,
+          googleDriveAccessToken: accessToken,
+          googleDriveRefreshToken: refreshToken,
+          googleDriveFolderId: folderId || ''
+        }));
+        
+        setIsGoogleDriveConnected(true);
+        
+        // Limpiar parámetros de la URL
+        const newUrl = new URL(window.location.href);
+        newUrl.searchParams.delete('google_drive_auth');
+        newUrl.searchParams.delete('access_token');
+        newUrl.searchParams.delete('refresh_token');
+        newUrl.searchParams.delete('folder_id');
+        window.history.replaceState({}, '', newUrl.toString());
+        
+        // Restaurar datos del formulario desde localStorage si existen
+        const savedFormData = localStorage.getItem('registrationFormData');
+        if (savedFormData) {
+          try {
+            const parsed = JSON.parse(savedFormData);
+            setFormData(prev => ({
+              ...prev,
+              name: parsed.name || prev.name,
+              email: parsed.email || prev.email,
+              password: parsed.password || prev.password,
+              confirmPassword: parsed.confirmPassword || prev.confirmPassword,
+              companyName: parsed.companyName || prev.companyName,
+              zones: parsed.zones || prev.zones,
+              role: parsed.role || prev.role,
+              googleDriveAccessToken: accessToken,
+              googleDriveRefreshToken: refreshToken,
+              googleDriveFolderId: folderId || ''
+            }));
+            localStorage.removeItem('registrationFormData');
+          } catch (e) {
+            console.error('Error restaurando datos del formulario:', e);
+          }
+        }
+        
+        // Ir al paso 3 (Google Drive) si no estamos ahí
+        setStep(3);
+        
+        setNotification({
+          isOpen: true,
+          type: 'success',
+          message: 'Google Drive conectado exitosamente. Puedes continuar con el registro.',
+          title: 'Conexión exitosa'
+        });
+      }
+    } else if (urlParams.get('error')) {
+      // Manejar errores de OAuth
+      const error = urlParams.get('error');
+      const errorMessage = urlParams.get('message') || 'Error desconocido';
+      
+      setNotification({
+        isOpen: true,
+        type: 'error',
+        message: `Error al conectar con Google Drive: ${errorMessage}`,
+        title: 'Error de conexión'
+      });
+      
+      // Limpiar parámetros de error de la URL
+      const newUrl = new URL(window.location.href);
+      newUrl.searchParams.delete('error');
+      newUrl.searchParams.delete('message');
+      window.history.replaceState({}, '', newUrl.toString());
+    }
+  }, []);
 
   const handleNext = () => setStep(prev => prev + 1);
   const handleBack = () => setStep(prev => prev - 1);
@@ -103,7 +191,10 @@ export const Register: React.FC<RegisterProps> = ({ onRegisterComplete, onGoToLo
         companyName: formData.companyName || 'Tu Inmobiliaria',
         logoUrl: logoBase64, // Guardar como base64 en lugar de blob URL
         zones: formData.zones, // Asegurar que es un array
-        role: formData.role
+        role: formData.role,
+        googleDriveAccessToken: formData.googleDriveAccessToken || undefined,
+        googleDriveRefreshToken: formData.googleDriveRefreshToken || undefined,
+        googleDriveFolderId: formData.googleDriveFolderId || undefined
       });
 
       console.log('📋 Resultado de saveCompanyToDB:', companyId);
@@ -156,7 +247,7 @@ export const Register: React.FC<RegisterProps> = ({ onRegisterComplete, onGoToLo
         
         {/* Progress Dots */}
         <div className="flex gap-3 mb-10 justify-center">
-          {[1, 2, 3].map((s) => (
+          {[1, 2, 3, 4].map((s) => (
             <div 
               key={s}
               className={`h-1.5 rounded-full transition-all duration-500 ${
@@ -354,8 +445,113 @@ export const Register: React.FC<RegisterProps> = ({ onRegisterComplete, onGoToLo
           </div>
         )}
 
-        {/* STEP 3: ZONES */}
+        {/* STEP 3: GOOGLE DRIVE INTEGRATION */}
         {step === 3 && (
+          <div className="animate-fade-in-up">
+            <div className="text-center mb-10">
+              <div className="flex justify-center mb-4">
+                <div className="bg-indigo-100 p-4 rounded-full">
+                  <Cloud className="text-indigo-600" size={32} />
+                </div>
+              </div>
+              <h1 className="text-3xl font-bold text-gray-900 mb-2 tracking-tight">Integración con Google Drive</h1>
+              <p className="text-gray-500 font-light">Conecta tu cuenta para organizar documentos automáticamente.</p>
+            </div>
+
+            <div className="bg-amber-50 border border-amber-200 rounded-2xl p-6 mb-6">
+              <div className="flex gap-3">
+                <AlertCircle className="text-amber-600 flex-shrink-0 mt-0.5" size={20} />
+                <div>
+                  <h3 className="font-semibold text-amber-900 mb-2">¿Por qué es importante?</h3>
+                  <ul className="text-sm text-amber-800 space-y-1.5">
+                    <li className="flex items-start gap-2">
+                      <span className="text-amber-600 mt-1">•</span>
+                      <span><strong>Organización automática:</strong> Todos los documentos de tus prospectos se guardan automáticamente en carpetas organizadas por cliente.</span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <span className="text-amber-600 mt-1">•</span>
+                      <span><strong>Acceso fácil:</strong> Puedes acceder a todos los documentos directamente desde Google Drive sin necesidad de la aplicación.</span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <span className="text-amber-600 mt-1">•</span>
+                      <span><strong>Backup automático:</strong> Tus documentos estarán seguros en la nube de Google.</span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <span className="text-amber-600 mt-1">•</span>
+                      <span><strong>Obligatorio:</strong> Esta integración es necesaria para que el sistema funcione correctamente.</span>
+                    </li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+
+            <div className="mb-8">
+              {isGoogleDriveConnected ? (
+                <div className="bg-green-50 border border-green-200 rounded-xl p-6 text-center">
+                  <Check className="text-green-600 mx-auto mb-3" size={32} />
+                  <p className="text-green-800 font-semibold mb-1">Google Drive conectado</p>
+                  <p className="text-green-700 text-sm">Tu cuenta está lista para guardar documentos automáticamente</p>
+                </div>
+              ) : (
+                <button
+                  onClick={() => {
+                    try {
+                      // Guardar estado temporal en localStorage para recuperarlo después del OAuth
+                      localStorage.setItem('registrationFormData', JSON.stringify({
+                        name: formData.name,
+                        email: formData.email,
+                        password: formData.password,
+                        confirmPassword: formData.confirmPassword,
+                        companyName: formData.companyName,
+                        logo: formData.logo ? 'hasLogo' : null,
+                        zones: formData.zones,
+                        role: formData.role
+                      }));
+                      initiateGoogleDriveAuth();
+                    } catch (error) {
+                      console.error('Error iniciando Google Drive auth:', error);
+                      setNotification({
+                        isOpen: true,
+                        type: 'error',
+                        message: 'Error al conectar con Google Drive. Por favor verifica la configuración.',
+                        title: 'Error de conexión'
+                      });
+                    }
+                  }}
+                  className="w-full py-4 px-6 bg-white border-2 border-gray-300 rounded-xl font-semibold text-gray-700 hover:border-indigo-500 hover:bg-indigo-50 transition-all flex items-center justify-center gap-3 shadow-sm"
+                >
+                  <svg className="w-5 h-5" viewBox="0 0 24 24">
+                    <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                    <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                    <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+                    <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+                  </svg>
+                  Conectar con Google Drive
+                </button>
+              )}
+            </div>
+
+            <div className="flex gap-4">
+              <button onClick={handleBack} className="px-6 py-4 text-gray-400 hover:text-gray-600 font-medium">
+                Atrás
+              </button>
+              <button
+                onClick={handleNext}
+                disabled={!isGoogleDriveConnected}
+                className={`flex-1 py-4 rounded-xl font-bold transition-all flex justify-center items-center gap-2 ${
+                   !isGoogleDriveConnected
+                   ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                   : 'bg-gray-900 text-white hover:bg-gray-800 shadow-lg shadow-gray-200'
+                }`}
+              >
+                Continuar <ArrowRight size={18} />
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* STEP 4: ZONES */}
+        {step === 4 && (
           <div className="animate-fade-in-up">
             <div className="text-center mb-8">
               <h1 className="text-3xl font-bold text-gray-900 mb-2 tracking-tight">Tu Mercado</h1>
