@@ -306,6 +306,18 @@ export const ProspectFlow: React.FC<ProspectFlowProps> = ({ availableZones, comp
   const [isLoadingProperties, setIsLoadingProperties] = useState(false);
   const [wantsValidation, setWantsValidation] = useState<boolean | null>(null); // null = no decidido, true = quiere validar, false = no quiere
   const [showApcModal, setShowApcModal] = useState(false);
+  const [requestedDocuments, setRequestedDocuments] = useState<{
+    idFile: boolean;
+    fichaFile: boolean;
+    talonarioFile: boolean;
+    signedAcpFile: boolean;
+  }>({
+    idFile: true,
+    fichaFile: true,
+    talonarioFile: true,
+    signedAcpFile: true
+  });
+  const [apcDocumentDriveId, setApcDocumentDriveId] = useState<string | null>(null);
   const [notification, setNotification] = useState<{ isOpen: boolean; type: NotificationType; message: string; title?: string }>({
     isOpen: false,
     type: 'success',
@@ -359,6 +371,25 @@ export const ProspectFlow: React.FC<ProspectFlowProps> = ({ availableZones, comp
           } else {
             console.warn('⚠️ Empresa encontrada pero sin zonas, usando zonas por defecto');
             setZones(availableZones);
+          }
+
+          // Cargar configuración de documentos solicitados
+          if (company && company.requestedDocuments) {
+            setRequestedDocuments({
+              idFile: company.requestedDocuments.idFile !== false,
+              fichaFile: company.requestedDocuments.fichaFile !== false,
+              talonarioFile: company.requestedDocuments.talonarioFile !== false,
+              signedAcpFile: company.requestedDocuments.signedAcpFile !== false
+            });
+            console.log('✅ Configuración de documentos solicitados cargada:', company.requestedDocuments);
+          } else {
+            console.warn('⚠️ No hay configuración de documentos solicitados, usando valores por defecto');
+          }
+
+          // Cargar ID del documento APC personalizado si existe
+          if (company && company.apcDocumentDriveId) {
+            setApcDocumentDriveId(company.apcDocumentDriveId);
+            console.log('✅ Documento APC personalizado encontrado:', company.apcDocumentDriveId);
           }
         } catch (error) {
           console.error('❌ Error cargando datos de la empresa:', error);
@@ -1022,42 +1053,50 @@ export const ProspectFlow: React.FC<ProspectFlowProps> = ({ availableZones, comp
                 <p className="text-gray-500 text-lg font-light">Sube los documentos necesarios para validar tu pre-aprobación.</p>
               </div>
 
-              <div className="grid md:grid-cols-2 gap-6 max-w-4xl mx-auto">
+              <div className={`grid gap-6 max-w-4xl mx-auto ${requestedDocuments.signedAcpFile ? 'md:grid-cols-2' : 'md:grid-cols-1'}`}>
                 <div className="bg-white p-6 rounded-[2rem] border border-gray-100 shadow-sm space-y-3">
                   <h3 className="font-bold text-gray-900 flex items-center gap-2 text-lg mb-4">
                     <div className="w-8 h-8 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center"><FileCheck size={16} /></div>
                     Documentación
                   </h3>
-                  <FileUpload label="Foto de Cédula / ID" file={personal.idFile} setFile={(f) => setPersonal({...personal, idFile: f})} />
-                  <FileUpload label="Ficha de Seguro Social" file={personal.fichaFile} setFile={(f) => setPersonal({...personal, fichaFile: f})} />
-                  <FileUpload label="Talonario de Pago" file={personal.talonarioFile} setFile={(f) => setPersonal({...personal, talonarioFile: f})} />
+                  {requestedDocuments.idFile && (
+                    <FileUpload label="Foto de Cédula / ID" file={personal.idFile} setFile={(f) => setPersonal({...personal, idFile: f})} />
+                  )}
+                  {requestedDocuments.fichaFile && (
+                    <FileUpload label="Ficha de Seguro Social" file={personal.fichaFile} setFile={(f) => setPersonal({...personal, fichaFile: f})} />
+                  )}
+                  {requestedDocuments.talonarioFile && (
+                    <FileUpload label="Talonario de Pago" file={personal.talonarioFile} setFile={(f) => setPersonal({...personal, talonarioFile: f})} />
+                  )}
                 </div>
 
-                <div className="bg-indigo-50/50 p-6 rounded-[2rem] border border-indigo-100 space-y-3">
-                  <div className="flex justify-between items-start">
-                    <h3 className="font-bold text-indigo-900 flex items-center gap-2 text-sm">
-                      Autorización APC
-                    </h3>
-                    <a 
-                      href="/apc.pdf"
-                      download="apc.pdf"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-xs font-semibold text-indigo-500 hover:text-indigo-700 flex items-center gap-1 transition-colors"
+                {requestedDocuments.signedAcpFile && (
+                  <div className="bg-indigo-50/50 p-6 rounded-[2rem] border border-indigo-100 space-y-3">
+                    <div className="flex justify-between items-start">
+                      <h3 className="font-bold text-indigo-900 flex items-center gap-2 text-sm">
+                        Autorización APC
+                      </h3>
+                      <a 
+                        href="/apc.pdf"
+                        download="apc.pdf"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-xs font-semibold text-indigo-500 hover:text-indigo-700 flex items-center gap-1 transition-colors"
+                      >
+                        <Download size={12} /> Descargar PDF
+                      </a>
+                    </div>
+                    <FileUpload label="Subir APC Firmada" file={personal.signedAcpFile} setFile={(f) => setPersonal({...personal, signedAcpFile: f})} />
+                    <button
+                      type="button"
+                      onClick={() => setShowApcModal(true)}
+                      className="mt-3 w-full text-xs font-semibold text-indigo-600 hover:text-indigo-800 bg-indigo-50/60 hover:bg-indigo-100 border border-dashed border-indigo-200 rounded-xl py-2.5 transition-colors flex items-center justify-center gap-2"
                     >
-                      <Download size={12} /> Descargar PDF
-                    </a>
+                      <FileCheck size={14} />
+                      Firmar APC en línea
+                    </button>
                   </div>
-                  <FileUpload label="Subir APC Firmada" file={personal.signedAcpFile} setFile={(f) => setPersonal({...personal, signedAcpFile: f})} />
-                  <button
-                    type="button"
-                    onClick={() => setShowApcModal(true)}
-                    className="mt-3 w-full text-xs font-semibold text-indigo-600 hover:text-indigo-800 bg-indigo-50/60 hover:bg-indigo-100 border border-dashed border-indigo-200 rounded-xl py-2.5 transition-colors flex items-center justify-center gap-2"
-                  >
-                    <FileCheck size={14} />
-                    Firmar APC en línea
-                  </button>
-                </div>
+                )}
               </div>
 
               <div className="mt-10 flex flex-col sm:flex-row justify-between items-stretch sm:items-center gap-4 px-4 max-w-4xl mx-auto">
@@ -1069,9 +1108,19 @@ export const ProspectFlow: React.FC<ProspectFlowProps> = ({ availableZones, comp
                 </button>
                 <button
                   onClick={() => handleFinalSubmit(true)}
-                  disabled={!personal.idFile || !personal.fichaFile || !personal.talonarioFile || !personal.signedAcpFile || isSaving}
+                  disabled={
+                    (requestedDocuments.idFile && !personal.idFile) ||
+                    (requestedDocuments.fichaFile && !personal.fichaFile) ||
+                    (requestedDocuments.talonarioFile && !personal.talonarioFile) ||
+                    (requestedDocuments.signedAcpFile && !personal.signedAcpFile) ||
+                    isSaving
+                  }
                   className={`flex items-center justify-center gap-3 px-6 sm:px-10 py-4 rounded-full font-bold text-base sm:text-lg transition-all duration-300 shadow-xl order-1 sm:order-2 flex-1 sm:flex-initial ${
-                    !personal.idFile || !personal.fichaFile || !personal.talonarioFile || !personal.signedAcpFile || isSaving
+                    (requestedDocuments.idFile && !personal.idFile) ||
+                    (requestedDocuments.fichaFile && !personal.fichaFile) ||
+                    (requestedDocuments.talonarioFile && !personal.talonarioFile) ||
+                    (requestedDocuments.signedAcpFile && !personal.signedAcpFile) ||
+                    isSaving
                       ? 'bg-gray-100 text-gray-400 cursor-not-allowed shadow-none'
                       : 'bg-indigo-600 text-white hover:bg-indigo-700 shadow-indigo-200'
                   }`}
