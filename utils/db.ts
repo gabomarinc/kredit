@@ -159,6 +159,13 @@ const ensureTablesExist = async (client: any) => {
           IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'companies' AND column_name = 'google_drive_folder_id') THEN
             ALTER TABLE companies ADD COLUMN google_drive_folder_id TEXT;
           END IF;
+          -- Columnas para Configurar Calculadora (Fase 1)
+          IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'companies' AND column_name = 'apc_document_drive_id') THEN
+            ALTER TABLE companies ADD COLUMN apc_document_drive_id TEXT;
+          END IF;
+          IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'companies' AND column_name = 'requested_documents') THEN
+            ALTER TABLE companies ADD COLUMN requested_documents JSONB DEFAULT '{"idFile": true, "fichaFile": true, "talonarioFile": true, "signedAcpFile": true}'::jsonb;
+          END IF;
         END $$;
       `);
     } catch (e) {
@@ -1086,6 +1093,13 @@ export interface Company {
   googleDriveAccessToken?: string;
   googleDriveRefreshToken?: string;
   googleDriveFolderId?: string;
+  requestedDocuments?: {
+    idFile: boolean;
+    fichaFile: boolean;
+    talonarioFile: boolean;
+    signedAcpFile: boolean;
+  };
+  apcDocumentDriveId?: string;
 }
 
 // Función simple para hash de contraseña (en producción usar bcrypt)
@@ -1327,6 +1341,24 @@ export const getCompanyById = async (companyId: string): Promise<Company | null>
 
     client.release();
 
+    // Parsear requested_documents JSONB o usar valores por defecto
+    let requestedDocuments = {
+      idFile: true,
+      fichaFile: true,
+      talonarioFile: true,
+      signedAcpFile: true
+    };
+    
+    if (company.requested_documents) {
+      try {
+        requestedDocuments = typeof company.requested_documents === 'string' 
+          ? JSON.parse(company.requested_documents)
+          : company.requested_documents;
+      } catch (e) {
+        console.warn('⚠️ Error parseando requested_documents, usando valores por defecto:', e);
+      }
+    }
+
     return {
       id: company.id,
       name: company.name,
@@ -1338,7 +1370,9 @@ export const getCompanyById = async (companyId: string): Promise<Company | null>
       role: (company.role || 'Broker') as 'Promotora' | 'Broker',
       googleDriveAccessToken: company.google_drive_access_token || undefined,
       googleDriveRefreshToken: company.google_drive_refresh_token || undefined,
-      googleDriveFolderId: company.google_drive_folder_id || undefined
+      googleDriveFolderId: company.google_drive_folder_id || undefined,
+      requestedDocuments: requestedDocuments,
+      apcDocumentDriveId: company.apc_document_drive_id || undefined
     };
 
   } catch (error) {
@@ -1505,6 +1539,77 @@ export const updateCompanyGoogleDriveConfig = async (
     return true;
   } catch (error) {
     console.error('❌ Error actualizando configuración de Google Drive:', error);
+    return false;
+  }
+};
+
+// Actualizar configuración de documentos solicitados
+export const updateCompanyRequestedDocuments = async (
+  companyId: string,
+  requestedDocuments: {
+    idFile: boolean;
+    fichaFile: boolean;
+    talonarioFile: boolean;
+    signedAcpFile: boolean;
+  }
+): Promise<boolean> => {
+  if (!pool) {
+    console.error('❌ Pool de base de datos no inicializado.');
+    return false;
+  }
+
+  try {
+    console.log('🔄 Actualizando documentos solicitados de la empresa...', {
+      companyId,
+      requestedDocuments
+    });
+
+    const client = await pool.connect();
+    await ensureTablesExist(client);
+
+    await client.query(
+      'UPDATE companies SET requested_documents = $1::jsonb WHERE id = $2',
+      [JSON.stringify(requestedDocuments), companyId]
+    );
+
+    client.release();
+    console.log('✅ Documentos solicitados actualizados para la empresa:', companyId);
+    return true;
+  } catch (error) {
+    console.error('❌ Error actualizando documentos solicitados:', error);
+    return false;
+  }
+};
+
+// Actualizar documento APC personalizado (ID de Google Drive)
+export const updateCompanyApcDocument = async (
+  companyId: string,
+  apcDocumentDriveId: string | null
+): Promise<boolean> => {
+  if (!pool) {
+    console.error('❌ Pool de base de datos no inicializado.');
+    return false;
+  }
+
+  try {
+    console.log('🔄 Actualizando documento APC de la empresa...', {
+      companyId,
+      hasApcDocument: !!apcDocumentDriveId
+    });
+
+    const client = await pool.connect();
+    await ensureTablesExist(client);
+
+    await client.query(
+      'UPDATE companies SET apc_document_drive_id = $1 WHERE id = $2',
+      [apcDocumentDriveId, companyId]
+    );
+
+    client.release();
+    console.log('✅ Documento APC actualizado para la empresa:', companyId);
+    return true;
+  } catch (error) {
+    console.error('❌ Error actualizando documento APC:', error);
     return false;
   }
 };
