@@ -1071,9 +1071,15 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableZones, onUpdateZo
   // Filtrar prospectos
   const filteredProspects = prospects.filter(prospect => {
     // Filtro por búsqueda
-    if (searchTerm && !prospect.name.toLowerCase().includes(searchTerm.toLowerCase()) && 
-        !prospect.email.toLowerCase().includes(searchTerm.toLowerCase())) {
-      return false;
+    if (searchTerm) {
+      const searchLower = searchTerm.toLowerCase();
+      const matchesName = prospect.name.toLowerCase().includes(searchLower);
+      const matchesEmail = prospect.email.toLowerCase().includes(searchLower);
+      const matchesPhone = prospect.phone?.toLowerCase().includes(searchLower) || false;
+      
+      if (!matchesName && !matchesEmail && !matchesPhone) {
+        return false;
+      }
     }
     
     // Filtro por estado
@@ -2240,6 +2246,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableZones, onUpdateZo
                       <thead>
                         <tr className="bg-gray-50/50 text-gray-400 text-xs uppercase tracking-wider">
                           <th className="px-4 sm:px-8 py-4 sm:py-6 font-semibold rounded-tl-[2rem]">Prospecto</th>
+                          <th className="px-3 sm:px-6 py-4 sm:py-6 font-semibold hidden lg:table-cell">Teléfono</th>
                           <th className="px-3 sm:px-6 py-4 sm:py-6 font-semibold">Ingreso</th>
                           <th className="px-3 sm:px-6 py-4 sm:py-6 font-semibold">Capacidad</th>
                           <th className="px-3 sm:px-6 py-4 sm:py-6 font-semibold hidden md:table-cell">Zona</th>
@@ -2258,6 +2265,9 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableZones, onUpdateZo
                                 <span className="font-bold text-gray-900 text-sm">{prospect.name}</span>
                                 <span className="text-xs text-gray-400 hidden sm:inline">{prospect.email}</span>
                               </div>
+                            </td>
+                            <td className="px-3 sm:px-6 py-4 sm:py-5 hidden lg:table-cell">
+                              <span className="text-sm text-gray-600 font-medium">{prospect.phone || 'N/A'}</span>
                             </td>
                             <td className="px-3 sm:px-6 py-4 sm:py-5">
                               <span className="font-medium text-gray-700 text-sm">{formatCurrency(prospect.income)}</span>
