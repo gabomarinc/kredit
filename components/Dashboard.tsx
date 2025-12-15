@@ -366,6 +366,9 @@ const ProjectModal: React.FC<ProjectModalProps> = ({ project, zones, onClose, on
     images: []
   });
   const [newAmenity, setNewAmenity] = useState('');
+  
+  // Amenidades predefinidas
+  const predefinedAmenities = ['Gym', 'Piscina', 'Terraza', 'Padel'];
 
   const handleProjectImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
@@ -471,11 +474,12 @@ const ProjectModal: React.FC<ProjectModalProps> = ({ project, zones, onClose, on
     setModels(models.filter((_, i) => i !== index));
   };
 
-  const addAmenity = () => {
-    if (newAmenity.trim() && !currentModel.amenities?.includes(newAmenity.trim())) {
+  const addAmenity = (amenity?: string) => {
+    const amenityToAdd = amenity || newAmenity.trim();
+    if (amenityToAdd && !currentModel.amenities?.includes(amenityToAdd)) {
       setCurrentModel({
         ...currentModel,
-        amenities: [...(currentModel.amenities || []), newAmenity.trim()]
+        amenities: [...(currentModel.amenities || []), amenityToAdd]
       });
       setNewAmenity('');
     }
@@ -787,35 +791,91 @@ const ProjectModal: React.FC<ProjectModalProps> = ({ project, zones, onClose, on
                     <Shield size={16} className="text-indigo-500" />
                     Amenidades
                   </label>
-                  <div className="flex gap-2 mb-3">
-                    <input
-                      type="text"
-                      value={newAmenity}
-                      onChange={(e) => setNewAmenity(e.target.value)}
-                      onKeyPress={(e) => e.key === 'Enter' && addAmenity()}
-                      className="flex-1 px-5 py-3 rounded-xl border border-gray-200 focus:border-indigo-500 outline-none bg-white"
-                      placeholder="Ej: Piscina, Gimnasio..."
-                    />
-                    <button
-                      onClick={addAmenity}
-                      className="px-6 py-3 bg-indigo-600 text-white rounded-xl font-semibold hover:bg-indigo-700 transition-colors"
-                    >
-                      <Plus size={18} />
-                    </button>
-                  </div>
-                  {currentModel.amenities && currentModel.amenities.length > 0 && (
+                  
+                  {/* Amenidades Predefinidas */}
+                  <div className="mb-4">
+                    <p className="text-xs text-gray-500 mb-2 font-medium">Amenidades Predefinidas</p>
                     <div className="flex flex-wrap gap-2">
-                      {currentModel.amenities.map((amenity, idx) => (
-                        <span
-                          key={idx}
-                          className="px-4 py-2 bg-indigo-100 text-indigo-700 rounded-full text-sm font-medium flex items-center gap-2"
-                        >
-                          {amenity}
-                          <button onClick={() => removeAmenity(amenity)} className="text-indigo-500 hover:text-indigo-700">
-                            <X size={14} />
+                      {predefinedAmenities.map((amenity) => {
+                        const isAdded = currentModel.amenities?.includes(amenity);
+                        return (
+                          <button
+                            key={amenity}
+                            type="button"
+                            onClick={() => {
+                              if (isAdded) {
+                                removeAmenity(amenity);
+                              } else {
+                                addAmenity(amenity);
+                              }
+                            }}
+                            className={`px-4 py-2 rounded-xl text-sm font-semibold transition-all ${
+                              isAdded
+                                ? 'bg-indigo-600 text-white hover:bg-indigo-700'
+                                : 'bg-gray-100 text-gray-700 hover:bg-gray-200 border border-gray-200'
+                            }`}
+                          >
+                            {isAdded ? (
+                              <span className="flex items-center gap-1.5">
+                                <Check size={14} />
+                                {amenity}
+                              </span>
+                            ) : (
+                              <span className="flex items-center gap-1.5">
+                                <Plus size={14} />
+                                {amenity}
+                              </span>
+                            )}
                           </button>
-                        </span>
-                      ))}
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  {/* Agregar Amenidad Personalizada */}
+                  <div className="mb-3">
+                    <p className="text-xs text-gray-500 mb-2 font-medium">Agregar Amenidad Personalizada</p>
+                    <div className="flex gap-2">
+                      <input
+                        type="text"
+                        value={newAmenity}
+                        onChange={(e) => setNewAmenity(e.target.value)}
+                        onKeyPress={(e) => e.key === 'Enter' && addAmenity()}
+                        className="flex-1 px-5 py-3 rounded-xl border border-gray-200 focus:border-indigo-500 outline-none bg-white"
+                        placeholder="Ej: Salón de eventos, Cancha de tenis..."
+                      />
+                      <button
+                        type="button"
+                        onClick={() => addAmenity()}
+                        disabled={!newAmenity.trim()}
+                        className="px-6 py-3 bg-indigo-600 text-white rounded-xl font-semibold hover:bg-indigo-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        <Plus size={18} />
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Lista de Amenidades Agregadas */}
+                  {currentModel.amenities && currentModel.amenities.length > 0 && (
+                    <div>
+                      <p className="text-xs text-gray-500 mb-2 font-medium">Amenidades Agregadas ({currentModel.amenities.length})</p>
+                      <div className="flex flex-wrap gap-2">
+                        {currentModel.amenities.map((amenity, idx) => (
+                          <span
+                            key={idx}
+                            className="px-4 py-2 bg-indigo-100 text-indigo-700 rounded-full text-sm font-medium flex items-center gap-2"
+                          >
+                            {amenity}
+                            <button 
+                              type="button"
+                              onClick={() => removeAmenity(amenity)} 
+                              className="text-indigo-500 hover:text-indigo-700 transition-colors"
+                            >
+                              <X size={14} />
+                            </button>
+                          </span>
+                        ))}
+                      </div>
                     </div>
                   )}
                 </div>
