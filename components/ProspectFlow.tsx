@@ -1922,10 +1922,10 @@ export const ProspectFlow: React.FC<ProspectFlowProps> = ({ availableZones, comp
 
 
       {/* Modal de Zonas más buscadas - Solo para Broker */}
-      {showZonesModal && companyRole === 'Broker' && createPortal(
+      {showZonesModal && createPortal(
         <div 
           className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
-          style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0 }}
+          style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, zIndex: 9999 }}
           onClick={(e) => {
             if (e.target === e.currentTarget) {
               setShowZonesModal(false);
@@ -1935,6 +1935,7 @@ export const ProspectFlow: React.FC<ProspectFlowProps> = ({ availableZones, comp
           <div 
             className="bg-white rounded-[2rem] w-full max-w-2xl max-h-[80vh] overflow-y-auto shadow-2xl relative"
             onClick={(e) => e.stopPropagation()}
+            style={{ zIndex: 10000 }}
           >
             {/* Header con botón cerrar */}
             <div className="sticky top-0 bg-white border-b border-gray-100 p-6 flex items-center justify-between z-10">
