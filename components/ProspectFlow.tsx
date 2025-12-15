@@ -5,7 +5,7 @@ import { calculateAffordability, formatCurrency } from '../utils/calculator';
 import { saveProspectToDB, getCompanyById, getAvailablePropertiesForProspect, savePropertyInterest, getCompanyById as getCompany, saveProspectInitial, updateProspectToDB, getAvailableProjectsForProspect, saveProjectModelInterest } from '../utils/db';
 import { Property, PlanType, Project, ProjectModel } from '../types';
 import { 
-  Home, Building2, MapPin, User, Upload, FileCheck, ArrowRight, CheckCircle2, Download, HeartHandshake, ChevronLeft, Check, BedDouble, Bath, Star, TrendingDown, X, Loader2
+  Home, Building2, MapPin, User, Upload, FileCheck, ArrowRight, CheckCircle2, Download, HeartHandshake, ChevronLeft, Check, BedDouble, Bath, Star, TrendingDown, X, Loader2, Heart
 } from 'lucide-react';
 import { NotificationModal, NotificationType } from './ui/NotificationModal';
 import SignatureCanvas from 'react-signature-canvas';
@@ -304,6 +304,7 @@ export const ProspectFlow: React.FC<ProspectFlowProps> = ({ availableZones, comp
   const [companyPlan, setCompanyPlan] = useState<PlanType>('Freshie');
   const [companyRole, setCompanyRole] = useState<'Promotora' | 'Broker'>('Broker');
   const [isLoadingProperties, setIsLoadingProperties] = useState(false);
+  const [showZonesModal, setShowZonesModal] = useState(false);
   const [wantsValidation, setWantsValidation] = useState<boolean | null>(null); // null = no decidido, true = quiere validar, false = no quiere
   const [showApcModal, setShowApcModal] = useState(false);
   const [requestedDocuments, setRequestedDocuments] = useState<{
@@ -1219,6 +1220,30 @@ export const ProspectFlow: React.FC<ProspectFlowProps> = ({ availableZones, comp
                     </div>
                   </div>
 
+                  {/* Tarjeta de Zonas más buscadas - Solo para Broker */}
+                  {companyRole === 'Broker' && preferences.zone.length > 0 && (
+                    <div 
+                      onClick={() => setShowZonesModal(true)}
+                      className="bg-white rounded-[2rem] p-6 border border-gray-100 shadow-sm hover:shadow-md transition-all cursor-pointer mb-10 max-w-md mx-auto"
+                    >
+                      <div className="flex items-center justify-center mb-4">
+                        <div className="w-12 h-12 rounded-full bg-orange-50 flex items-center justify-center">
+                          <MapPin size={24} className="text-orange-600" />
+                        </div>
+                      </div>
+                      <p className="text-xs text-gray-500 uppercase font-semibold text-center mb-2">ZONAS MÁS BUSCADAS</p>
+                      <p className="text-xl font-bold text-gray-900 text-center mb-3">
+                        {preferences.zone.slice(0, 2).join(', ')}
+                        {preferences.zone.length > 2 && ' y ...'}
+                      </p>
+                      <div className="flex justify-center">
+                        <span className="px-3 py-1 bg-orange-50 text-orange-700 rounded-full text-xs font-semibold">
+                          {preferences.zone.length} {preferences.zone.length === 1 ? 'zona' : 'zonas'}
+                        </span>
+                      </div>
+                    </div>
+                  )}
+
                   {/* Propiedades/Proyectos Disponibles - Solo si hay plan Premium */}
                   {companyPlan === 'Wolf of Wallstreet' && (
                     <div className="mb-10">
@@ -1863,6 +1888,62 @@ export const ProspectFlow: React.FC<ProspectFlowProps> = ({ availableZones, comp
         </div>
       )}
 
+
+      {/* Modal de Zonas más buscadas - Solo para Broker */}
+      {showZonesModal && companyRole === 'Broker' && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+          <div className="bg-white rounded-[2rem] w-full max-w-2xl max-h-[80vh] overflow-y-auto shadow-2xl relative animate-fade-in-up">
+            {/* Header con botón cerrar */}
+            <div className="sticky top-0 bg-white border-b border-gray-100 p-6 flex items-center justify-between z-10">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-full bg-orange-50 flex items-center justify-center">
+                  <MapPin size={20} className="text-orange-600" />
+                </div>
+                <div>
+                  <h3 className="text-2xl font-bold text-gray-900">Zonas de Interés</h3>
+                  <p className="text-sm text-gray-500">Zonas seleccionadas para tu búsqueda</p>
+                </div>
+              </div>
+              <button
+                onClick={() => setShowZonesModal(false)}
+                className="w-10 h-10 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center transition-colors"
+              >
+                <X size={20} className="text-gray-600" />
+              </button>
+            </div>
+
+            {/* Contenido */}
+            <div className="p-6">
+              <div className="space-y-4">
+                {preferences.zone.map((zone, index) => (
+                  <div 
+                    key={index}
+                    className="flex items-center gap-4 p-4 bg-gray-50 rounded-xl border border-gray-100 hover:border-indigo-200 transition-colors"
+                  >
+                    <div className="w-10 h-10 rounded-full bg-indigo-100 flex items-center justify-center shrink-0">
+                      <MapPin size={18} className="text-indigo-600" />
+                    </div>
+                    <div className="flex-1">
+                      <h4 className="font-bold text-gray-900">{zone}</h4>
+                      <p className="text-sm text-gray-500">
+                        {availableProperties.filter(p => p.zone === zone).length} {availableProperties.filter(p => p.zone === zone).length === 1 ? 'propiedad disponible' : 'propiedades disponibles'}
+                      </p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {availableProperties.length > 0 && (
+                <div className="mt-6 pt-6 border-t border-gray-200">
+                  <p className="text-sm text-gray-600 text-center">
+                    Total: <span className="font-bold text-gray-900">{availableProperties.length}</span> {availableProperties.length === 1 ? 'propiedad encontrada' : 'propiedades encontradas'} en tus zonas de interés
+                  </p>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Notification Modal */}
       <NotificationModal
