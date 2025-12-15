@@ -1847,73 +1847,108 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableZones, onUpdateZo
   };
 
   const exportToExcel = () => {
-    const filteredData = filterProspectsForExport();
-    
-    if (filteredData.length === 0) {
+    try {
+      const filteredData = filterProspectsForExport();
+      
+      console.log('📊 Datos filtrados para exportar:', filteredData.length);
+      
+      if (filteredData.length === 0) {
+        setNotification({
+          isOpen: true,
+          type: 'warning',
+          message: 'No hay datos para exportar con los filtros seleccionados.',
+          title: 'Sin datos'
+        });
+        return;
+      }
+
+      // Preparar datos para Excel
+      const worksheetData = filteredData.map(p => ({
+        'ID': p.id,
+        'Nombre Completo': p.name || 'N/A',
+        'Email': p.email || 'N/A',
+        'Teléfono': p.phone || 'N/A',
+        'Ingreso Mensual': p.income,
+        'Tipo de Propiedad': p.propertyType || 'N/A',
+        'Habitaciones': p.bedrooms ?? 'N/A',
+        'Baños': p.bathrooms ?? 'N/A',
+        'Zonas de Interés': Array.isArray(p.zone) ? p.zone.join(', ') : (typeof p.zone === 'string' ? p.zone : 'N/A'),
+        'Precio Máximo': p.result?.maxPropertyPrice || 0,
+        'Pago Mensual': p.result?.monthlyPayment || 0,
+        'Enganche (%)': p.result?.downPaymentPercent || 0,
+        'Enganche ($)': p.result?.downPaymentAmount || 0,
+        'Estado': p.status || 'Nuevo',
+        'Fecha de Registro': p.dateDisplay || new Date(p.date).toLocaleDateString('es-PA')
+      }));
+
+      console.log('📝 Datos preparados para Excel:', worksheetData.length, 'filas');
+
+      // Crear workbook y worksheet
+      const worksheet = XLSX.utils.json_to_sheet(worksheetData);
+      const workbook = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(workbook, worksheet, 'Prospectos');
+
+      // Ajustar ancho de columnas
+      const columnWidths = [
+        { wch: 10 }, // ID
+        { wch: 25 }, // Nombre
+        { wch: 30 }, // Email
+        { wch: 15 }, // Teléfono
+        { wch: 15 }, // Ingreso
+        { wch: 18 }, // Tipo Propiedad
+        { wch: 12 }, // Habitaciones
+        { wch: 10 }, // Baños
+        { wch: 30 }, // Zonas
+        { wch: 15 }, // Precio Máximo
+        { wch: 15 }, // Pago Mensual
+        { wch: 12 }, // Enganche %
+        { wch: 15 }, // Enganche $
+        { wch: 15 }, // Estado
+        { wch: 18 }  // Fecha
+      ];
+      worksheet['!cols'] = columnWidths;
+
+      // Descargar archivo
+      const fileName = `prospectos_${new Date().toISOString().split('T')[0]}.xlsx`;
+      console.log('💾 Descargando archivo:', fileName);
+      XLSX.writeFile(workbook, fileName);
+      
+      console.log('✅ Archivo Excel descargado exitosamente');
+      setShowExportModal(false);
+    } catch (error) {
+      console.error('❌ Error exportando a Excel:', error);
       setNotification({
         isOpen: true,
-        type: 'warning',
-        message: 'No hay datos para exportar con los filtros seleccionados.',
-        title: 'Sin datos'
+        type: 'error',
+        message: 'Error al exportar a Excel. Por favor intenta de nuevo.',
+        title: 'Error de exportación'
       });
-      return;
     }
-
-    // Preparar datos para Excel
-    const worksheetData = filteredData.map(p => ({
-      'ID': p.id,
-      'Nombre Completo': p.name || 'N/A',
-      'Email': p.email || 'N/A',
-      'Teléfono': p.phone || 'N/A',
-      'Ingreso Mensual': p.income,
-      'Tipo de Propiedad': p.propertyType || 'N/A',
-      'Habitaciones': p.bedrooms ?? 'N/A',
-      'Baños': p.bathrooms ?? 'N/A',
-      'Zonas de Interés': Array.isArray(p.zone) ? p.zone.join(', ') : (typeof p.zone === 'string' ? p.zone : 'N/A'),
-      'Precio Máximo': p.result?.maxPropertyPrice || 0,
-      'Pago Mensual': p.result?.monthlyPayment || 0,
-      'Enganche (%)': p.result?.downPaymentPercent || 0,
-      'Enganche ($)': p.result?.downPaymentAmount || 0,
-      'Estado': p.status || 'Nuevo',
-      'Fecha de Registro': p.dateDisplay || new Date(p.date).toLocaleDateString('es-PA')
-    }));
-
-    // Crear workbook y worksheet
-    const worksheet = XLSX.utils.json_to_sheet(worksheetData);
-    const workbook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(workbook, worksheet, 'Prospectos');
-
-    // Ajustar ancho de columnas
-    const columnWidths = [
-      { wch: 10 }, // ID
-      { wch: 25 }, // Nombre
-      { wch: 30 }, // Email
-      { wch: 15 }, // Teléfono
-      { wch: 15 }, // Ingreso
-      { wch: 18 }, // Tipo Propiedad
-      { wch: 12 }, // Habitaciones
-      { wch: 10 }, // Baños
-      { wch: 30 }, // Zonas
-      { wch: 15 }, // Precio Máximo
-      { wch: 15 }, // Pago Mensual
-      { wch: 12 }, // Enganche %
-      { wch: 15 }, // Enganche $
-      { wch: 15 }, // Estado
-      { wch: 18 }  // Fecha
-    ];
-    worksheet['!cols'] = columnWidths;
-
-    // Descargar archivo
-    XLSX.writeFile(workbook, `prospectos_${new Date().toISOString().split('T')[0]}.xlsx`);
-    
-    setShowExportModal(false);
   };
 
   const handleExport = () => {
-    if (exportFormat === 'csv') {
-      exportToCSV();
-    } else {
-      exportToExcel();
+    try {
+      console.log('🔄 Iniciando exportación...', {
+        format: exportFormat,
+        filterType: exportFilterType,
+        salaryRange: exportSalaryRange,
+        dateRange: { start: dateRangeStart, end: dateRangeEnd },
+        totalProspects: prospects.length
+      });
+      
+      if (exportFormat === 'csv') {
+        exportToCSV();
+      } else {
+        exportToExcel();
+      }
+    } catch (error) {
+      console.error('❌ Error en handleExport:', error);
+      setNotification({
+        isOpen: true,
+        type: 'error',
+        message: 'Error al exportar los datos. Por favor intenta de nuevo.',
+        title: 'Error de exportación'
+      });
     }
   };
 
@@ -3387,7 +3422,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableZones, onUpdateZo
                 onClick={handleExport}
                 className="w-full bg-gray-900 text-white py-4 rounded-xl font-bold hover:bg-gray-800 transition-all shadow-lg shadow-gray-200 flex justify-center items-center gap-2"
               >
-                <Download size={18} /> Descargar Reporte {exportFormat === 'excel' ? 'Excel' : 'CSV'}
+                <Download size={18} /> Descargar
               </button>
             </div>
 
