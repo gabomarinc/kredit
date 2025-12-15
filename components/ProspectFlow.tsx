@@ -1223,7 +1223,12 @@ export const ProspectFlow: React.FC<ProspectFlowProps> = ({ availableZones, comp
                   {/* Tarjeta de Zonas más buscadas - Solo para Broker */}
                   {companyRole === 'Broker' && preferences.zone.length > 0 && (
                     <div 
-                      onClick={() => setShowZonesModal(true)}
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        console.log('🖱️ Click en tarjeta de zonas, abriendo modal...');
+                        setShowZonesModal(true);
+                      }}
                       className="bg-white rounded-[2rem] p-6 border border-gray-100 shadow-sm hover:shadow-md transition-all cursor-pointer mb-10 max-w-md mx-auto"
                     >
                       <div className="flex items-center justify-center mb-4">
@@ -1890,9 +1895,19 @@ export const ProspectFlow: React.FC<ProspectFlowProps> = ({ availableZones, comp
 
 
       {/* Modal de Zonas más buscadas - Solo para Broker */}
-      {showZonesModal && companyRole === 'Broker' && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-          <div className="bg-white rounded-[2rem] w-full max-w-2xl max-h-[80vh] overflow-y-auto shadow-2xl relative animate-fade-in-up">
+      {showZonesModal && companyRole === 'Broker' && createPortal(
+        <div 
+          className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) {
+              setShowZonesModal(false);
+            }
+          }}
+        >
+          <div 
+            className="bg-white rounded-[2rem] w-full max-w-2xl max-h-[80vh] overflow-y-auto shadow-2xl relative animate-fade-in-up"
+            onClick={(e) => e.stopPropagation()}
+          >
             {/* Header con botón cerrar */}
             <div className="sticky top-0 bg-white border-b border-gray-100 p-6 flex items-center justify-between z-10">
               <div className="flex items-center gap-3">
@@ -1942,7 +1957,8 @@ export const ProspectFlow: React.FC<ProspectFlowProps> = ({ availableZones, comp
               )}
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
       {/* Notification Modal */}
