@@ -353,6 +353,7 @@ const ProjectModal: React.FC<ProjectModalProps> = ({ project, zones, onClose, on
   const [projectImages, setProjectImages] = useState<string[]>(project?.images || []);
   const [status, setStatus] = useState<'Activo' | 'Inactivo'>(project?.status || 'Activo');
   const [models, setModels] = useState<ProjectModel[]>(project?.models || []);
+  const [editingModelIndex, setEditingModelIndex] = useState<number | null>(null);
   const [currentModel, setCurrentModel] = useState<ProjectModel>({
     name: '',
     areaM2: null,
@@ -408,7 +409,46 @@ const ProjectModal: React.FC<ProjectModalProps> = ({ project, zones, onClose, on
     if (!currentModel.name || currentModel.unitsTotal === 0 || currentModel.price === 0) {
       return;
     }
-    setModels([...models, { ...currentModel }]);
+    
+    if (editingModelIndex !== null) {
+      // Actualizar modelo existente
+      const updatedModels = [...models];
+      updatedModels[editingModelIndex] = { ...currentModel };
+      setModels(updatedModels);
+      setEditingModelIndex(null);
+    } else {
+      // Agregar nuevo modelo
+      setModels([...models, { ...currentModel }]);
+    }
+    
+    // Limpiar formulario
+    setCurrentModel({
+      name: '',
+      areaM2: null,
+      bedrooms: null,
+      bathrooms: null,
+      amenities: [],
+      unitsTotal: 0,
+      unitsAvailable: 0,
+      price: 0,
+      images: []
+    });
+    setNewAmenity('');
+  };
+
+  const editModel = (index: number) => {
+    const modelToEdit = models[index];
+    setCurrentModel({ ...modelToEdit });
+    setEditingModelIndex(index);
+    // Scroll al formulario de modelo
+    const formElement = document.querySelector('[data-model-form]');
+    if (formElement) {
+      formElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  };
+
+  const cancelEdit = () => {
+    setEditingModelIndex(null);
     setCurrentModel({
       name: '',
       areaM2: null,
@@ -424,6 +464,10 @@ const ProjectModal: React.FC<ProjectModalProps> = ({ project, zones, onClose, on
   };
 
   const removeModel = (index: number) => {
+    if (editingModelIndex === index) {
+      // Si se elimina el modelo que se está editando, cancelar edición
+      cancelEdit();
+    }
     setModels(models.filter((_, i) => i !== index));
   };
 
@@ -639,7 +683,21 @@ const ProjectModal: React.FC<ProjectModalProps> = ({ project, zones, onClose, on
               </div>
 
               {/* Formulario de Modelo Actual */}
-              <div className="bg-gray-50/50 p-8 rounded-2xl border border-gray-100 space-y-6">
+              <div className="bg-gray-50/50 p-8 rounded-2xl border border-gray-100 space-y-6" data-model-form>
+                {editingModelIndex !== null && (
+                  <div className="bg-indigo-50 border border-indigo-200 rounded-xl p-4 mb-4 flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <Settings size={18} className="text-indigo-600" />
+                      <span className="text-sm font-semibold text-indigo-900">Editando modelo: {models[editingModelIndex]?.name}</span>
+                    </div>
+                    <button
+                      onClick={cancelEdit}
+                      className="text-xs text-indigo-600 hover:text-indigo-800 font-semibold"
+                    >
+                      Cancelar
+                    </button>
+                  </div>
+                )}
                 <div>
                   <label className="block text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
                     <Building size={16} className="text-indigo-500" />
@@ -800,8 +858,17 @@ const ProjectModal: React.FC<ProjectModalProps> = ({ project, zones, onClose, on
                   disabled={!currentModel.name || currentModel.unitsTotal === 0 || currentModel.price === 0}
                   className="w-full px-6 py-4 bg-indigo-600 text-white rounded-xl font-bold text-lg hover:bg-indigo-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-indigo-200"
                 >
-                  <Plus size={20} className="inline mr-2" />
-                  Agregar Modelo
+                  {editingModelIndex !== null ? (
+                    <>
+                      <Save size={20} className="inline mr-2" />
+                      Actualizar Modelo
+                    </>
+                  ) : (
+                    <>
+                      <Plus size={20} className="inline mr-2" />
+                      Agregar Modelo
+                    </>
+                  )}
                 </button>
               </div>
 
@@ -820,12 +887,20 @@ const ProjectModal: React.FC<ProjectModalProps> = ({ project, zones, onClose, on
                           {formatCurrency(model.price)} • {model.unitsAvailable}/{model.unitsTotal} disponibles
                         </p>
                       </div>
-                      <button
-                        onClick={() => removeModel(idx)}
-                        className="px-3 py-1 bg-red-100 text-red-600 rounded-lg hover:bg-red-200"
-                      >
-                        Eliminar
-                      </button>
+                      <div className="flex items-center gap-2">
+                        <button
+                          onClick={() => editModel(idx)}
+                          className="px-3 py-1 bg-indigo-100 text-indigo-600 rounded-lg hover:bg-indigo-200 font-semibold text-sm"
+                        >
+                          Editar
+                        </button>
+                        <button
+                          onClick={() => removeModel(idx)}
+                          className="px-3 py-1 bg-red-100 text-red-600 rounded-lg hover:bg-red-200 font-semibold text-sm"
+                        >
+                          Eliminar
+                        </button>
+                      </div>
                     </div>
                   ))}
                 </div>
