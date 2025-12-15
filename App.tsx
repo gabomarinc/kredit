@@ -27,10 +27,65 @@ function App() {
   // Standard App State
   const [authState, setAuthState] = useState<AuthState>('selection');
   const [isAdminView, setIsAdminView] = useState(true); 
+  const [isCheckingSession, setIsCheckingSession] = useState(true);
   
   // App Global Data
   const [zones, setZones] = useState<string[]>(ZONES_PANAMA);
   const [companyName, setCompanyName] = useState('Krêdit');
+
+  // Verificar sesión guardada al cargar la aplicación
+  useEffect(() => {
+    const checkSession = async () => {
+      const savedCompanyId = localStorage.getItem('companyId');
+      
+      if (savedCompanyId) {
+        try {
+          console.log('🔄 Verificando sesión guardada...');
+          const company = await getCompanyById(savedCompanyId);
+          
+          if (company) {
+            console.log('✅ Sesión válida encontrada, restaurando...');
+            // Restaurar datos de la empresa
+            setCompanyName(company.companyName);
+            setZones(company.zones.length > 0 ? company.zones : ZONES_PANAMA);
+            // Restaurar datos en localStorage por si acaso
+            localStorage.setItem('companyId', company.id);
+            localStorage.setItem('companyName', company.companyName);
+            localStorage.setItem('zones', JSON.stringify(company.zones));
+            // Establecer como autenticado
+            setAuthState('authenticated');
+            setIsAdminView(true);
+          } else {
+            console.log('⚠️ Sesión inválida, limpiando...');
+            // Limpiar datos inválidos
+            localStorage.removeItem('companyId');
+            localStorage.removeItem('companyName');
+            localStorage.removeItem('zones');
+            setAuthState('selection');
+          }
+        } catch (error) {
+          console.error('❌ Error verificando sesión:', error);
+          // En caso de error, limpiar y mostrar pantalla de selección
+          localStorage.removeItem('companyId');
+          localStorage.removeItem('companyName');
+          localStorage.removeItem('zones');
+          setAuthState('selection');
+        }
+      } else {
+        console.log('ℹ️ No hay sesión guardada');
+        setAuthState('selection');
+      }
+      
+      setIsCheckingSession(false);
+    };
+
+    // Solo verificar sesión si no estamos en modo embed
+    if (!isEmbedMode) {
+      checkSession();
+    } else {
+      setIsCheckingSession(false);
+    }
+  }, [isEmbedMode]);
 
   const handleLogin = async () => {
     // Cargar datos de la empresa desde localStorage o DB
@@ -85,6 +140,20 @@ function App() {
   }
 
   // --- STANDARD APP FLOW (For the Agency/Client) ---
+
+  // Mostrar loading mientras se verifica la sesión
+  if (isCheckingSession) {
+    return (
+      <Layout isWelcomeScreen>
+        <div className="min-h-screen flex items-center justify-center">
+          <div className="text-center">
+            <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mb-4"></div>
+            <p className="text-gray-500">Verificando sesión...</p>
+          </div>
+        </div>
+      </Layout>
+    );
+  }
 
   // 1. Initial Selection Screen
   if (authState === 'selection') {
