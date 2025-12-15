@@ -995,7 +995,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableZones, onUpdateZo
   const [isUpdatingLogo, setIsUpdatingLogo] = useState(false);
   const [isPromotora, setIsPromotora] = useState<boolean>(false); // Inicializar como false para que no aparezca el cuadro
   const [isSavingZones, setIsSavingZones] = useState(false);
-  
+
   // Estados para Configurar Calculadora
   const [requestedDocuments, setRequestedDocuments] = useState<{
     idFile: boolean;
@@ -2042,8 +2042,6 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableZones, onUpdateZo
             </div>
           </div>
         </div>
-          </div>
-        </div>
 
         {/* Content Area */}
         {activeTab === 'dashboard' ? (
@@ -2361,44 +2359,44 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableZones, onUpdateZo
             )}
           </div>
         ) : activeTab === 'calculator-config' ? (
-          <div className="space-y-8">
-            
+            <div className="space-y-8">
+              
             {/* Integración Web */}
             <div className="bg-white rounded-[2.5rem] shadow-[0_10px_40px_-10px_rgba(0,0,0,0.05)] border border-gray-100 overflow-hidden relative">
-              <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-50 rounded-full blur-2xl -mr-16 -mt-16 pointer-events-none"></div>
+                <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-50 rounded-full blur-2xl -mr-16 -mt-16 pointer-events-none"></div>
 
-              <div className="p-8 border-b border-gray-50">
-                <div className="w-12 h-12 rounded-2xl bg-gray-900 text-white flex items-center justify-center mb-4 shadow-lg shadow-gray-200">
-                  <Code size={24} strokeWidth={1.5} />
-                </div>
-                <h3 className="text-xl font-bold text-gray-900">Integración Web</h3>
-                <p className="text-sm text-gray-500 mt-2">Copia este código para añadir la calculadora a tu sitio web.</p>
-              </div>
-              
-              <div className="p-6 bg-gray-50/50">
-                <div className="bg-gray-900 rounded-xl p-4 mb-4 relative">
-                  <code className="text-xs text-gray-300 font-mono whitespace-pre-wrap block overflow-visible">
-                    {embedCode}
-                  </code>
-                  <div className="absolute right-2 top-2">
-                     <button 
-                      onClick={copyToClipboard}
-                      className="bg-white/10 hover:bg-white/20 text-white p-2 rounded-lg transition-colors backdrop-blur-sm"
-                      title="Copiar código"
-                     >
-                       {copied ? <CheckCircle2 size={16} className="text-green-400"/> : <Copy size={16} />}
-                     </button>
+                <div className="p-8 border-b border-gray-50">
+                  <div className="w-12 h-12 rounded-2xl bg-gray-900 text-white flex items-center justify-center mb-4 shadow-lg shadow-gray-200">
+                    <Code size={24} strokeWidth={1.5} />
                   </div>
+                  <h3 className="text-xl font-bold text-gray-900">Integración Web</h3>
+                  <p className="text-sm text-gray-500 mt-2">Copia este código para añadir la calculadora a tu sitio web.</p>
                 </div>
                 
-                <button 
-                  onClick={openPreview}
-                  className="w-full py-3 rounded-xl border border-gray-200 bg-white text-gray-700 font-semibold text-sm hover:border-indigo-300 hover:text-indigo-600 transition-colors flex items-center justify-center gap-2"
-                >
-                  <ExternalLink size={16} /> Previsualizar Formulario
-                </button>
+                <div className="p-6 bg-gray-50/50">
+                  <div className="bg-gray-900 rounded-xl p-4 mb-4 relative">
+                    <code className="text-xs text-gray-300 font-mono whitespace-pre-wrap block overflow-visible">
+                      {embedCode}
+                    </code>
+                    <div className="absolute right-2 top-2">
+                       <button 
+                        onClick={copyToClipboard}
+                        className="bg-white/10 hover:bg-white/20 text-white p-2 rounded-lg transition-colors backdrop-blur-sm"
+                        title="Copiar código"
+                       >
+                         {copied ? <CheckCircle2 size={16} className="text-green-400"/> : <Copy size={16} />}
+                       </button>
+                    </div>
+                  </div>
+                  
+                  <button 
+                    onClick={openPreview}
+                    className="w-full py-3 rounded-xl border border-gray-200 bg-white text-gray-700 font-semibold text-sm hover:border-indigo-300 hover:text-indigo-600 transition-colors flex items-center justify-center gap-2"
+                  >
+                    <ExternalLink size={16} /> Previsualizar Formulario
+                  </button>
+                </div>
               </div>
-            </div>
 
             {/* Documentación Solicitada */}
             <div className="bg-white rounded-[2.5rem] shadow-[0_10px_40px_-10px_rgba(0,0,0,0.05)] border border-gray-100 overflow-hidden">
@@ -2570,171 +2568,171 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableZones, onUpdateZo
 
             {/* Zonas de Preferencia */}
             <div className="bg-white rounded-[2.5rem] shadow-[0_10px_40px_-10px_rgba(0,0,0,0.05)] border border-gray-100 overflow-hidden">
-              <div className="p-8 border-b border-gray-50">
-                <div className="w-12 h-12 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center mb-4">
-                  <MapPin size={24} strokeWidth={1.5} />
-                </div>
-                <h3 className="text-xl font-bold text-gray-900">Zonas de Preferencia</h3>
-                <p className="text-sm text-gray-500 mt-2">Gestiona las áreas que se muestran a los clientes potenciales.</p>
-              </div>
-              
-              <div className="p-6 bg-gray-50/50">
-                <div className="flex flex-wrap gap-2 mb-6">
-                  {availableZones.map(zone => (
-                    <div key={zone} className="bg-white border border-gray-200 text-gray-600 px-3 py-1.5 rounded-full text-sm font-medium flex items-center gap-2 shadow-sm group hover:border-red-200 hover:bg-red-50 transition-colors">
-                      {zone}
-                      <button 
-                        onClick={() => handleDeleteZone(zone)}
-                        className="text-gray-400 hover:text-red-500 transition-colors"
-                      >
-                        <X size={14} />
-                      </button>
-                    </div>
-                  ))}
+                <div className="p-8 border-b border-gray-50">
+                  <div className="w-12 h-12 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center mb-4">
+                    <MapPin size={24} strokeWidth={1.5} />
+                  </div>
+                  <h3 className="text-xl font-bold text-gray-900">Zonas de Preferencia</h3>
+                  <p className="text-sm text-gray-500 mt-2">Gestiona las áreas que se muestran a los clientes potenciales.</p>
                 </div>
                 
-                <div className="flex gap-2">
-                  <input 
-                    type="text" 
-                    value={newZone}
-                    onChange={(e) => setNewZone(e.target.value)}
-                    onKeyPress={(e) => e.key === 'Enter' && handleAddZone()}
-                    placeholder="Nueva Zona..."
-                    className="flex-1 px-4 py-2.5 rounded-xl border border-gray-200 text-sm focus:border-indigo-500 outline-none bg-white"
-                  />
-                  <button 
-                    onClick={handleAddZone}
-                    disabled={isSavingZones || !newZone.trim()}
-                    className="bg-gray-900 text-white p-2.5 rounded-xl hover:bg-gray-800 disabled:opacity-50 transition-colors flex items-center justify-center"
-                  >
-                    {isSavingZones ? (
-                      <Loader2 size={20} className="animate-spin" />
-                    ) : (
+              <div className="p-6 bg-gray-50/50">
+                  <div className="flex flex-wrap gap-2 mb-6">
+                    {availableZones.map(zone => (
+                      <div key={zone} className="bg-white border border-gray-200 text-gray-600 px-3 py-1.5 rounded-full text-sm font-medium flex items-center gap-2 shadow-sm group hover:border-red-200 hover:bg-red-50 transition-colors">
+                        {zone}
+                        <button 
+                          onClick={() => handleDeleteZone(zone)}
+                          className="text-gray-400 hover:text-red-500 transition-colors"
+                        >
+                          <X size={14} />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                  
+                  <div className="flex gap-2">
+                    <input 
+                      type="text" 
+                      value={newZone}
+                      onChange={(e) => setNewZone(e.target.value)}
+                      onKeyPress={(e) => e.key === 'Enter' && handleAddZone()}
+                      placeholder="Nueva Zona..."
+                      className="flex-1 px-4 py-2.5 rounded-xl border border-gray-200 text-sm focus:border-indigo-500 outline-none bg-white"
+                    />
+                    <button 
+                      onClick={handleAddZone}
+                      disabled={isSavingZones || !newZone.trim()}
+                      className="bg-gray-900 text-white p-2.5 rounded-xl hover:bg-gray-800 disabled:opacity-50 transition-colors flex items-center justify-center"
+                    >
+                      {isSavingZones ? (
+                        <Loader2 size={20} className="animate-spin" />
+                      ) : (
                       <Plus size={20} />
-                    )}
-                  </button>
+                      )}
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
         ) : activeTab === 'settings' ? (
           <div className="space-y-8">
-            
+
             {/* Plan de Suscripción */}
-            <div className="bg-white rounded-[2.5rem] shadow-[0_10px_40px_-10px_rgba(0,0,0,0.05)] border border-gray-100 overflow-hidden">
-              <div className="p-8 border-b border-gray-50 flex items-center gap-4">
-                <div className="w-12 h-12 rounded-2xl bg-purple-50 text-purple-600 flex items-center justify-center">
-                  <ShieldCheck size={24} strokeWidth={1.5} />
+              <div className="bg-white rounded-[2.5rem] shadow-[0_10px_40px_-10px_rgba(0,0,0,0.05)] border border-gray-100 overflow-hidden">
+                <div className="p-8 border-b border-gray-50 flex items-center gap-4">
+                  <div className="w-12 h-12 rounded-2xl bg-purple-50 text-purple-600 flex items-center justify-center">
+                    <ShieldCheck size={24} strokeWidth={1.5} />
+                  </div>
+                  <div>
+                    <h3 className="text-xl font-bold text-gray-900">Plan de Suscripción</h3>
+                    <p className="text-sm text-gray-500">Elige el plan que mejor se adapte a tus necesidades.</p>
+                  </div>
                 </div>
-                <div>
-                  <h3 className="text-xl font-bold text-gray-900">Plan de Suscripción</h3>
-                  <p className="text-sm text-gray-500">Elige el plan que mejor se adapte a tus necesidades.</p>
-                </div>
-              </div>
 
-              <div className="p-8">
-                <div className="grid md:grid-cols-2 gap-4">
-                  <button
-                    onClick={async () => {
-                      const companyId = localStorage.getItem('companyId');
-                      if (companyId) {
-                        const success = await updateCompanyPlan(companyId, 'Freshie');
-                        if (success && companyData) {
-                          setCompanyData({ ...companyData, plan: 'Freshie' });
-                        }
-                      }
-                    }}
-                    className={`p-6 rounded-2xl border-2 transition-all text-left ${
-                      companyData?.plan === 'Freshie'
-                        ? 'border-indigo-500 bg-indigo-50/30 shadow-lg'
-                        : 'border-gray-200 hover:border-indigo-200 hover:bg-indigo-50/20'
-                    }`}
-                  >
-                    <div className="font-bold text-xl text-gray-900 mb-2">Plan Freshie</div>
-                    <div className="text-sm text-gray-600 mb-4">Plan gratuito con funciones básicas</div>
-                    <div className="space-y-2 text-sm text-gray-500">
-                      <div className="flex items-center gap-2">
-                        <CheckCircle2 size={16} className="text-green-500" />
-                        <span>Gestión de prospectos</span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <CheckCircle2 size={16} className="text-green-500" />
-                        <span>Dashboard de análisis</span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <X size={16} className="text-gray-300" />
-                        <span className="text-gray-400">Gestión de propiedades</span>
-                      </div>
-                    </div>
-                    <div className="mt-6 pt-4 border-t border-gray-200">
-                      <div className="text-3xl font-bold text-gray-900">$0.00</div>
-                      <div className="text-sm text-gray-500">/ mes</div>
-                    </div>
-                    {companyData?.plan === 'Freshie' && (
-                      <div className="mt-4 text-xs font-semibold text-indigo-600 bg-indigo-100 px-3 py-1 rounded-full inline-block">
-                        Plan Actual
-                      </div>
-                    )}
-                  </button>
-
-                  <button
-                    onClick={async () => {
-                      const companyId = localStorage.getItem('companyId');
-                      if (companyId) {
-                        const success = await updateCompanyPlan(companyId, 'Wolf of Wallstreet');
-                        if (success && companyData) {
-                          setCompanyData({ ...companyData, plan: 'Wolf of Wallstreet' });
-                          if (activeTab === 'properties') {
-                            await loadProperties(true);
+                <div className="p-8">
+                  <div className="grid md:grid-cols-2 gap-4">
+                    <button
+                      onClick={async () => {
+                        const companyId = localStorage.getItem('companyId');
+                        if (companyId) {
+                          const success = await updateCompanyPlan(companyId, 'Freshie');
+                          if (success && companyData) {
+                            setCompanyData({ ...companyData, plan: 'Freshie' });
                           }
                         }
-                      }
-                    }}
-                    className={`p-6 rounded-2xl border-2 transition-all text-left relative overflow-hidden ${
-                      companyData?.plan === 'Wolf of Wallstreet'
-                        ? 'border-purple-500 bg-purple-50/30 shadow-lg'
-                        : 'border-gray-200 hover:border-purple-200 hover:bg-purple-50/20'
-                    }`}
-                  >
-                    {companyData?.plan === 'Wolf of Wallstreet' && (
-                      <div className="absolute top-3 right-3 bg-purple-600 text-white text-xs font-bold px-3 py-1 rounded-full">
-                        Premium
+                      }}
+                      className={`p-6 rounded-2xl border-2 transition-all text-left ${
+                        companyData?.plan === 'Freshie'
+                          ? 'border-indigo-500 bg-indigo-50/30 shadow-lg'
+                          : 'border-gray-200 hover:border-indigo-200 hover:bg-indigo-50/20'
+                      }`}
+                    >
+                      <div className="font-bold text-xl text-gray-900 mb-2">Plan Freshie</div>
+                      <div className="text-sm text-gray-600 mb-4">Plan gratuito con funciones básicas</div>
+                      <div className="space-y-2 text-sm text-gray-500">
+                        <div className="flex items-center gap-2">
+                          <CheckCircle2 size={16} className="text-green-500" />
+                          <span>Gestión de prospectos</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <CheckCircle2 size={16} className="text-green-500" />
+                          <span>Dashboard de análisis</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <X size={16} className="text-gray-300" />
+                          <span className="text-gray-400">Gestión de propiedades</span>
+                        </div>
                       </div>
-                    )}
-                    <div className="font-bold text-xl text-gray-900 mb-2">Plan Wolf of Wallstreet</div>
-                    <div className="text-sm text-gray-600 mb-4">Plan premium con todas las funciones</div>
-                    <div className="space-y-2 text-sm text-gray-500">
-                      <div className="flex items-center gap-2">
-                        <CheckCircle2 size={16} className="text-green-500" />
-                        <span>Todas las funciones del plan Freshie</span>
+                      <div className="mt-6 pt-4 border-t border-gray-200">
+                        <div className="text-3xl font-bold text-gray-900">$0.00</div>
+                        <div className="text-sm text-gray-500">/ mes</div>
                       </div>
-                      <div className="flex items-center gap-2">
-                        <CheckCircle2 size={16} className="text-purple-500" />
-                        <span className="font-semibold text-purple-600">Gestión de propiedades</span>
+                      {companyData?.plan === 'Freshie' && (
+                        <div className="mt-4 text-xs font-semibold text-indigo-600 bg-indigo-100 px-3 py-1 rounded-full inline-block">
+                          Plan Actual
+                        </div>
+                      )}
+                    </button>
+
+                    <button
+                      onClick={async () => {
+                        const companyId = localStorage.getItem('companyId');
+                        if (companyId) {
+                          const success = await updateCompanyPlan(companyId, 'Wolf of Wallstreet');
+                          if (success && companyData) {
+                            setCompanyData({ ...companyData, plan: 'Wolf of Wallstreet' });
+                            if (activeTab === 'properties') {
+                              await loadProperties(true);
+                            }
+                          }
+                        }
+                      }}
+                      className={`p-6 rounded-2xl border-2 transition-all text-left relative overflow-hidden ${
+                        companyData?.plan === 'Wolf of Wallstreet'
+                          ? 'border-purple-500 bg-purple-50/30 shadow-lg'
+                          : 'border-gray-200 hover:border-purple-200 hover:bg-purple-50/20'
+                      }`}
+                    >
+                      {companyData?.plan === 'Wolf of Wallstreet' && (
+                        <div className="absolute top-3 right-3 bg-purple-600 text-white text-xs font-bold px-3 py-1 rounded-full">
+                          Premium
+                        </div>
+                      )}
+                      <div className="font-bold text-xl text-gray-900 mb-2">Plan Wolf of Wallstreet</div>
+                      <div className="text-sm text-gray-600 mb-4">Plan premium con todas las funciones</div>
+                      <div className="space-y-2 text-sm text-gray-500">
+                        <div className="flex items-center gap-2">
+                          <CheckCircle2 size={16} className="text-green-500" />
+                          <span>Todas las funciones del plan Freshie</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <CheckCircle2 size={16} className="text-purple-500" />
+                          <span className="font-semibold text-purple-600">Gestión de propiedades</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <CheckCircle2 size={16} className="text-purple-500" />
+                          <span className="font-semibold text-purple-600">Mostrar propiedades a prospectos</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <CheckCircle2 size={16} className="text-purple-500" />
+                          <span className="font-semibold text-purple-600">Seguimiento de intereses</span>
+                        </div>
                       </div>
-                      <div className="flex items-center gap-2">
-                        <CheckCircle2 size={16} className="text-purple-500" />
-                        <span className="font-semibold text-purple-600">Mostrar propiedades a prospectos</span>
+                      <div className="mt-6 pt-4 border-t border-gray-200">
+                        <div className="text-3xl font-bold text-gray-900">$6.99</div>
+                        <div className="text-sm text-gray-500">/ mes</div>
                       </div>
-                      <div className="flex items-center gap-2">
-                        <CheckCircle2 size={16} className="text-purple-500" />
-                        <span className="font-semibold text-purple-600">Seguimiento de intereses</span>
-                      </div>
-                    </div>
-                    <div className="mt-6 pt-4 border-t border-gray-200">
-                      <div className="text-3xl font-bold text-gray-900">$6.99</div>
-                      <div className="text-sm text-gray-500">/ mes</div>
-                    </div>
-                    {companyData?.plan === 'Wolf of Wallstreet' && (
-                      <div className="mt-4 text-xs font-semibold text-purple-600 bg-purple-100 px-3 py-1 rounded-full inline-block">
-                        Plan Actual
-                      </div>
-                    )}
-                  </button>
+                      {companyData?.plan === 'Wolf of Wallstreet' && (
+                        <div className="mt-4 text-xs font-semibold text-purple-600 bg-purple-100 px-3 py-1 rounded-full inline-block">
+                          Plan Actual
+                        </div>
+                      )}
+                    </button>
+                  </div>
                 </div>
               </div>
-            </div>
-            
+              
             {/* Integración con Google Drive */}
             <div className="bg-white rounded-[2.5rem] shadow-[0_10px_40px_-10px_rgba(0,0,0,0.05)] border border-gray-100 overflow-hidden">
               <div className="p-8 border-b border-gray-50 flex items-center gap-4">
@@ -2817,270 +2815,270 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableZones, onUpdateZo
             </div>
 
             {/* Perfil de Empresa */}
-            <div className="bg-white rounded-[2.5rem] shadow-[0_10px_40px_-10px_rgba(0,0,0,0.05)] border border-gray-100 overflow-hidden">
-              <div className="p-8 border-b border-gray-50 flex items-center gap-4">
-                <div className="w-12 h-12 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center">
-                  <Building size={24} strokeWidth={1.5} />
+              <div className="bg-white rounded-[2.5rem] shadow-[0_10px_40px_-10px_rgba(0,0,0,0.05)] border border-gray-100 overflow-hidden">
+                <div className="p-8 border-b border-gray-50 flex items-center gap-4">
+                  <div className="w-12 h-12 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center">
+                    <Building size={24} strokeWidth={1.5} />
+                  </div>
+                  <div>
+                    <h3 className="text-xl font-bold text-gray-900">Perfil de Empresa</h3>
+                    <p className="text-sm text-gray-500">Personaliza la identidad visual de la plataforma.</p>
+                  </div>
                 </div>
-                <div>
-                  <h3 className="text-xl font-bold text-gray-900">Perfil de Empresa</h3>
-                  <p className="text-sm text-gray-500">Personaliza la identidad visual de la plataforma.</p>
-                </div>
-              </div>
 
-              <div className="p-8 grid md:grid-cols-3 gap-8 items-center">
-                 <div className="text-center md:text-left">
-                   <label className="cursor-pointer">
-                     {(() => {
-                       const hasLogo = companyData?.logoUrl && companyData.logoUrl.trim() !== '' && companyData.logoUrl !== 'null' && companyData.logoUrl !== 'undefined';
-                       const shouldShow = hasLogo && !logoError;
-                       
-                       if (companyData) {
-                         console.log('🔍 Verificando logo:', {
-                           hasCompanyData: true,
-                           hasLogoUrl: !!companyData.logoUrl,
-                           logoUrlPreview: companyData.logoUrl ? companyData.logoUrl.substring(0, 80) + '...' : 'none',
-                           logoUrlType: companyData.logoUrl ? (companyData.logoUrl.startsWith('data:') ? 'base64' : companyData.logoUrl.startsWith('blob:') ? 'blob' : 'url') : 'none',
-                           logoError,
-                           shouldShow
-                         });
-                       }
-                       
-                       return shouldShow;
-                     })() ? (
-                       <div className="w-32 h-32 rounded-3xl border-2 border-gray-200 overflow-hidden bg-white flex items-center justify-center mx-auto md:mx-0 shadow-sm relative group">
-                         <img 
-                           src={companyData.logoUrl} 
-                           alt="Logo de la empresa" 
-                           className="w-full h-full object-contain p-2"
-                           onLoad={() => {
-                             console.log('✅ Logo cargado exitosamente');
-                           }}
-                           onError={(e) => {
-                             console.error('❌ Error cargando logo:', {
-                               src: companyData.logoUrl,
-                               srcType: companyData.logoUrl.startsWith('data:') ? 'base64' : companyData.logoUrl.startsWith('blob:') ? 'blob' : 'url',
-                               error: e
-                             });
-                             setLogoError(true);
-                           }}
-                         />
-                         {isUpdatingLogo ? (
-                           <div className="absolute inset-0 bg-white/90 flex items-center justify-center rounded-3xl">
-                             <Loader2 className="animate-spin text-indigo-600" size={24} />
-                           </div>
-                         ) : (
-                           <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center rounded-3xl">
-                             <span className="text-white text-xs font-semibold">Cambiar</span>
-                           </div>
-                         )}
-                       </div>
-                     ) : (
-                       <div className="w-32 h-32 rounded-3xl border-2 border-dashed border-gray-200 flex flex-col items-center justify-center text-gray-400 hover:border-indigo-300 hover:bg-indigo-50/30 transition-all mx-auto md:mx-0">
-                         {isUpdatingLogo ? (
-                           <Loader2 className="animate-spin text-indigo-600" size={32} />
-                         ) : (
-                           <>
-                      <ImageIcon size={32} strokeWidth={1} />
-                      <span className="text-xs font-semibold mt-2">Cambiar Logo</span>
-                           </>
-                         )}
-                   </div>
-                     )}
-                     <input 
-                       type="file" 
-                       accept="image/*"
-                       className="hidden"
-                       onChange={async (e) => {
-                         const file = e.target.files?.[0];
-                         if (!file) return;
+                <div className="p-8 grid md:grid-cols-3 gap-8 items-center">
+                   <div className="text-center md:text-left">
+                     <label className="cursor-pointer">
+                       {(() => {
+                         const hasLogo = companyData?.logoUrl && companyData.logoUrl.trim() !== '' && companyData.logoUrl !== 'null' && companyData.logoUrl !== 'undefined';
+                         const shouldShow = hasLogo && !logoError;
+                         
+                         if (companyData) {
+                           console.log('🔍 Verificando logo:', {
+                             hasCompanyData: true,
+                             hasLogoUrl: !!companyData.logoUrl,
+                             logoUrlPreview: companyData.logoUrl ? companyData.logoUrl.substring(0, 80) + '...' : 'none',
+                             logoUrlType: companyData.logoUrl ? (companyData.logoUrl.startsWith('data:') ? 'base64' : companyData.logoUrl.startsWith('blob:') ? 'blob' : 'url') : 'none',
+                             logoError,
+                             shouldShow
+                           });
+                         }
+                         
+                         return shouldShow;
+                       })() ? (
+                         <div className="w-32 h-32 rounded-3xl border-2 border-gray-200 overflow-hidden bg-white flex items-center justify-center mx-auto md:mx-0 shadow-sm relative group">
+                           <img 
+                             src={companyData.logoUrl} 
+                             alt="Logo de la empresa" 
+                             className="w-full h-full object-contain p-2"
+                             onLoad={() => {
+                               console.log('✅ Logo cargado exitosamente');
+                             }}
+                             onError={(e) => {
+                               console.error('❌ Error cargando logo:', {
+                                 src: companyData.logoUrl,
+                                 srcType: companyData.logoUrl.startsWith('data:') ? 'base64' : companyData.logoUrl.startsWith('blob:') ? 'blob' : 'url',
+                                 error: e
+                               });
+                               setLogoError(true);
+                             }}
+                           />
+                           {isUpdatingLogo ? (
+                             <div className="absolute inset-0 bg-white/90 flex items-center justify-center rounded-3xl">
+                               <Loader2 className="animate-spin text-indigo-600" size={24} />
+                             </div>
+                           ) : (
+                             <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center rounded-3xl">
+                               <span className="text-white text-xs font-semibold">Cambiar</span>
+                             </div>
+                           )}
+                         </div>
+                       ) : (
+                         <div className="w-32 h-32 rounded-3xl border-2 border-dashed border-gray-200 flex flex-col items-center justify-center text-gray-400 hover:border-indigo-300 hover:bg-indigo-50/30 transition-all mx-auto md:mx-0">
+                           {isUpdatingLogo ? (
+                             <Loader2 className="animate-spin text-indigo-600" size={32} />
+                           ) : (
+                             <>
+                        <ImageIcon size={32} strokeWidth={1} />
+                        <span className="text-xs font-semibold mt-2">Cambiar Logo</span>
+                             </>
+                           )}
+                     </div>
+                       )}
+                       <input 
+                         type="file" 
+                         accept="image/*"
+                         className="hidden"
+                         onChange={async (e) => {
+                           const file = e.target.files?.[0];
+                           if (!file) return;
 
-                        // Validar tamaño (máx 2MB)
-                        if (file.size > 2 * 1024 * 1024) {
-                          setNotification({
-                            isOpen: true,
-                            type: 'warning',
-                            message: 'El logo debe ser menor a 2MB.',
-                            title: 'Archivo muy grande'
-                          });
-                          return;
-                        }
+                          // Validar tamaño (máx 2MB)
+                          if (file.size > 2 * 1024 * 1024) {
+                            setNotification({
+                              isOpen: true,
+                              type: 'warning',
+                              message: 'El logo debe ser menor a 2MB.',
+                              title: 'Archivo muy grande'
+                            });
+                            return;
+                          }
 
-                         setIsUpdatingLogo(true);
-                         setLogoError(false);
+                           setIsUpdatingLogo(true);
+                           setLogoError(false);
 
-                         try {
-                           // Convertir a base64
-                           const reader = new FileReader();
-                           reader.readAsDataURL(file);
-                           reader.onload = async () => {
-                             const base64 = reader.result as string;
-                             
-                             const companyId = localStorage.getItem('companyId');
-                             if (!companyId) {
+                           try {
+                             // Convertir a base64
+                             const reader = new FileReader();
+                             reader.readAsDataURL(file);
+                             reader.onload = async () => {
+                               const base64 = reader.result as string;
+                               
+                               const companyId = localStorage.getItem('companyId');
+                               if (!companyId) {
+                                setNotification({
+                                  isOpen: true,
+                                  type: 'error',
+                                  message: 'No se encontró el ID de la empresa. Por favor, inicia sesión nuevamente.',
+                                  title: 'Error de sesión'
+                                });
+                                setIsUpdatingLogo(false);
+                                return;
+                               }
+
+                               // Actualizar en la base de datos
+                               const success = await updateCompanyLogo(companyId, base64);
+                               
+                               if (success) {
+                                 // Actualizar el estado local
+                                 if (companyData) {
+                                   setCompanyData({ ...companyData, logoUrl: base64 });
+                                 }
+                                 console.log('✅ Logo actualizado exitosamente');
+                               } else {
+                                setNotification({
+                                  isOpen: true,
+                                  type: 'error',
+                                  message: 'Error al actualizar el logo. Por favor intenta de nuevo.',
+                                  title: 'Error al actualizar'
+                                });
+                              }
+                              
+                              setIsUpdatingLogo(false);
+                            };
+                            reader.onerror = () => {
                               setNotification({
                                 isOpen: true,
                                 type: 'error',
-                                message: 'No se encontró el ID de la empresa. Por favor, inicia sesión nuevamente.',
-                                title: 'Error de sesión'
+                                message: 'Error al leer el archivo. Verifica que sea una imagen válida.',
+                                title: 'Error de archivo'
                               });
                               setIsUpdatingLogo(false);
-                              return;
-                             }
-
-                             // Actualizar en la base de datos
-                             const success = await updateCompanyLogo(companyId, base64);
-                             
-                             if (success) {
-                               // Actualizar el estado local
-                               if (companyData) {
-                                 setCompanyData({ ...companyData, logoUrl: base64 });
-                               }
-                               console.log('✅ Logo actualizado exitosamente');
-                             } else {
-                              setNotification({
-                                isOpen: true,
-                                type: 'error',
-                                message: 'Error al actualizar el logo. Por favor intenta de nuevo.',
-                                title: 'Error al actualizar'
-                              });
-                            }
-                            
-                            setIsUpdatingLogo(false);
-                          };
-                          reader.onerror = () => {
+                            };
+                          } catch (error) {
+                            console.error('Error actualizando logo:', error);
                             setNotification({
                               isOpen: true,
                               type: 'error',
-                              message: 'Error al leer el archivo. Verifica que sea una imagen válida.',
-                              title: 'Error de archivo'
+                              message: 'Error al actualizar el logo. Por favor intenta de nuevo.',
+                              title: 'Error al actualizar'
                             });
                             setIsUpdatingLogo(false);
-                          };
-                        } catch (error) {
-                          console.error('Error actualizando logo:', error);
-                          setNotification({
-                            isOpen: true,
-                            type: 'error',
-                            message: 'Error al actualizar el logo. Por favor intenta de nuevo.',
-                            title: 'Error al actualizar'
-                          });
-                          setIsUpdatingLogo(false);
-                        }
-                       }}
-                     />
-                   </label>
-                 </div>
-                 <div className="md:col-span-2 space-y-4">
-                    <div>
-                      <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Nombre de la Empresa</label>
-                      <input 
-                        type="text" 
-                        value={companyName}
-                        onChange={(e) => onUpdateCompanyName(e.target.value)}
-                        className="w-full px-5 py-3 rounded-xl border border-gray-200 focus:border-indigo-500 outline-none bg-gray-50 focus:bg-white transition-colors text-gray-900 font-medium"
-                      />
-                    </div>
-                    <div className="flex justify-end">
-                      <button 
-                        onClick={async () => {
-                          const companyId = localStorage.getItem('companyId');
-                          if (!companyId) return;
-                          
-                          setIsSavingCompanyName(true);
-                          try {
-                            const success = await updateCompanyName(companyId, companyName);
-                            if (success) {
-                              setNotification({
-                                isOpen: true,
-                                type: 'success',
-                                message: 'Nombre de la empresa actualizado exitosamente.',
-                                title: 'Actualizado'
-                              });
-                              onUpdateCompanyName(companyName);
-                            } else {
+                          }
+                         }}
+                       />
+                     </label>
+                   </div>
+                   <div className="md:col-span-2 space-y-4">
+                      <div>
+                        <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Nombre de la Empresa</label>
+                        <input 
+                          type="text" 
+                          value={companyName}
+                          onChange={(e) => onUpdateCompanyName(e.target.value)}
+                          className="w-full px-5 py-3 rounded-xl border border-gray-200 focus:border-indigo-500 outline-none bg-gray-50 focus:bg-white transition-colors text-gray-900 font-medium"
+                        />
+                      </div>
+                      <div className="flex justify-end">
+                        <button 
+                          onClick={async () => {
+                            const companyId = localStorage.getItem('companyId');
+                            if (!companyId) return;
+                            
+                            setIsSavingCompanyName(true);
+                            try {
+                              const success = await updateCompanyName(companyId, companyName);
+                              if (success) {
+                                setNotification({
+                                  isOpen: true,
+                                  type: 'success',
+                                  message: 'Nombre de la empresa actualizado exitosamente.',
+                                  title: 'Actualizado'
+                                });
+                                onUpdateCompanyName(companyName);
+                              } else {
+                                setNotification({
+                                  isOpen: true,
+                                  type: 'error',
+                                  message: 'Error al actualizar el nombre de la empresa.',
+                                  title: 'Error'
+                                });
+                              }
+                            } catch (error) {
+                              console.error('Error actualizando nombre:', error);
                               setNotification({
                                 isOpen: true,
                                 type: 'error',
                                 message: 'Error al actualizar el nombre de la empresa.',
                                 title: 'Error'
                               });
+                            } finally {
+                              setIsSavingCompanyName(false);
                             }
-                          } catch (error) {
-                            console.error('Error actualizando nombre:', error);
-                            setNotification({
-                              isOpen: true,
-                              type: 'error',
-                              message: 'Error al actualizar el nombre de la empresa.',
-                              title: 'Error'
-                            });
-                          } finally {
-                            setIsSavingCompanyName(false);
-                          }
-                        }}
-                        disabled={isSavingCompanyName}
+                          }}
+                          disabled={isSavingCompanyName}
                         className="px-6 py-2.5 rounded-xl bg-gray-900 text-white font-semibold text-sm hover:bg-gray-800 disabled:opacity-60 disabled:cursor-not-allowed transition-colors flex items-center gap-2"
-                      >
-                        {isSavingCompanyName ? (
-                          <>
-                            <Loader2 size={16} className="animate-spin" />
-                            Guardando...
-                          </>
-                        ) : (
-                          <>
+                        >
+                          {isSavingCompanyName ? (
+                            <>
+                              <Loader2 size={16} className="animate-spin" />
+                              Guardando...
+                            </>
+                          ) : (
+                            <>
                             <Save size={16} />
                             Guardar Cambios
-                          </>
-                        )}
-                      </button>
-                    </div>
-                 </div>
+                            </>
+                          )}
+                        </button>
+                      </div>
+                   </div>
+                </div>
               </div>
-            </div>
 
             {/* Cuenta & Seguridad */}
-            <div className="bg-white rounded-[2.5rem] shadow-[0_10px_40px_-10px_rgba(0,0,0,0.05)] border border-gray-100 overflow-hidden">
-              <div className="p-8 border-b border-gray-50 flex items-center gap-4">
+              <div className="bg-white rounded-[2.5rem] shadow-[0_10px_40px_-10px_rgba(0,0,0,0.05)] border border-gray-100 overflow-hidden">
+                <div className="p-8 border-b border-gray-50 flex items-center gap-4">
                 <div className="w-12 h-12 rounded-2xl bg-gray-50 text-gray-600 flex items-center justify-center">
-                  <Shield size={24} strokeWidth={1.5} />
-                </div>
-                <div>
-                  <h3 className="text-xl font-bold text-gray-900">Cuenta & Seguridad</h3>
+                    <Shield size={24} strokeWidth={1.5} />
+                  </div>
+                  <div>
+                    <h3 className="text-xl font-bold text-gray-900">Cuenta & Seguridad</h3>
                   <p className="text-sm text-gray-500">Información de tu cuenta y configuración de seguridad.</p>
+                  </div>
                 </div>
-              </div>
 
               <div className="p-8 space-y-4">
-                <div>
-                  <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Nombre del Administrador</label>
-                  <input 
-                    type="text" 
-                    value={adminName}
-                    onChange={(e) => setAdminName(e.target.value)}
-                    className="w-full px-5 py-3 rounded-xl border border-gray-200 focus:border-indigo-500 outline-none bg-gray-50 focus:bg-white transition-colors text-gray-900 font-medium"
+                      <div>
+                        <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Nombre del Administrador</label>
+                        <input 
+                          type="text" 
+                          value={adminName}
+                          onChange={(e) => setAdminName(e.target.value)}
+                          className="w-full px-5 py-3 rounded-xl border border-gray-200 focus:border-indigo-500 outline-none bg-gray-50 focus:bg-white transition-colors text-gray-900 font-medium"
                     placeholder="Nombre del administrador"
-                  />
-                </div>
-                <div>
+                        />
+                      </div>
+                      <div>
                   <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Email</label>
-                  <input 
-                    type="email" 
-                    value={adminEmail}
+                        <input 
+                          type="email" 
+                          value={adminEmail}
                     onChange={(e) => setAdminEmail(e.target.value)}
                     className="w-full px-5 py-3 rounded-xl border border-gray-200 focus:border-indigo-500 outline-none bg-gray-50 focus:bg-white transition-colors text-gray-900 font-medium"
                     placeholder="email@ejemplo.com"
-                  />
-                </div>
+                        />
+                      </div>
                 <div className="pt-4 border-t border-gray-100">
                   <p className="text-xs text-gray-500">
                     Para cambiar tu contraseña o realizar cambios adicionales en tu cuenta, contacta con el soporte.
-                  </p>
-                </div>
-              </div>
-            </div>
-          </div>
+                            </p>
+                          </div>
+                      </div>
+                  </div>
+                          </div>
         ) : null}
-      </div>
+                  </div>
 
       {/* Prospect Detail Modal */}
       {selectedProspect && (
