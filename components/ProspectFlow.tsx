@@ -1237,6 +1237,7 @@ export const ProspectFlow: React.FC<ProspectFlowProps> = ({ availableZones, comp
                         style={{ position: 'relative' }}
                       >
                         <button
+                          type="button"
                           onClick={(e) => {
                             e.preventDefault();
                             e.stopPropagation();
@@ -1245,11 +1246,15 @@ export const ProspectFlow: React.FC<ProspectFlowProps> = ({ availableZones, comp
                               companyRole,
                               zones: preferences.zone 
                             });
-                            setShowZonesModal(true);
-                            console.log('✅ setShowZonesModal(true) ejecutado');
+                            const newValue = true;
+                            console.log('🔄 Llamando setShowZonesModal con:', newValue);
+                            setShowZonesModal(newValue);
+                            setTimeout(() => {
+                              console.log('⏱️ Después de 100ms, showZonesModal debería ser:', newValue);
+                            }, 100);
                           }}
-                          className="w-full text-left cursor-pointer"
-                          style={{ background: 'transparent', border: 'none', padding: 0 }}
+                          className="w-full text-left cursor-pointer hover:opacity-90"
+                          style={{ background: 'transparent', border: 'none', padding: 0, outline: 'none' }}
                         >
                           <div className="flex items-center justify-center mb-4">
                             <div className="w-12 h-12 rounded-full bg-orange-50 flex items-center justify-center">
@@ -1917,14 +1922,6 @@ export const ProspectFlow: React.FC<ProspectFlowProps> = ({ availableZones, comp
 
 
       {/* Modal de Zonas más buscadas - Solo para Broker */}
-      {(() => {
-        console.log('🔍 [DEBUG MODAL] Verificando renderizado del modal:', {
-          showZonesModal,
-          companyRole,
-          shouldRender: showZonesModal && companyRole === 'Broker'
-        });
-        return null;
-      })()}
       {showZonesModal && companyRole === 'Broker' && createPortal(
         <div 
           className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
