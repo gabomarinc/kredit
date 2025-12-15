@@ -3,7 +3,7 @@ import { Pool } from '@neondatabase/serverless';
 import { CalculationResult, Prospect, PersonalData, FinancialData, UserPreferences, Project, ProjectModel } from '../types';
 import { MOCK_PROSPECTS } from '../constants';
 import pako from 'pako';
-import { uploadProspectFilesToDrive, refreshAccessToken } from './googleDrive';
+import { uploadProspectFilesToDrive, refreshAccessToken, downloadFileFromDriveAsBase64 } from './googleDrive';
 
 // Usar variable de entorno para la conexión a Neon
 // En Vercel, configurar VITE_DATABASE_URL en las variables de entorno del proyecto
@@ -915,23 +915,27 @@ export const getProspectDocuments = async (prospectId: string): Promise<{
     // Convertir prospectId a número si es necesario (la tabla usa SERIAL)
     const prospectIdNum = parseInt(prospectId, 10);
     
+    // Obtener documentos Y company_id para acceder a Google Drive
     const res = await client.query(`
       SELECT 
-        id_file_base64, 
-        ficha_file_base64, 
-        talonario_file_base64, 
-        signed_acp_file_base64,
-        id_file_drive_id,
-        ficha_file_drive_id,
-        talonario_file_drive_id,
-        signed_acp_file_drive_id
-      FROM prospects 
-      WHERE id = $1
+        p.id_file_base64, 
+        p.ficha_file_base64, 
+        p.talonario_file_base64, 
+        p.signed_acp_file_base64,
+        p.id_file_drive_id,
+        p.ficha_file_drive_id,
+        p.talonario_file_drive_id,
+        p.signed_acp_file_drive_id,
+        p.company_id,
+        c.google_drive_access_token,
+        c.google_drive_refresh_token
+      FROM prospects p
+      LEFT JOIN companies c ON p.company_id = c.id
+      WHERE p.id = $1
     `, [isNaN(prospectIdNum) ? prospectId : prospectIdNum]);
 
-    client.release();
-
     if (res.rows.length === 0) {
+      client.release();
       return {
         idFileBase64: null,
         fichaFileBase64: null,
@@ -945,24 +949,102 @@ export const getProspectDocuments = async (prospectId: string): Promise<{
     }
 
     const row = res.rows[0];
-    
-    // Función helper para generar URLs de Drive
-    const getFileDownloadUrl = (fileId: string): string => {
-      return `https://drive.google.com/uc?export=view&id=${fileId}`;
+    client.release();
+
+    // Si hay IDs de Drive, descargarlos usando el access token de la empresa
+    let accessToken = row.google_drive_access_token;
+    const refreshToken = row.google_drive_refresh_token;
+    const hasDriveIds = !!(row.id_file_drive_id || row.ficha_file_drive_id || row.talonario_file_drive_id || row.signed_acp_file_drive_id);
+
+    // Función helper para descargar archivo de Drive y convertirlo a Base64
+    const downloadFileIfNeeded = async (fileId: string | null, fallbackBase64: string | null): Promise<string | null> => {
+      // Si hay Base64 antiguo y no hay ID de Drive, usar Base64
+      if (!fileId && fallbackBase64) {
+        return fallbackBase64;
+      }
+      
+      // Si no hay ID de Drive, retornar null
+      if (!fileId) {
+        return null;
+      }
+
+      // Si no hay access token, no podemos descargar
+      if (!accessToken) {
+        console.warn('⚠️ No hay access token para descargar archivo de Drive:', fileId);
+        return null;
+      }
+
+      try {
+        console.log('🔄 Descargando archivo de Drive:', fileId);
+        const base64 = await downloadFileFromDriveAsBase64(accessToken, fileId);
+        if (base64) {
+          console.log('✅ Archivo descargado exitosamente');
+          return base64;
+        }
+        return null;
+      } catch (error: any) {
+        // Si es error 401 y tenemos refresh token, intentar renovar
+        if (error?.status === 401 && refreshToken) {
+          console.log('🔄 Token expirado, intentando renovar...');
+          try {
+            const newAccessToken = await refreshAccessToken(refreshToken);
+            if (newAccessToken) {
+              console.log('✅ Token renovado, reintentando descarga...');
+              // Actualizar token en BD
+              const updateClient = await pool.connect();
+              await updateClient.query(
+                'UPDATE companies SET google_drive_access_token = $1 WHERE id = $2',
+                [newAccessToken, row.company_id]
+              );
+              updateClient.release();
+              
+              accessToken = newAccessToken;
+              // Reintentar descarga
+              const base64 = await downloadFileFromDriveAsBase64(newAccessToken, fileId);
+              return base64 || null;
+            }
+          } catch (refreshError) {
+            console.error('❌ Error renovando token:', refreshError);
+          }
+        }
+        console.error('❌ Error descargando archivo de Drive:', error);
+        return null;
+      }
     };
-    
-    // Generar URLs de Drive si hay IDs, sino usar Base64 (backward compatibility)
+
+    // Si hay IDs de Drive, descargarlos
+    if (hasDriveIds && accessToken) {
+      console.log('🔄 Descargando archivos de Google Drive...');
+      const [idFileBase64, fichaFileBase64, talonarioFileBase64, signedAcpFileBase64] = await Promise.all([
+        downloadFileIfNeeded(row.id_file_drive_id, row.id_file_base64),
+        downloadFileIfNeeded(row.ficha_file_drive_id, row.ficha_file_base64),
+        downloadFileIfNeeded(row.talonario_file_drive_id, row.talonario_file_base64),
+        downloadFileIfNeeded(row.signed_acp_file_drive_id, row.signed_acp_file_base64)
+      ]);
+
+      return {
+        idFileBase64,
+        fichaFileBase64,
+        talonarioFileBase64,
+        signedAcpFileBase64,
+        // Mantener URLs de Drive para referencia (aunque preferimos Base64 descargado)
+        idFileDriveUrl: row.id_file_drive_id ? `https://drive.google.com/file/d/${row.id_file_drive_id}/view` : null,
+        fichaFileDriveUrl: row.ficha_file_drive_id ? `https://drive.google.com/file/d/${row.ficha_file_drive_id}/view` : null,
+        talonarioFileDriveUrl: row.talonario_file_drive_id ? `https://drive.google.com/file/d/${row.talonario_file_drive_id}/view` : null,
+        signedAcpFileDriveUrl: row.signed_acp_file_drive_id ? `https://drive.google.com/file/d/${row.signed_acp_file_drive_id}/view` : null
+      };
+    }
+
+    // Si no hay IDs de Drive, usar Base64 antiguo (backward compatibility)
     return {
-      // Base64 (para compatibilidad con datos antiguos)
-      idFileBase64: row.id_file_drive_id ? null : (row.id_file_base64 || null),
-      fichaFileBase64: row.ficha_file_drive_id ? null : (row.ficha_file_base64 || null),
-      talonarioFileBase64: row.talonario_file_drive_id ? null : (row.talonario_file_base64 || null),
-      signedAcpFileBase64: row.signed_acp_file_drive_id ? null : (row.signed_acp_file_base64 || null),
-      // URLs de Google Drive (nuevo sistema)
-      idFileDriveUrl: row.id_file_drive_id ? getFileDownloadUrl(row.id_file_drive_id) : null,
-      fichaFileDriveUrl: row.ficha_file_drive_id ? getFileDownloadUrl(row.ficha_file_drive_id) : null,
-      talonarioFileDriveUrl: row.talonario_file_drive_id ? getFileDownloadUrl(row.talonario_file_drive_id) : null,
-      signedAcpFileDriveUrl: row.signed_acp_file_drive_id ? getFileDownloadUrl(row.signed_acp_file_drive_id) : null
+      idFileBase64: row.id_file_base64 || null,
+      fichaFileBase64: row.ficha_file_base64 || null,
+      talonarioFileBase64: row.talonario_file_base64 || null,
+      signedAcpFileBase64: row.signed_acp_file_base64 || null,
+      idFileDriveUrl: null,
+      fichaFileDriveUrl: null,
+      talonarioFileDriveUrl: null,
+      signedAcpFileDriveUrl: null
     };
   } catch (error) {
     console.error('❌ Error obteniendo documentos del prospecto:', error);
@@ -970,7 +1052,11 @@ export const getProspectDocuments = async (prospectId: string): Promise<{
       idFileBase64: null,
       fichaFileBase64: null,
       talonarioFileBase64: null,
-      signedAcpFileBase64: null
+      signedAcpFileBase64: null,
+      idFileDriveUrl: null,
+      fichaFileDriveUrl: null,
+      talonarioFileDriveUrl: null,
+      signedAcpFileDriveUrl: null
     };
   }
 };

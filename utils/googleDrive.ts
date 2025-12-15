@@ -252,6 +252,79 @@ export const getFileDownloadUrl = (fileId: string): string => {
 };
 
 /**
+ * Descarga un archivo de Google Drive usando el access token y lo convierte a Base64
+ * Esto permite mostrar archivos privados sin hacerlos públicos
+ */
+export const downloadFileFromDriveAsBase64 = async (
+  accessToken: string,
+  fileId: string
+): Promise<string | null> => {
+  try {
+    if (!fileId) {
+      return null;
+    }
+
+    // Descargar el archivo usando la API de Drive con autenticación
+    const response = await fetch(
+      `https://www.googleapis.com/drive/v3/files/${fileId}?alt=media`,
+      {
+        headers: {
+          'Authorization': `Bearer ${accessToken}`
+        }
+      }
+    );
+
+    if (!response.ok) {
+      console.error(`❌ Error descargando archivo ${fileId}:`, response.status, response.statusText);
+      // Si es 401, el token puede estar expirado
+      if (response.status === 401) {
+        const error: any = new Error('Token expired (401)');
+        error.status = 401;
+        throw error;
+      }
+      return null;
+    }
+
+    // Obtener el tipo MIME del archivo
+    const contentType = response.headers.get('content-type') || 'application/octet-stream';
+    
+    // Convertir la respuesta a blob y luego a Base64
+    const blob = await response.blob();
+    
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        try {
+          const base64String = reader.result as string;
+          // FileReader.readAsDataURL ya incluye el prefijo data:...;base64,...
+          // Solo necesitamos asegurarnos de que tenga el content-type correcto
+          if (base64String.startsWith('data:')) {
+            resolve(base64String);
+          } else {
+            // Si por alguna razón no tiene prefijo, agregarlo
+            resolve(`data:${contentType};base64,${base64String}`);
+          }
+        } catch (e) {
+          reject(e);
+        }
+      };
+      reader.onerror = (error) => {
+        console.error('❌ Error leyendo blob como Base64:', error);
+        reject(error);
+      };
+      reader.readAsDataURL(blob);
+    });
+  } catch (error: any) {
+    console.error('❌ Error descargando archivo de Drive:', error);
+    // Propagar errores 401 para que puedan ser manejados
+    if (error.status === 401) {
+      throw error;
+    }
+    return null;
+  }
+};
+
+/**
  * Sube todos los archivos de un prospecto a Google Drive
  * Retorna un objeto con las URLs/IDs de los archivos subidos
  */
