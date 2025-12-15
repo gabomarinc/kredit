@@ -2,8 +2,8 @@ import React, { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { PropertyType, UserPreferences, FinancialData, PersonalData, CalculationResult } from '../types';
 import { calculateAffordability, formatCurrency } from '../utils/calculator';
-import { saveProspectToDB, getCompanyById, getAvailablePropertiesForProspect, savePropertyInterest, getCompanyById as getCompany, saveProspectInitial, updateProspectToDB, getAvailableProjectsForProspect } from '../utils/db';
-import { Property, PlanType, Project } from '../types';
+import { saveProspectToDB, getCompanyById, getAvailablePropertiesForProspect, savePropertyInterest, getCompanyById as getCompany, saveProspectInitial, updateProspectToDB, getAvailableProjectsForProspect, saveProjectModelInterest } from '../utils/db';
+import { Property, PlanType, Project, ProjectModel } from '../types';
 import { 
   Home, Building2, MapPin, User, Upload, FileCheck, ArrowRight, CheckCircle2, Download, HeartHandshake, ChevronLeft, Check, BedDouble, Bath, Star, TrendingDown, X, Loader2
 } from 'lucide-react';
@@ -618,14 +618,17 @@ export const ProspectFlow: React.FC<ProspectFlowProps> = ({ availableZones, comp
               setIsLoadingProperties(true);
               
               if (company.role === 'Promotora') {
-                // Cargar proyectos para Promotora
+                // Cargar proyectos para Promotora con filtros adicionales
                 const projects = await getAvailableProjectsForProspect(
                   companyId,
                   result.maxPropertyPrice,
-                  Array.isArray(preferences.zone) ? preferences.zone : [preferences.zone]
+                  Array.isArray(preferences.zone) ? preferences.zone : [preferences.zone],
+                  preferences.bedrooms,
+                  preferences.bathrooms,
+                  preferences.propertyType === 'Apartamento' ? 'Apartamento' : preferences.propertyType === 'Casa' ? 'Casa' : null
                 );
                 setAvailableProjects(projects);
-                console.log('✅ Proyectos cargados:', projects.length);
+                console.log('✅ Proyectos cargados:', projects.length, 'con filtros:', { bedrooms: preferences.bedrooms, bathrooms: preferences.bathrooms });
               } else {
                 // Cargar propiedades para Broker
                 const props = await getAvailablePropertiesForProspect(
@@ -1228,68 +1231,107 @@ export const ProspectFlow: React.FC<ProspectFlowProps> = ({ availableZones, comp
                         </div>
                       ) : companyRole === 'Promotora' && availableProjects.length > 0 ? (
                         <>
-                          <h3 className="text-2xl font-bold text-gray-900 mb-6 text-center">Proyectos que te pueden interesar</h3>
-                          <div className="grid md:grid-cols-2 gap-4 max-w-5xl mx-auto">
-                            {availableProjects.slice(0, 4).map((project) => (
-                              <div
-                                key={project.id}
-                                onClick={() => setSelectedProject(project)}
-                                className="bg-white rounded-2xl overflow-hidden border border-gray-100 shadow-sm hover:shadow-lg transition-all cursor-pointer group"
-                              >
-                                {/* Imagen del proyecto */}
-                                <div className="relative h-48 bg-gray-100 overflow-hidden">
-                                  {project.images && project.images.length > 0 ? (
-                                    <img
-                                      src={project.images[0]}
-                                      alt={project.name}
-                                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                                    />
-                                  ) : (
-                                    <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-indigo-50 to-purple-50">
-                                      <Building2 size={48} className="text-indigo-300" />
-                                    </div>
-                                  )}
-                                  
-                                  {/* Badge de estado */}
-                                  <div className={`absolute top-3 left-3 px-3 py-1 rounded-lg text-xs font-bold text-white ${
-                                    project.status === 'Activo' ? 'bg-green-600' : 'bg-gray-600'
-                                  }`}>
-                                    {project.status}
-                                  </div>
-                                </div>
+                          {(() => {
+                            // Crear lista plana de todos los modelos que cumplen criterios
+                            const allModels: Array<{ model: ProjectModel, project: Project }> = [];
+                            availableProjects.forEach(project => {
+                              if (project.models && project.models.length > 0) {
+                                project.models.forEach(model => {
+                                  allModels.push({ model, project });
+                                });
+                              }
+                            });
 
-                                {/* Contenido */}
-                                <div className="p-5">
-                                  <h4 className="font-bold text-gray-900 mb-2 text-lg">{project.name}</h4>
-                                  <div className="flex items-center gap-1.5 text-gray-500 text-sm mb-4">
-                                    <MapPin size={14} />
-                                    <span>{project.zone || 'Zona no especificada'}</span>
-                                  </div>
-                                  
-                                  {project.description && (
-                                    <p className="text-sm text-gray-600 mb-4 line-clamp-2">{project.description}</p>
-                                  )}
-
-                                  <div className="pt-4 border-t border-gray-100">
-                                    <div className="text-xs text-gray-400 uppercase font-semibold mb-1">Modelos Disponibles</div>
-                                    <div className="text-lg font-bold text-indigo-600">
-                                      {project.models?.length || 0} {project.models?.length === 1 ? 'modelo' : 'modelos'}
-                                    </div>
-                                    {project.models && project.models.length > 0 && (
-                                      <div className="text-sm text-gray-500 mt-1">
-                                        Desde {formatCurrency(Math.min(...project.models.map(m => m.price)))}
+                            return allModels.length > 0 ? (
+                              <>
+                                <h3 className="text-2xl font-bold text-gray-900 mb-6 text-center">Modelos que te pueden interesar</h3>
+                                <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4 max-w-6xl mx-auto">
+                                  {allModels.map(({ model, project }) => (
+                                    <div
+                                      key={model.id}
+                                      onClick={() => setSelectedModel({ model, project })}
+                                      className="bg-white rounded-2xl overflow-hidden border border-gray-100 shadow-sm hover:shadow-lg transition-all cursor-pointer group"
+                                    >
+                                      {/* Imagen del modelo */}
+                                      <div className="relative h-48 bg-gray-100 overflow-hidden">
+                                        {(model.images && model.images.length > 0) ? (
+                                          <img
+                                            src={model.images[0]}
+                                            alt={model.name}
+                                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                                          />
+                                        ) : (project.images && project.images.length > 0) ? (
+                                          <img
+                                            src={project.images[0]}
+                                            alt={project.name}
+                                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                                          />
+                                        ) : (
+                                          <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-indigo-50 to-purple-50">
+                                            <Building2 size={48} className="text-indigo-300" />
+                                          </div>
+                                        )}
+                                        
+                                        {/* Badge de precio */}
+                                        <div className="absolute top-3 left-3 px-3 py-1 rounded-lg text-xs font-bold text-white bg-indigo-600">
+                                          {formatCurrency(model.price)}
+                                        </div>
                                       </div>
-                                    )}
-                                  </div>
+
+                                      {/* Contenido */}
+                                      <div className="p-5">
+                                        <h4 className="font-bold text-gray-900 mb-1 text-lg">{model.name}</h4>
+                                        <p className="text-xs text-gray-500 mb-3">{project.name}</p>
+                                        <div className="flex items-center gap-1.5 text-gray-500 text-sm mb-4">
+                                          <MapPin size={14} />
+                                          <span>{project.zone || 'Zona no especificada'}</span>
+                                        </div>
+                                        
+                                        {/* Características */}
+                                        <div className="flex items-center gap-4 text-sm text-gray-600 mb-4">
+                                          {model.bedrooms && (
+                                            <div className="flex items-center gap-1">
+                                              <BedDouble size={16} className="text-gray-400" />
+                                              <span>{model.bedrooms}</span>
+                                            </div>
+                                          )}
+                                          {model.bathrooms && (
+                                            <div className="flex items-center gap-1">
+                                              <Bath size={16} className="text-gray-400" />
+                                              <span>{model.bathrooms}</span>
+                                            </div>
+                                          )}
+                                          {model.areaM2 && (
+                                            <div className="flex items-center gap-1">
+                                              <span className="text-gray-400">📐</span>
+                                              <span>{model.areaM2}m²</span>
+                                            </div>
+                                          )}
+                                        </div>
+
+                                        <div className="pt-4 border-t border-gray-100">
+                                          <div className="text-xs text-gray-400 uppercase font-semibold mb-1">Disponibilidad</div>
+                                          <div className="text-sm font-semibold text-green-600">
+                                            {model.unitsAvailable} {model.unitsAvailable === 1 ? 'unidad disponible' : 'unidades disponibles'}
+                                          </div>
+                                        </div>
+                                      </div>
+                                    </div>
+                                  ))}
                                 </div>
+                                {allModels.length > 6 && (
+                                  <p className="text-center text-gray-500 text-sm mt-4">
+                                    Mostrando {allModels.length} modelos disponibles
+                                  </p>
+                                )}
+                              </>
+                            ) : (
+                              <div className="text-center py-8 text-gray-400">
+                                <Building2 size={48} className="mx-auto mb-3 opacity-50" />
+                                <p className="text-sm">No hay modelos disponibles que cumplan tus criterios</p>
                               </div>
-                            ))}
-                          </div>
-                          {availableProjects.length > 4 && (
-                            <p className="text-center text-gray-500 text-sm mt-4">
-                              Y {availableProjects.length - 4} proyectos más disponibles
-                            </p>
-                          )}
+                            );
+                          })()}
                         </>
                       ) : companyRole === 'Broker' && availableProperties.length > 0 ? (
                         <>
@@ -1661,7 +1703,167 @@ export const ProspectFlow: React.FC<ProspectFlowProps> = ({ availableZones, comp
                 </div>
               )}
 
-              {/* Botón "Me interesa" */}
+              {/* Botón "Me interesa" - Removido porque ahora se maneja por modelo individual */}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal de Detalle de Modelo Individual */}
+      {selectedModel && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+          <div className="bg-white rounded-[2rem] w-full max-w-4xl max-h-[90vh] overflow-y-auto shadow-2xl relative animate-fade-in-up">
+            {/* Header con botón cerrar */}
+            <div className="sticky top-0 bg-white border-b border-gray-100 p-6 flex items-center justify-between z-10">
+              <div>
+                <h3 className="text-2xl font-bold text-gray-900">{selectedModel.model.name}</h3>
+                <p className="text-sm text-gray-500 mt-1">{selectedModel.project.name}</p>
+              </div>
+              <button
+                onClick={() => setSelectedModel(null)}
+                className="w-10 h-10 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center transition-colors"
+              >
+                <X size={20} className="text-gray-600" />
+              </button>
+            </div>
+
+            {/* Imágenes */}
+            {(selectedModel.model.images && selectedModel.model.images.length > 0) ? (
+              <div className="relative h-64 bg-gray-100">
+                <img
+                  src={selectedModel.model.images[0]}
+                  alt={selectedModel.model.name}
+                  className="w-full h-full object-cover"
+                />
+              </div>
+            ) : (selectedModel.project.images && selectedModel.project.images.length > 0) ? (
+              <div className="relative h-64 bg-gray-100">
+                <img
+                  src={selectedModel.project.images[0]}
+                  alt={selectedModel.project.name}
+                  className="w-full h-full object-cover"
+                />
+              </div>
+            ) : null}
+
+            {/* Contenido */}
+            <div className="p-6 space-y-6">
+              {/* Ubicación */}
+              <div className="flex items-center gap-2 text-gray-600">
+                <MapPin size={18} className="text-indigo-500" />
+                <span className="font-medium">{selectedModel.project.zone || 'Zona no especificada'}</span>
+                {selectedModel.project.address && (
+                  <span className="text-gray-400">• {selectedModel.project.address}</span>
+                )}
+              </div>
+
+              {/* Especificaciones */}
+              <div className="grid grid-cols-3 gap-4 py-4 border-t border-b border-gray-100">
+                {selectedModel.model.bedrooms && (
+                  <div className="text-center">
+                    <BedDouble size={24} className="text-gray-400 mx-auto mb-2" />
+                    <div className="text-sm text-gray-500">Habitaciones</div>
+                    <div className="text-lg font-bold text-gray-900">{selectedModel.model.bedrooms}</div>
+                  </div>
+                )}
+                {selectedModel.model.bathrooms && (
+                  <div className="text-center">
+                    <Bath size={24} className="text-gray-400 mx-auto mb-2" />
+                    <div className="text-sm text-gray-500">Baños</div>
+                    <div className="text-lg font-bold text-gray-900">{selectedModel.model.bathrooms}</div>
+                  </div>
+                )}
+                {selectedModel.model.areaM2 && (
+                  <div className="text-center">
+                    <div className="text-2xl mb-2">📐</div>
+                    <div className="text-sm text-gray-500">Área</div>
+                    <div className="text-lg font-bold text-gray-900">{selectedModel.model.areaM2}m²</div>
+                  </div>
+                )}
+              </div>
+
+              {/* Descripción del proyecto */}
+              {selectedModel.project.description && (
+                <div>
+                  <h4 className="font-bold text-gray-900 mb-2">Sobre el Proyecto</h4>
+                  <p className="text-gray-600 leading-relaxed">{selectedModel.project.description}</p>
+                </div>
+              )}
+
+              {/* Amenidades */}
+              {selectedModel.model.amenities && selectedModel.model.amenities.length > 0 && (
+                <div>
+                  <h4 className="font-bold text-gray-900 mb-3">Amenidades</h4>
+                  <div className="flex flex-wrap gap-2">
+                    {selectedModel.model.amenities.map((amenity, idx) => (
+                      <span key={idx} className="px-3 py-1.5 bg-indigo-50 text-indigo-700 rounded-lg text-sm font-medium">
+                        {amenity}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Más imágenes del modelo */}
+              {selectedModel.model.images && selectedModel.model.images.length > 1 && (
+                <div>
+                  <h4 className="font-bold text-gray-900 mb-3">Galería</h4>
+                  <div className="grid grid-cols-4 gap-2">
+                    {selectedModel.model.images.slice(1, 5).map((img, idx) => (
+                      <img key={idx} src={img} alt={`${selectedModel.model.name} ${idx + 2}`} className="w-full h-24 object-cover rounded-lg" />
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Disponibilidad */}
+              <div className="bg-gray-50 rounded-xl p-4">
+                <div className="text-xs text-gray-400 uppercase font-semibold mb-1">Disponibilidad</div>
+                <div className="text-lg font-semibold text-green-600">
+                  {selectedModel.model.unitsAvailable} {selectedModel.model.unitsAvailable === 1 ? 'unidad disponible' : 'unidades disponibles'} de {selectedModel.model.unitsTotal} totales
+                </div>
+              </div>
+
+              {/* Precio y Botón "Me interesa" */}
+              <div className="pt-6 border-t border-gray-200">
+                <div className="flex items-center justify-between flex-wrap gap-4">
+                  <div>
+                    <div className="text-xs text-gray-400 uppercase font-semibold mb-1">Precio</div>
+                    <div className="text-3xl font-bold text-gray-900">{formatCurrency(selectedModel.model.price)}</div>
+                  </div>
+                  {prospectId && selectedModel.model.id && (
+                    <label className="flex items-center gap-3 cursor-pointer group">
+                      <input
+                        type="checkbox"
+                        onChange={async (e) => {
+                          if (prospectId && selectedModel.model.id) {
+                            const success = await saveProjectModelInterest(prospectId, selectedModel.model.id, e.target.checked);
+                            // Mostrar feedback visual
+                            if (e.target.checked && success) {
+                              setNotification({
+                                isOpen: true,
+                                type: 'success',
+                                message: '¡Gracias por tu interés! Un agente se pondrá en contacto contigo pronto.',
+                                title: '¡Interés registrado!'
+                              });
+                            }
+                          }
+                        }}
+                        className="w-5 h-5 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500 focus:ring-2 cursor-pointer"
+                      />
+                      <span className="text-lg font-semibold text-gray-700 group-hover:text-indigo-600 transition-colors">
+                        Me interesa
+                      </span>
+                    </label>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Botón "Me interesa" - Removido porque ahora se maneja por modelo individual */}
               {prospectId && (
                 <div className="pt-6 border-t border-gray-200">
                   <label className="flex items-center gap-3 cursor-pointer group">

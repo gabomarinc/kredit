@@ -274,6 +274,8 @@ const ensureTablesExist = async (client: any) => {
       await client.query(`CREATE INDEX IF NOT EXISTS idx_property_interests_interested ON property_interests(interested)`);
       await client.query(`CREATE INDEX IF NOT EXISTS idx_projects_company_id ON projects(company_id)`);
       await client.query(`CREATE INDEX IF NOT EXISTS idx_project_models_project_id ON project_models(project_id)`);
+      await client.query(`CREATE INDEX IF NOT EXISTS idx_project_model_interests_prospect_id ON project_model_interests(prospect_id)`);
+      await client.query(`CREATE INDEX IF NOT EXISTS idx_project_model_interests_model_id ON project_model_interests(project_model_id)`);
     } catch (e) {
       console.warn('Nota: No se pudieron crear índices (pueden que ya existan):', e);
     }
@@ -2242,7 +2244,10 @@ export const saveProject = async (project: Omit<Project, 'id' | 'createdAt' | 'u
 export const getAvailableProjectsForProspect = async (
   companyId: string,
   maxPrice: number,
-  interestedZones: string[]
+  interestedZones: string[],
+  bedrooms?: number | null,
+  bathrooms?: number | null,
+  propertyType?: string | null
 ): Promise<Project[]> => {
   if (!pool) {
     return [];
@@ -2255,7 +2260,11 @@ export const getAvailableProjectsForProspect = async (
     // Buscar proyectos activos que:
     // 1. Pertenezcan a la empresa
     // 2. Estén en las zonas de interés del prospecto (si hay zonas especificadas)
-    // 3. Tengan al menos un modelo con precio <= maxPrice * 1.1
+    // 3. Tengan al menos un modelo que cumpla TODOS los criterios:
+    //    - Precio <= maxPrice
+    //    - Unidades disponibles > 0
+    //    - Bedrooms coincide (si se especifica)
+    //    - Bathrooms coincide (si se especifica)
     // 4. Estén activos
 
     let query = `
@@ -2284,39 +2293,80 @@ export const getAvailableProjectsForProspect = async (
       AND EXISTS (
         SELECT 1 FROM project_models pm2 
         WHERE pm2.project_id = p.id 
-        AND pm2.price <= $2 * 1.1
+        AND pm2.price <= $2
         AND pm2.units_available > 0
-      )
     `;
 
     const values: any[] = [companyId, maxPrice];
+    let paramIndex = 3;
+
+    // Filtrar por bedrooms si se especifica
+    if (bedrooms !== null && bedrooms !== undefined) {
+      query += ` AND pm2.bedrooms = $${paramIndex}`;
+      values.push(bedrooms);
+      paramIndex++;
+    }
+
+    // Filtrar por bathrooms si se especifica
+    if (bathrooms !== null && bathrooms !== undefined) {
+      query += ` AND pm2.bathrooms = $${paramIndex}`;
+      values.push(bathrooms);
+      paramIndex++;
+    }
+
+    query += `      )`;
+
+    // Filtrar modelos en el LEFT JOIN también
+    query += ` AND (
+      pm.id IS NULL OR (
+        pm.price <= $2
+        AND pm.units_available > 0
+    `;
+
+    // Aplicar mismos filtros al LEFT JOIN
+    if (bedrooms !== null && bedrooms !== undefined) {
+      query += ` AND pm.bedrooms = $${values.length + 1}`;
+      values.push(bedrooms);
+    }
+
+    if (bathrooms !== null && bathrooms !== undefined) {
+      query += ` AND pm.bathrooms = $${values.length + 1}`;
+      values.push(bathrooms);
+    }
+
+    query += `      )
+    )`;
 
     // Si hay zonas de interés, filtrar por ellas
     if (interestedZones && interestedZones.length > 0) {
-      query += ` AND (p.zone = ANY($3) OR p.zone IS NULL)`;
+      query += ` AND (p.zone = ANY($${values.length + 1}) OR p.zone IS NULL)`;
       values.push(interestedZones);
     }
 
     query += ` 
       GROUP BY p.id
+      HAVING COUNT(pm.id) > 0
       ORDER BY p.created_at DESC
-      LIMIT 20`;
+      LIMIT 50`;
 
     const res = await client.query(query, values);
     client.release();
 
-    return res.rows.map((row: any) => ({
-      id: row.id,
-      companyId: row.company_id,
-      name: row.name,
-      description: row.description,
-      zone: row.zone,
-      address: row.address,
-      images: Array.isArray(row.images) ? row.images : [],
-      status: row.status as 'Activo' | 'Inactivo',
-      createdAt: row.created_at ? new Date(row.created_at).toISOString() : undefined,
-      updatedAt: row.updated_at ? new Date(row.updated_at).toISOString() : undefined,
-      models: Array.isArray(row.models) ? row.models.map((m: any) => ({
+    // Filtrar modelos dentro de cada proyecto según los criterios
+    return res.rows.map((row: any) => {
+      const filteredModels = Array.isArray(row.models) ? row.models.filter((m: any) => {
+        // Filtrar por precio
+        if (parseFloat(m.price || 0) > maxPrice) return false;
+        if (m.unitsAvailable <= 0) return false;
+        
+        // Filtrar por bedrooms
+        if (bedrooms !== null && bedrooms !== undefined && m.bedrooms !== bedrooms) return false;
+        
+        // Filtrar por bathrooms
+        if (bathrooms !== null && bathrooms !== undefined && m.bathrooms !== bathrooms) return false;
+        
+        return true;
+      }).map((m: any) => ({
         id: m.id,
         name: m.name,
         areaM2: m.areaM2 ? parseFloat(m.areaM2) : null,
@@ -2327,12 +2377,59 @@ export const getAvailableProjectsForProspect = async (
         unitsAvailable: m.unitsAvailable || 0,
         price: parseFloat(m.price || 0),
         images: Array.isArray(m.images) ? m.images : []
-      })) : []
-    }));
+      })) : [];
+
+      return {
+        id: row.id,
+        companyId: row.company_id,
+        name: row.name,
+        description: row.description,
+        zone: row.zone,
+        address: row.address,
+        images: Array.isArray(row.images) ? row.images : [],
+        status: row.status as 'Activo' | 'Inactivo',
+        createdAt: row.created_at ? new Date(row.created_at).toISOString() : undefined,
+        updatedAt: row.updated_at ? new Date(row.updated_at).toISOString() : undefined,
+        models: filteredModels
+      };
+    }).filter((project: Project) => project.models.length > 0); // Solo proyectos con modelos que cumplen criterios
 
   } catch (error) {
     console.error('❌ Error obteniendo proyectos disponibles:', error);
     return [];
+  }
+};
+
+// Guardar interés de un prospecto en un modelo de proyecto
+export const saveProjectModelInterest = async (
+  prospectId: string,
+  projectModelId: string,
+  interested: boolean = true
+): Promise<boolean> => {
+  if (!pool) {
+    console.error('❌ Pool de base de datos no inicializado.');
+    return false;
+  }
+
+  try {
+    const client = await pool.connect();
+    await ensureTablesExist(client);
+
+    // Usar INSERT ... ON CONFLICT para actualizar si ya existe
+    await client.query(`
+      INSERT INTO project_model_interests (prospect_id, project_model_id, interested)
+      VALUES ($1, $2, $3)
+      ON CONFLICT (prospect_id, project_model_id)
+      DO UPDATE SET interested = $3, created_at = NOW()
+    `, [prospectId, projectModelId, interested]);
+
+    client.release();
+    console.log(`✅ Interés ${interested ? 'guardado' : 'removido'} para prospecto ${prospectId} en modelo ${projectModelId}`);
+    return true;
+
+  } catch (error) {
+    console.error('❌ Error guardando interés en modelo:', error);
+    return false;
   }
 };
 
