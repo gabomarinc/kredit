@@ -1160,6 +1160,16 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableZones, onUpdateZo
     const cacheKey = `prospects_cache_${companyId || 'no_company'}`;
     const cacheTime = 5 * 60 * 1000; // 5 minutos
 
+    // Si es refresh forzado, limpiar caché primero
+    if (forceRefresh) {
+      try {
+        localStorage.removeItem(cacheKey);
+        console.log('🗑️ Caché de prospectos limpiado para refresh forzado');
+      } catch (e) {
+        console.warn('⚠️ Error limpiando caché:', e);
+      }
+    }
+
     // Verificar caché si no es refresh forzado
     if (!forceRefresh) {
       try {
