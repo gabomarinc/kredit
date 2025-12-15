@@ -2129,114 +2129,112 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableZones, onUpdateZo
             )}
           </div>
         ) : activeTab === 'prospects' ? (
-          <div className="space-y-6">
-            {/* Header */}
-            <div className="flex items-center justify-between flex-wrap gap-4">
+          <div className="bg-white rounded-[2.5rem] shadow-[0_10px_40px_-10px_rgba(0,0,0,0.05)] border border-gray-100 overflow-hidden min-h-[500px] flex flex-col">
+            
+            {/* List Header */}
+            <div className="p-8 border-b border-gray-100 flex flex-col md:flex-row justify-between items-center gap-4">
               <div>
-                <h2 className="text-2xl font-bold text-gray-900 mb-1">Prospectos</h2>
-                <p className="text-gray-500 text-sm">Gestiona y visualiza todos tus prospectos</p>
+                <h2 className="text-2xl font-bold text-gray-900">Base de Prospectos</h2>
+                <p className="text-gray-500 text-sm">Gestiona y analiza los datos capturados.</p>
               </div>
-              <div className="flex items-center gap-3">
-                <button
-                  onClick={() => setShowExportModal(true)}
-                  className="bg-indigo-600 text-white px-4 py-2 rounded-xl font-semibold hover:bg-indigo-700 transition-colors flex items-center gap-2 text-sm"
-                >
-                  <Download size={16} /> Exportar
-                </button>
-              </div>
+              
+              <button 
+                onClick={() => setShowExportModal(true)}
+                className="bg-gray-900 hover:bg-gray-800 text-white px-6 py-3 rounded-xl font-semibold text-sm flex items-center gap-2 transition-all shadow-lg shadow-gray-200"
+              >
+                <Download size={16} /> Exportar Data
+              </button>
             </div>
 
-            {/* Filters */}
-            <div className="bg-white rounded-2xl p-4 border border-gray-100">
-              <div className="flex flex-wrap items-center gap-4">
-                <div className="flex items-center gap-2">
-                  <Filter size={18} className="text-gray-400" />
-                  <span className="text-sm font-semibold text-gray-700">Filtros:</span>
-                </div>
-                <input
-                  type="text"
-                  placeholder="Buscar por nombre..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="px-4 py-2 rounded-xl border border-gray-200 focus:border-indigo-500 outline-none text-sm flex-1 min-w-[200px]"
-                />
-                <select
-                  value={statusFilter}
-                  onChange={(e) => setStatusFilter(e.target.value)}
-                  className="px-4 py-2 rounded-xl border border-gray-200 focus:border-indigo-500 outline-none text-sm"
-                >
-                  <option value="all">Todos los estados</option>
-                  <option value="new">Nuevos</option>
-                  <option value="contacted">Contactados</option>
-                  <option value="qualified">Calificados</option>
-                </select>
-              </div>
-            </div>
-
-            {/* Prospects List */}
-            {isLoading ? (
-              <div className="text-center py-12">
-                <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div>
-                <p className="text-gray-500 mt-4">Cargando prospectos...</p>
-              </div>
-            ) : paginatedProspects.length === 0 ? (
-              <div className="bg-white rounded-[2rem] p-12 text-center border border-gray-100">
-                <Users size={64} className="mx-auto mb-4 text-gray-300" />
-                <h3 className="text-xl font-bold text-gray-900 mb-2">No hay prospectos</h3>
-                <p className="text-gray-500">Aún no has recibido ningún prospecto</p>
-              </div>
-            ) : (
-              <>
-                <div className="grid gap-4">
-                  {paginatedProspects.map((prospect) => (
-                    <div
-                      key={prospect.id}
-                      onClick={() => setSelectedProspect(prospect)}
-                      className="bg-white rounded-2xl p-6 border border-gray-100 hover:shadow-lg transition-all cursor-pointer"
-                    >
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-4">
-                          <div className="w-12 h-12 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center text-lg font-bold">
-                            {prospect.name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)}
-                          </div>
-                          <div>
-                            <h3 className="font-bold text-gray-900 text-lg">{prospect.name}</h3>
-                            <p className="text-sm text-gray-500">{prospect.email}</p>
-                          </div>
-                        </div>
-                        <div className="text-right">
-                          <p className="font-semibold text-gray-900">{formatCurrency(prospect.income || 0)}</p>
-                          <p className="text-xs text-gray-500">Ingreso mensual</p>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-
-                {/* Pagination */}
-                {totalPages > 1 && (
-                  <div className="flex items-center justify-center gap-2">
-                    <button
-                      onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
-                      disabled={currentPage === 1}
-                      className="px-4 py-2 rounded-xl border border-gray-200 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 transition-colors"
-                    >
-                      <ChevronLeft size={16} />
-                    </button>
-                    <span className="px-4 py-2 text-sm text-gray-700">
-                      Página {currentPage} de {totalPages}
-                    </span>
-                    <button
-                      onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
-                      disabled={currentPage === totalPages}
-                      className="px-4 py-2 rounded-xl border border-gray-200 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 transition-colors"
-                    >
-                      <ChevronRight size={16} />
-                    </button>
+            {/* Table */}
+            <div className="overflow-x-auto flex-1">
+              {isLoading ? (
+                <div className="flex justify-center items-center h-full text-gray-400">
+                  <div className="flex flex-col items-center gap-2">
+                    <Loader2 size={32} className="animate-spin text-indigo-500" />
+                    <p className="text-sm font-medium">Cargando base de datos...</p>
                   </div>
-                )}
-              </>
-            )}
+                </div>
+              ) : paginatedProspects.length === 0 ? (
+                <div className="flex justify-center items-center h-full text-gray-400">
+                   <p>Aún no hay prospectos registrados.</p>
+                </div>
+              ) : (
+                <>
+                  <div className="overflow-x-auto -mx-4 sm:mx-0">
+                    <table className="w-full text-left border-collapse min-w-[600px]">
+                      <thead>
+                        <tr className="bg-gray-50/50 text-gray-400 text-xs uppercase tracking-wider">
+                          <th className="px-4 sm:px-8 py-4 sm:py-6 font-semibold rounded-tl-[2rem]">Prospecto</th>
+                          <th className="px-3 sm:px-6 py-4 sm:py-6 font-semibold">Ingreso</th>
+                          <th className="px-3 sm:px-6 py-4 sm:py-6 font-semibold">Capacidad</th>
+                          <th className="px-3 sm:px-6 py-4 sm:py-6 font-semibold hidden md:table-cell">Zona</th>
+                          <th className="px-3 sm:px-6 py-4 sm:py-6 font-semibold hidden sm:table-cell">Fecha</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-gray-50">
+                        {paginatedProspects.map((prospect) => (
+                          <tr 
+                            key={prospect.id} 
+                            onClick={() => setSelectedProspect(prospect)}
+                            className="hover:bg-indigo-50/30 transition-colors group cursor-pointer"
+                          >
+                            <td className="px-4 sm:px-8 py-4 sm:py-5">
+                              <div className="flex flex-col">
+                                <span className="font-bold text-gray-900 text-sm">{prospect.name}</span>
+                                <span className="text-xs text-gray-400 hidden sm:inline">{prospect.email}</span>
+                              </div>
+                            </td>
+                            <td className="px-3 sm:px-6 py-4 sm:py-5">
+                              <span className="font-medium text-gray-700 text-sm">{formatCurrency(prospect.income)}</span>
+                            </td>
+                            <td className="px-3 sm:px-6 py-4 sm:py-5">
+                              <span className="font-bold text-indigo-600 bg-indigo-50 px-2 sm:px-3 py-1 rounded-lg text-xs whitespace-nowrap">
+                                {formatCurrency(prospect.result?.maxPropertyPrice || 0)}
+                              </span>
+                            </td>
+                            <td className="px-3 sm:px-6 py-4 sm:py-5 hidden md:table-cell">
+                              <div className="flex items-center gap-2">
+                                <MapPin size={14} className="text-gray-400 shrink-0" />
+                                <span className="text-sm text-gray-600 font-medium truncate max-w-[150px]">
+                                  {Array.isArray(prospect.zone) ? prospect.zone.join(', ') : (typeof prospect.zone === 'string' ? prospect.zone : 'Sin zona')}
+                                </span>
+                              </div>
+                            </td>
+                            <td className="px-3 sm:px-6 py-4 sm:py-5 hidden sm:table-cell">
+                              <span className="text-sm text-gray-500 whitespace-nowrap">{prospect.dateDisplay || new Date(prospect.date).toLocaleDateString('es-PA')}</span>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+
+                  {/* Pagination */}
+                  {totalPages > 1 && (
+                    <div className="p-6 border-t border-gray-100 flex items-center justify-center gap-2">
+                      <button
+                        onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                        disabled={currentPage === 1}
+                        className="px-4 py-2 rounded-xl border border-gray-200 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 transition-colors"
+                      >
+                        <ChevronLeft size={16} />
+                      </button>
+                      <span className="px-4 py-2 text-sm text-gray-700">
+                        Página {currentPage} de {totalPages}
+                      </span>
+                      <button
+                        onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                        disabled={currentPage === totalPages}
+                        className="px-4 py-2 rounded-xl border border-gray-200 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 transition-colors"
+                      >
+                        <ChevronRight size={16} />
+                      </button>
+                    </div>
+                  )}
+                </>
+              )}
+            </div>
           </div>
         ) : activeTab === 'properties' ? (
           <div className="space-y-6">
