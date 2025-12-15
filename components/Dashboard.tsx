@@ -3238,6 +3238,163 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableZones, onUpdateZo
         ) : null}
                   </div>
 
+      {/* Export Modal */}
+      {showExportModal && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+          <div 
+            className="absolute inset-0 bg-gray-900/40 backdrop-blur-sm transition-opacity"
+            onClick={() => setShowExportModal(false)}
+          ></div>
+          <div className="bg-white rounded-[2rem] p-8 w-full max-w-md shadow-2xl relative animate-fade-in-up z-10">
+            <button 
+              onClick={() => setShowExportModal(false)}
+              className="absolute top-6 right-6 text-gray-400 hover:text-gray-600"
+            >
+              <X size={20} />
+            </button>
+
+            <div className="mb-6">
+              <div className="w-12 h-12 bg-indigo-50 text-indigo-600 rounded-2xl flex items-center justify-center mb-4">
+                <Filter size={24} />
+              </div>
+              <h3 className="text-2xl font-bold text-gray-900">Exportar Datos</h3>
+              <p className="text-gray-500 text-sm mt-1">Selecciona los filtros para tu reporte.</p>
+            </div>
+
+            <div className="space-y-6">
+              {/* Format Selection */}
+              <div>
+                <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Formato de Exportación</label>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <button
+                    onClick={() => setExportFormat('excel')}
+                    className={`p-4 rounded-xl border-2 transition-all font-semibold text-sm ${
+                      exportFormat === 'excel'
+                        ? 'border-indigo-500 bg-indigo-50 text-indigo-700'
+                        : 'border-gray-200 bg-gray-50 text-gray-600 hover:border-gray-300'
+                    }`}
+                  >
+                    Excel (.xlsx)
+                  </button>
+                  <button
+                    onClick={() => setExportFormat('csv')}
+                    className={`p-4 rounded-xl border-2 transition-all font-semibold text-sm ${
+                      exportFormat === 'csv'
+                        ? 'border-indigo-500 bg-indigo-50 text-indigo-700'
+                        : 'border-gray-200 bg-gray-50 text-gray-600 hover:border-gray-300'
+                    }`}
+                  >
+                    CSV (.csv)
+                  </button>
+                </div>
+              </div>
+
+              {/* Filter: Range Type */}
+              <div className="space-y-3">
+                <label 
+                  onClick={() => setExportFilterType('all')}
+                  className={`flex items-center gap-3 p-3 sm:p-4 border rounded-xl cursor-pointer transition-colors ${
+                    exportFilterType === 'all'
+                      ? 'border-indigo-500 bg-indigo-50/30'
+                      : 'border-gray-200 hover:bg-gray-50'
+                  }`}
+                >
+                  <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 ${
+                    exportFilterType === 'all' ? 'border-indigo-600' : 'border-gray-300'
+                  }`}>
+                    {exportFilterType === 'all' && (
+                      <div className="w-2.5 h-2.5 bg-indigo-600 rounded-full"></div>
+                    )}
+                  </div>
+                  <span className={`font-semibold text-xs sm:text-sm ${
+                    exportFilterType === 'all' ? 'text-gray-900' : 'text-gray-600'
+                  }`}>Toda la base de datos</span>
+                </label>
+                
+                <label 
+                  onClick={() => setExportFilterType('dateRange')}
+                  className={`flex items-center gap-3 p-3 sm:p-4 border rounded-xl cursor-pointer transition-colors ${
+                    exportFilterType === 'dateRange'
+                      ? 'border-indigo-500 bg-indigo-50/30'
+                      : 'border-gray-200 hover:bg-gray-50'
+                  }`}
+                >
+                  <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 ${
+                    exportFilterType === 'dateRange' ? 'border-indigo-600' : 'border-gray-300'
+                  }`}>
+                    {exportFilterType === 'dateRange' && (
+                      <div className="w-2.5 h-2.5 bg-indigo-600 rounded-full"></div>
+                    )}
+                  </div>
+                  <span className={`font-medium text-xs sm:text-sm ${
+                    exportFilterType === 'dateRange' ? 'text-gray-900' : 'text-gray-600'
+                  }`}>Filtrar por rango de fechas</span>
+                </label>
+              </div>
+
+              {/* Date Range Filter */}
+              {exportFilterType === 'dateRange' && (
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Fecha Inicio</label>
+                    <div className="relative">
+                      <Calendar className="absolute left-3 top-3.5 text-gray-400" size={16} />
+                      <input
+                        type="date"
+                        value={dateRangeStart}
+                        onChange={(e) => setDateRangeStart(e.target.value)}
+                        className="w-full pl-10 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm outline-none focus:border-indigo-500 text-gray-700 font-medium"
+                      />
+                    </div>
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Fecha Fin</label>
+                    <div className="relative">
+                      <Calendar className="absolute left-3 top-3.5 text-gray-400" size={16} />
+                      <input
+                        type="date"
+                        value={dateRangeEnd}
+                        onChange={(e) => setDateRangeEnd(e.target.value)}
+                        className="w-full pl-10 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm outline-none focus:border-indigo-500 text-gray-700 font-medium"
+                      />
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Filter: Salary Range */}
+              <div>
+                <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Rango Salarial (Opcional)</label>
+                <div className="relative">
+                  <DollarSign className="absolute left-4 top-3.5 text-gray-400" size={18} />
+                  <select 
+                    value={exportSalaryRange}
+                    onChange={(e) => setExportSalaryRange(e.target.value)}
+                    className="w-full pl-12 pr-10 py-3.5 bg-gray-50 border border-gray-200 rounded-xl text-sm outline-none focus:border-indigo-500 appearance-none cursor-pointer hover:bg-white transition-colors text-gray-700 font-medium"
+                  >
+                    <option value="">Cualquier Salario</option>
+                    <option value="0-3000">Menos de $3,000</option>
+                    <option value="3000-5000">$3,000 - $5,000</option>
+                    <option value="5000-8000">$5,000 - $8,000</option>
+                    <option value="8000-12000">$8,000 - $12,000</option>
+                    <option value="12000+">Más de $12,000</option>
+                  </select>
+                  <ChevronDown className="absolute right-4 top-3.5 text-gray-400 pointer-events-none" size={18} />
+                </div>
+              </div>
+
+              <button 
+                onClick={handleExport}
+                className="w-full bg-gray-900 text-white py-4 rounded-xl font-bold hover:bg-gray-800 transition-all shadow-lg shadow-gray-200 flex justify-center items-center gap-2"
+              >
+                <Download size={18} /> Descargar Reporte {exportFormat === 'excel' ? 'Excel' : 'CSV'}
+              </button>
+            </div>
+
+          </div>
+        </div>
+      )}
+
       {/* Prospect Detail Modal */}
       {selectedProspect && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
