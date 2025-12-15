@@ -301,6 +301,7 @@ export const ProspectFlow: React.FC<ProspectFlowProps> = ({ availableZones, comp
   const [selectedProperty, setSelectedProperty] = useState<Property | null>(null);
   const [availableProjects, setAvailableProjects] = useState<Project[]>([]);
   const [selectedProject, setSelectedProject] = useState<Project | null>(null);
+  const [selectedModel, setSelectedModel] = useState<{ model: ProjectModel; project: Project } | null>(null);
   const [companyPlan, setCompanyPlan] = useState<PlanType>('Freshie');
   const [companyRole, setCompanyRole] = useState<'Promotora' | 'Broker'>('Broker');
   const [isLoadingProperties, setIsLoadingProperties] = useState(false);
