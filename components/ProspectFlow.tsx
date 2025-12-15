@@ -1141,12 +1141,14 @@ export const ProspectFlow: React.FC<ProspectFlowProps> = ({ availableZones, comp
         )}
 
         {/* Modal de firma APC */}
-        <ApcSignatureModal
-          isOpen={showApcModal}
-          onClose={() => setShowApcModal(false)}
-          fullName={personal.fullName}
-          onSigned={(file) => setPersonal(prev => ({ ...prev, signedAcpFile: file }))}
-        />
+        {requestedDocuments.signedAcpFile && (
+          <ApcSignatureModal
+            isOpen={showApcModal}
+            onClose={() => setShowApcModal(false)}
+            fullName={personal.fullName}
+            onSigned={(file) => setPersonal(prev => ({ ...prev, signedAcpFile: file }))}
+          />
+        )}
 
         {/* STEP 6: RESULTADOS FINALES */}
         {step === 6 && result && (
