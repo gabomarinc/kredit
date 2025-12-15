@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { PropertyType, UserPreferences, FinancialData, PersonalData, CalculationResult } from '../types';
 import { calculateAffordability, formatCurrency } from '../utils/calculator';
 import { saveProspectToDB, getCompanyById, getAvailablePropertiesForProspect, savePropertyInterest, getCompanyById as getCompany, saveProspectInitial, updateProspectToDB, getAvailableProjectsForProspect } from '../utils/db';
@@ -82,8 +83,6 @@ const ApcSignatureModal: React.FC<ApcSignatureModalProps> = ({ isOpen, onClose, 
     }
   }, [isOpen, fullName]);
 
-  if (!isOpen) return null;
-
   const handleClear = () => {
     sigPadRef.current?.clear();
   };
@@ -160,13 +159,15 @@ const ApcSignatureModal: React.FC<ApcSignatureModalProps> = ({ isOpen, onClose, 
     }
   };
 
-  return (
-    <div className="fixed inset-0 z-[120] flex items-center justify-center p-4">
+  if (!isOpen) return null;
+
+  return createPortal(
+    <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4">
       <div
-        className="absolute inset-0 bg-gray-900/40 backdrop-blur-sm"
+        className="absolute inset-0 bg-gray-900/50 backdrop-blur-sm"
         onClick={onClose}
       />
-      <div className="relative bg-white rounded-3xl shadow-2xl max-w-5xl w-full max-h-[90vh] overflow-hidden z-10 flex flex-col">
+      <div className="relative bg-white rounded-3xl shadow-2xl max-w-6xl w-full max-h-[90vh] overflow-hidden z-10 flex flex-col">
         <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
           <h2 className="text-lg font-bold text-gray-900">Firmar Autorización APC</h2>
           <button
@@ -267,7 +268,8 @@ const ApcSignatureModal: React.FC<ApcSignatureModalProps> = ({ isOpen, onClose, 
           </div>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 };
 
