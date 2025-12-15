@@ -940,6 +940,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableZones, onUpdateZo
   const [activeTab, setActiveTab] = useState<Tab>('dashboard');
   const [showExportModal, setShowExportModal] = useState(false);
   const [showZonesModal, setShowZonesModal] = useState(false);
+  const [showSettingsSubmenu, setShowSettingsSubmenu] = useState(false);
   const [selectedProspect, setSelectedProspect] = useState<Prospect | null>(null);
   const [selectedDocument, setSelectedDocument] = useState<{ type: string; url: string; name: string } | null>(null);
   const [newZone, setNewZone] = useState('');
@@ -1113,6 +1114,31 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableZones, onUpdateZo
     };
     fetchData();
   }, []); // Run once on mount
+
+  // Cerrar submenú cuando se cambia de tab o se hace clic fuera
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as HTMLElement;
+      if (showSettingsSubmenu && !target.closest('.settings-submenu-container')) {
+        setShowSettingsSubmenu(false);
+      }
+    };
+
+    if (showSettingsSubmenu) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [showSettingsSubmenu]);
+
+  // Cerrar submenú cuando se cambia a un tab que no es de configuración
+  useEffect(() => {
+    if (activeTab !== 'settings' && activeTab !== 'calculator-config') {
+      setShowSettingsSubmenu(false);
+    }
+  }, [activeTab]);
 
   // Manejar callback de OAuth de Google Drive cuando venimos desde la configuración
   useEffect(() => {
@@ -1932,26 +1958,88 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableZones, onUpdateZo
             >
               <Building size={14} className="sm:w-4 sm:h-4" /> <span>{isPromotora ? 'Proyectos' : 'Propiedades'}</span>
             </button>
-            <button
-              onClick={() => setActiveTab('calculator-config')}
-              className={`px-3 sm:px-6 py-2 sm:py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition-all flex items-center gap-1 sm:gap-2 shrink-0 ${
-                activeTab === 'calculator-config' 
-                  ? 'bg-indigo-50 text-indigo-600 shadow-sm' 
-                  : 'text-gray-400 hover:text-gray-600 hover:bg-gray-50'
-              }`}
-            >
-              <Calculator size={14} className="sm:w-4 sm:h-4" /> <span>Configurar Calculadora</span>
-            </button>
-            <button
-              onClick={() => setActiveTab('settings')}
-              className={`px-3 sm:px-6 py-2 sm:py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition-all flex items-center gap-1 sm:gap-2 shrink-0 ${
-                activeTab === 'settings' 
-                  ? 'bg-indigo-50 text-indigo-600 shadow-sm' 
-                  : 'text-gray-400 hover:text-gray-600 hover:bg-gray-50'
-              }`}
-            >
-              <Settings size={14} className="sm:w-4 sm:h-4" /> <span>Configuración</span>
-            </button>
+            <div className="relative settings-submenu-container">
+              <button
+                onClick={() => {
+                  setShowSettingsSubmenu(!showSettingsSubmenu);
+                  if (!showSettingsSubmenu && activeTab !== 'settings' && activeTab !== 'calculator-config') {
+                    setActiveTab('settings');
+                  }
+                }}
+                className={`px-3 sm:px-6 py-2 sm:py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition-all flex items-center gap-1 sm:gap-2 shrink-0 ${
+                  (activeTab === 'settings' || activeTab === 'calculator-config')
+                    ? 'bg-indigo-50 text-indigo-600 shadow-sm' 
+                    : 'text-gray-400 hover:text-gray-600 hover:bg-gray-50'
+                }`}
+              >
+                <Settings size={14} className="sm:w-4 sm:h-4" /> <span>Configuración</span>
+                <ChevronDown 
+                  size={14} 
+                  className={`sm:w-4 sm:h-4 transition-transform ${showSettingsSubmenu ? 'rotate-180' : ''}`} 
+                />
+              </button>
+              
+              {/* Submenú de Configuración */}
+              {showSettingsSubmenu && (
+                <div className="absolute top-full left-0 mt-2 w-72 bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden z-50 animate-fade-in-up">
+                  <button
+                    onClick={() => {
+                      setActiveTab('calculator-config');
+                      setShowSettingsSubmenu(false);
+                    }}
+                    className={`w-full px-5 py-4 text-left hover:bg-indigo-50/50 transition-colors flex items-start gap-4 border-b border-gray-50 last:border-b-0 ${
+                      activeTab === 'calculator-config' ? 'bg-indigo-50' : ''
+                    }`}
+                  >
+                    <div className={`w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0 transition-colors ${
+                      activeTab === 'calculator-config' 
+                        ? 'bg-indigo-100 text-indigo-600' 
+                        : 'bg-gray-100 text-gray-600 group-hover:bg-indigo-50'
+                    }`}>
+                      <Calculator size={22} strokeWidth={1.5} />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className={`font-bold text-sm mb-1.5 ${
+                        activeTab === 'calculator-config' ? 'text-indigo-600' : 'text-gray-900'
+                      }`}>
+                        Configurar Calculadora
+                      </div>
+                      <div className="text-xs text-gray-500 leading-relaxed">
+                        Integración web, documentos y zonas
+                      </div>
+                    </div>
+                  </button>
+                  
+                  <button
+                    onClick={() => {
+                      setActiveTab('settings');
+                      setShowSettingsSubmenu(false);
+                    }}
+                    className={`w-full px-5 py-4 text-left hover:bg-indigo-50/50 transition-colors flex items-start gap-4 ${
+                      activeTab === 'settings' ? 'bg-indigo-50' : ''
+                    }`}
+                  >
+                    <div className={`w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0 transition-colors ${
+                      activeTab === 'settings' 
+                        ? 'bg-indigo-100 text-indigo-600' 
+                        : 'bg-gray-100 text-gray-600 group-hover:bg-indigo-50'
+                    }`}>
+                      <Shield size={22} strokeWidth={1.5} />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className={`font-bold text-sm mb-1.5 ${
+                        activeTab === 'settings' ? 'text-indigo-600' : 'text-gray-900'
+                      }`}>
+                        Configuración General
+                      </div>
+                      <div className="text-xs text-gray-500 leading-relaxed">
+                        Plan, Google Drive y perfil
+                      </div>
+                    </div>
+                  </button>
+                </div>
+              )}
+            </div>
           </div>
         </div>
 
