@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { 
   Users, DollarSign, LayoutDashboard, FileText, Download, Filter, Calendar, CheckCircle2, X, ChevronDown, MapPin, Briefcase, Settings, Plus, Trash2, Building, Image as ImageIcon, Shield, Save, Code, Copy, ExternalLink, Loader2, User, Target, MessageCircle, ShieldCheck, TrendingUp, Eye, FileText as FileTextIcon, BedDouble, Bath, Heart, ArrowRight, Upload, Check, ChevronLeft, RefreshCw, ChevronRight, Cloud, Calculator, FileCheck
 } from 'lucide-react';
@@ -4277,6 +4278,86 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableZones, onUpdateZo
             setSelectedProjectForEdit(null);
           }}
         />
+      )}
+
+      {/* Modal de Zonas más buscadas */}
+      {showZonesModal && createPortal(
+        <div 
+          className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
+          style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, zIndex: 9999 }}
+          onClick={(e) => {
+            if (e.target === e.currentTarget) {
+              setShowZonesModal(false);
+            }
+          }}
+        >
+          <div 
+            className="bg-white rounded-[2rem] w-full max-w-2xl max-h-[80vh] overflow-y-auto shadow-2xl relative"
+            onClick={(e) => e.stopPropagation()}
+            style={{ zIndex: 10000 }}
+          >
+            {/* Header con botón cerrar */}
+            <div className="sticky top-0 bg-white border-b border-gray-100 p-6 flex items-center justify-between z-10">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-full bg-orange-50 flex items-center justify-center">
+                  <MapPin size={20} className="text-orange-600" />
+                </div>
+                <div>
+                  <h3 className="text-2xl font-bold text-gray-900">Zonas Más Buscadas</h3>
+                  <p className="text-sm text-gray-500">Zonas más populares entre los prospectos</p>
+                </div>
+              </div>
+              <button
+                onClick={() => setShowZonesModal(false)}
+                className="w-10 h-10 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center transition-colors"
+              >
+                <X size={20} className="text-gray-600" />
+              </button>
+            </div>
+
+            {/* Contenido */}
+            <div className="p-6">
+              <div className="space-y-4">
+                {sortedZones.length === 0 ? (
+                  <div className="text-center py-8 text-gray-500">
+                    Aún no tenemos datos de zonas
+                  </div>
+                ) : (
+                  sortedZones.map(([zone, count], index) => (
+                    <div 
+                      key={index}
+                      className="flex items-center gap-4 p-4 bg-gray-50 rounded-xl border border-gray-100 hover:border-orange-200 transition-colors"
+                    >
+                      <div className="w-10 h-10 rounded-full bg-orange-100 flex items-center justify-center shrink-0">
+                        <MapPin size={18} className="text-orange-600" />
+                      </div>
+                      <div className="flex-1">
+                        <h4 className="font-bold text-gray-900">{zone}</h4>
+                        <p className="text-sm text-gray-500">
+                          {count} {count === 1 ? 'prospecto interesado' : 'prospectos interesados'}
+                        </p>
+                      </div>
+                      <div className="text-right">
+                        <span className="px-3 py-1 bg-orange-50 text-orange-700 rounded-full text-xs font-semibold">
+                          #{index + 1}
+                        </span>
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+
+              {sortedZones.length > 0 && (
+                <div className="mt-6 pt-6 border-t border-gray-200">
+                  <p className="text-sm text-gray-600 text-center">
+                    Total: <span className="font-bold text-gray-900">{totalZones}</span> {totalZones === 1 ? 'zona encontrada' : 'zonas encontradas'} con actividad
+                  </p>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>,
+        document.body
       )}
 
       {/* Notification Modal */}
