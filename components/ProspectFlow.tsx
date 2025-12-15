@@ -1221,28 +1221,29 @@ export const ProspectFlow: React.FC<ProspectFlowProps> = ({ availableZones, comp
                   </div>
 
                   {/* Tarjeta de Zonas más buscadas - Solo para Broker */}
-                  {(() => {
-                    console.log('🔍 Verificando condiciones para tarjeta de zonas:', {
-                      companyRole,
-                      isBroker: companyRole === 'Broker',
-                      zonesLength: preferences.zone.length,
-                      zones: preferences.zone,
-                      shouldShow: companyRole === 'Broker' && preferences.zone.length > 0
-                    });
-                    return null;
-                  })()}
                   {companyRole === 'Broker' && preferences.zone.length > 0 && (
                     <div 
                       onClick={(e) => {
+                        console.log('🖱️ CLICK DETECTADO en tarjeta de zonas!', { 
+                          showZonesModal, 
+                          companyRole,
+                          zones: preferences.zone 
+                        });
                         e.preventDefault();
                         e.stopPropagation();
-                        console.log('🖱️ Click en tarjeta de zonas, abriendo modal...', { showZonesModal });
                         setShowZonesModal(true);
-                        console.log('✅ Estado actualizado, showZonesModal debería ser true');
+                        console.log('✅ setShowZonesModal(true) ejecutado');
                       }}
-                      onMouseEnter={() => console.log('🖱️ Mouse sobre tarjeta de zonas')}
-                      className="bg-white rounded-[2rem] p-6 border border-gray-100 shadow-sm hover:shadow-md transition-all cursor-pointer mb-10 max-w-md mx-auto relative z-10"
-                      style={{ pointerEvents: 'auto' }}
+                      onMouseDown={(e) => {
+                        console.log('🖱️ MouseDown en tarjeta');
+                        e.stopPropagation();
+                      }}
+                      onMouseUp={(e) => {
+                        console.log('🖱️ MouseUp en tarjeta');
+                        e.stopPropagation();
+                      }}
+                      className="bg-white rounded-[2rem] p-6 border border-gray-100 shadow-sm hover:shadow-md transition-all cursor-pointer mb-10 max-w-md mx-auto relative z-50"
+                      style={{ pointerEvents: 'auto', position: 'relative' }}
                     >
                       <div className="flex items-center justify-center mb-4">
                         <div className="w-12 h-12 rounded-full bg-orange-50 flex items-center justify-center">
@@ -1908,10 +1909,6 @@ export const ProspectFlow: React.FC<ProspectFlowProps> = ({ availableZones, comp
 
 
       {/* Modal de Zonas más buscadas - Solo para Broker */}
-      {(() => {
-        console.log('🔍 Estado del modal de zonas:', { showZonesModal, companyRole, shouldShow: showZonesModal && companyRole === 'Broker' });
-        return null;
-      })()}
       {showZonesModal && companyRole === 'Broker' && createPortal(
         <div 
           className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
