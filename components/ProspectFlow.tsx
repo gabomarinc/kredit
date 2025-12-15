@@ -1221,67 +1221,6 @@ export const ProspectFlow: React.FC<ProspectFlowProps> = ({ availableZones, comp
                     </div>
                   </div>
 
-                  {/* TEST: Botón de prueba para abrir modal */}
-                  {companyRole === 'Broker' && (
-                    <button
-                      onClick={() => {
-                        console.log('🧪 TEST: Click en botón de prueba');
-                        setShowZonesModal(true);
-                      }}
-                      className="mb-4 px-4 py-2 bg-red-500 text-white rounded"
-                    >
-                      TEST: Abrir Modal
-                    </button>
-                  )}
-
-                  {/* Tarjeta de Zonas más buscadas - Solo para Broker */}
-                  {(() => {
-                    const shouldShow = companyRole === 'Broker' && preferences.zone.length > 0;
-                    return shouldShow ? (
-                      <div 
-                        className="bg-white rounded-[2rem] p-6 border border-gray-100 shadow-sm hover:shadow-md transition-all mb-10 max-w-md mx-auto relative z-50"
-                        style={{ position: 'relative' }}
-                      >
-                        <button
-                          type="button"
-                          onClick={(e) => {
-                            e.preventDefault();
-                            e.stopPropagation();
-                            console.log('🖱️ CLICK en botón de tarjeta de zonas!', { 
-                              showZonesModal, 
-                              companyRole,
-                              zones: preferences.zone 
-                            });
-                            const newValue = true;
-                            console.log('🔄 Llamando setShowZonesModal con:', newValue);
-                            setShowZonesModal(newValue);
-                            setTimeout(() => {
-                              console.log('⏱️ Después de 100ms, showZonesModal debería ser:', newValue);
-                            }, 100);
-                          }}
-                          className="w-full text-left cursor-pointer hover:opacity-90"
-                          style={{ background: 'transparent', border: 'none', padding: 0, outline: 'none' }}
-                        >
-                          <div className="flex items-center justify-center mb-4">
-                            <div className="w-12 h-12 rounded-full bg-orange-50 flex items-center justify-center">
-                              <MapPin size={24} className="text-orange-600" />
-                            </div>
-                          </div>
-                          <p className="text-xs text-gray-500 uppercase font-semibold text-center mb-2">ZONAS MÁS BUSCADAS</p>
-                          <p className="text-xl font-bold text-gray-900 text-center mb-3">
-                            {preferences.zone.slice(0, 2).join(', ')}
-                            {preferences.zone.length > 2 && ' y ...'}
-                          </p>
-                          <div className="flex justify-center">
-                            <span className="px-3 py-1 bg-orange-50 text-orange-700 rounded-full text-xs font-semibold">
-                              {preferences.zone.length} {preferences.zone.length === 1 ? 'zona' : 'zonas'}
-                            </span>
-                          </div>
-                        </button>
-                      </div>
-                    ) : null;
-                  })()}
-
                   {/* Propiedades/Proyectos Disponibles - Solo si hay plan Premium */}
                   {companyPlan === 'Wolf of Wallstreet' && (
                     <div className="mb-10">
