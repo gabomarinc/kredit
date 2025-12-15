@@ -1220,17 +1220,22 @@ export const ProspectFlow: React.FC<ProspectFlowProps> = ({ availableZones, comp
                     </div>
                   </div>
 
+                  {/* TEST: Botón de prueba para abrir modal */}
+                  {companyRole === 'Broker' && (
+                    <button
+                      onClick={() => {
+                        console.log('🧪 TEST: Click en botón de prueba');
+                        setShowZonesModal(true);
+                      }}
+                      className="mb-4 px-4 py-2 bg-red-500 text-white rounded"
+                    >
+                      TEST: Abrir Modal
+                    </button>
+                  )}
+
                   {/* Tarjeta de Zonas más buscadas - Solo para Broker */}
                   {(() => {
                     const shouldShow = companyRole === 'Broker' && preferences.zone.length > 0;
-                    console.log('🔍 [DEBUG] Condiciones para tarjeta de zonas:', {
-                      companyRole,
-                      isBroker: companyRole === 'Broker',
-                      zonesLength: preferences.zone.length,
-                      zones: preferences.zone,
-                      shouldShow,
-                      showZonesModal
-                    });
                     return shouldShow ? (
                       <div 
                         className="bg-white rounded-[2rem] p-6 border border-gray-100 shadow-sm hover:shadow-md transition-all mb-10 max-w-md mx-auto relative z-50"
