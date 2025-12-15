@@ -1926,8 +1926,8 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableZones, onUpdateZo
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 animate-fade-in-up">
         
         {/* Top Menu Tabs */}
-        <div className="flex justify-center mb-6 sm:mb-10">
-          <div className="bg-white p-1 sm:p-1.5 rounded-2xl shadow-sm border border-gray-100 inline-flex gap-1 overflow-x-auto relative">
+        <div className="flex justify-center mb-6 sm:mb-10 relative">
+          <div className="bg-white p-1 sm:p-1.5 rounded-2xl shadow-sm border border-gray-100 inline-flex gap-1 overflow-x-auto">
             <button
               onClick={() => setActiveTab('dashboard')}
               className={`px-3 sm:px-6 py-2 sm:py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition-all flex items-center gap-1 sm:gap-2 shrink-0 ${
@@ -1958,7 +1958,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableZones, onUpdateZo
             >
               <Building size={14} className="sm:w-4 sm:h-4" /> <span>{isPromotora ? 'Proyectos' : 'Propiedades'}</span>
             </button>
-            <div className="relative settings-submenu-container" style={{ zIndex: 100 }}>
+            <div className="relative settings-submenu-container">
               <button
                 onClick={() => {
                   setShowSettingsSubmenu(!showSettingsSubmenu);
@@ -1981,7 +1981,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableZones, onUpdateZo
               
               {/* Submenú de Configuración */}
               {showSettingsSubmenu && (
-                <div className="absolute top-full left-0 mt-2 w-72 bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden z-[100] animate-fade-in-up" style={{ zIndex: 1000 }}>
+                <div className="absolute top-full left-0 mt-2 w-72 bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden z-[1000]">
                   <button
                     onClick={() => {
                       setActiveTab('calculator-config');
@@ -2040,6 +2040,8 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableZones, onUpdateZo
                 </div>
               )}
             </div>
+          </div>
+        </div>
           </div>
         </div>
 
