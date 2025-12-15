@@ -411,6 +411,11 @@ export const ProspectFlow: React.FC<ProspectFlowProps> = ({ availableZones, comp
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }, [step]);
 
+  // Debug: Ver cuando cambia showZonesModal
+  useEffect(() => {
+    console.log('🔄 [DEBUG] showZonesModal cambió a:', showZonesModal);
+  }, [showZonesModal]);
+
   // Guardar automáticamente los datos cuando se llega al paso 6 (BACKUP - por si handleFinalSubmit no guardó)
   useEffect(() => {
     const saveFinalDataAutomatically = async () => {
