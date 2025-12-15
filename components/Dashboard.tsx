@@ -964,6 +964,8 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableZones, onUpdateZo
   // Pagination State
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
+  const [searchTerm, setSearchTerm] = useState('');
+  const [statusFilter, setStatusFilter] = useState('all');
 
   // Properties State
   const [properties, setProperties] = useState<Property[]>([]);
@@ -1065,10 +1067,29 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableZones, onUpdateZo
   };
 
   // Calcular prospectos paginados
-  const totalPages = Math.ceil(prospects.length / itemsPerPage);
+  // Filtrar prospectos
+  const filteredProspects = prospects.filter(prospect => {
+    // Filtro por búsqueda
+    if (searchTerm && !prospect.name.toLowerCase().includes(searchTerm.toLowerCase()) && 
+        !prospect.email.toLowerCase().includes(searchTerm.toLowerCase())) {
+      return false;
+    }
+    
+    // Filtro por estado
+    if (statusFilter !== 'all') {
+      const prospectStatus = prospect.status?.toLowerCase() || 'new';
+      if (statusFilter === 'new' && prospectStatus !== 'new') return false;
+      if (statusFilter === 'contacted' && prospectStatus !== 'contacted') return false;
+      if (statusFilter === 'qualified' && prospectStatus !== 'qualified') return false;
+    }
+    
+    return true;
+  });
+
+  const totalPages = Math.ceil(filteredProspects.length / itemsPerPage);
   const startIndex = (currentPage - 1) * itemsPerPage;
   const endIndex = startIndex + itemsPerPage;
-  const paginatedProspects = prospects.slice(startIndex, endIndex);
+  const paginatedProspects = filteredProspects.slice(startIndex, endIndex);
 
   // Load Data from Neon
   useEffect(() => {
@@ -1115,30 +1136,17 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableZones, onUpdateZo
     fetchData();
   }, []); // Run once on mount
 
-  // Cerrar submenú cuando se cambia de tab o se hace clic fuera
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      const target = event.target as HTMLElement;
-      if (showSettingsSubmenu && !target.closest('.settings-submenu-container')) {
-        setShowSettingsSubmenu(false);
-      }
-    };
-
-    if (showSettingsSubmenu) {
-      document.addEventListener('mousedown', handleClickOutside);
-    }
-
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
-  }, [showSettingsSubmenu]);
-
   // Cerrar submenú cuando se cambia a un tab que no es de configuración
   useEffect(() => {
     if (activeTab !== 'settings' && activeTab !== 'calculator-config') {
       setShowSettingsSubmenu(false);
     }
   }, [activeTab]);
+
+  // Resetear página cuando cambian los filtros
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm, statusFilter]);
 
   // Manejar callback de OAuth de Google Drive cuando venimos desde la configuración
   useEffect(() => {
@@ -1958,11 +1966,14 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableZones, onUpdateZo
             >
               <Building size={14} className="sm:w-4 sm:h-4" /> <span>{isPromotora ? 'Proyectos' : 'Propiedades'}</span>
             </button>
-            <div className="relative settings-submenu-container">
+            <div 
+              className="relative settings-submenu-container"
+              onMouseEnter={() => setShowSettingsSubmenu(true)}
+              onMouseLeave={() => setShowSettingsSubmenu(false)}
+            >
               <button
                 onClick={() => {
-                  setShowSettingsSubmenu(!showSettingsSubmenu);
-                  if (!showSettingsSubmenu && activeTab !== 'settings' && activeTab !== 'calculator-config') {
+                  if (activeTab !== 'settings' && activeTab !== 'calculator-config') {
                     setActiveTab('settings');
                   }
                 }}
@@ -2115,6 +2126,116 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableZones, onUpdateZo
                    {totalZones > 0 ? `${totalZones} ${totalZones === 1 ? 'zona' : 'zonas'}` : '0 zonas'}
                  </span>
             </div>
+            )}
+          </div>
+        ) : activeTab === 'prospects' ? (
+          <div className="space-y-6">
+            {/* Header */}
+            <div className="flex items-center justify-between flex-wrap gap-4">
+              <div>
+                <h2 className="text-2xl font-bold text-gray-900 mb-1">Prospectos</h2>
+                <p className="text-gray-500 text-sm">Gestiona y visualiza todos tus prospectos</p>
+              </div>
+              <div className="flex items-center gap-3">
+                <button
+                  onClick={() => setShowExportModal(true)}
+                  className="bg-indigo-600 text-white px-4 py-2 rounded-xl font-semibold hover:bg-indigo-700 transition-colors flex items-center gap-2 text-sm"
+                >
+                  <Download size={16} /> Exportar
+                </button>
+              </div>
+            </div>
+
+            {/* Filters */}
+            <div className="bg-white rounded-2xl p-4 border border-gray-100">
+              <div className="flex flex-wrap items-center gap-4">
+                <div className="flex items-center gap-2">
+                  <Filter size={18} className="text-gray-400" />
+                  <span className="text-sm font-semibold text-gray-700">Filtros:</span>
+                </div>
+                <input
+                  type="text"
+                  placeholder="Buscar por nombre..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="px-4 py-2 rounded-xl border border-gray-200 focus:border-indigo-500 outline-none text-sm flex-1 min-w-[200px]"
+                />
+                <select
+                  value={statusFilter}
+                  onChange={(e) => setStatusFilter(e.target.value)}
+                  className="px-4 py-2 rounded-xl border border-gray-200 focus:border-indigo-500 outline-none text-sm"
+                >
+                  <option value="all">Todos los estados</option>
+                  <option value="new">Nuevos</option>
+                  <option value="contacted">Contactados</option>
+                  <option value="qualified">Calificados</option>
+                </select>
+              </div>
+            </div>
+
+            {/* Prospects List */}
+            {isLoading ? (
+              <div className="text-center py-12">
+                <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div>
+                <p className="text-gray-500 mt-4">Cargando prospectos...</p>
+              </div>
+            ) : paginatedProspects.length === 0 ? (
+              <div className="bg-white rounded-[2rem] p-12 text-center border border-gray-100">
+                <Users size={64} className="mx-auto mb-4 text-gray-300" />
+                <h3 className="text-xl font-bold text-gray-900 mb-2">No hay prospectos</h3>
+                <p className="text-gray-500">Aún no has recibido ningún prospecto</p>
+              </div>
+            ) : (
+              <>
+                <div className="grid gap-4">
+                  {paginatedProspects.map((prospect) => (
+                    <div
+                      key={prospect.id}
+                      onClick={() => setSelectedProspect(prospect)}
+                      className="bg-white rounded-2xl p-6 border border-gray-100 hover:shadow-lg transition-all cursor-pointer"
+                    >
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-4">
+                          <div className="w-12 h-12 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center text-lg font-bold">
+                            {prospect.name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)}
+                          </div>
+                          <div>
+                            <h3 className="font-bold text-gray-900 text-lg">{prospect.name}</h3>
+                            <p className="text-sm text-gray-500">{prospect.email}</p>
+                          </div>
+                        </div>
+                        <div className="text-right">
+                          <p className="font-semibold text-gray-900">{formatCurrency(prospect.income || 0)}</p>
+                          <p className="text-xs text-gray-500">Ingreso mensual</p>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Pagination */}
+                {totalPages > 1 && (
+                  <div className="flex items-center justify-center gap-2">
+                    <button
+                      onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                      disabled={currentPage === 1}
+                      className="px-4 py-2 rounded-xl border border-gray-200 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 transition-colors"
+                    >
+                      <ChevronLeft size={16} />
+                    </button>
+                    <span className="px-4 py-2 text-sm text-gray-700">
+                      Página {currentPage} de {totalPages}
+                    </span>
+                    <button
+                      onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                      disabled={currentPage === totalPages}
+                      className="px-4 py-2 rounded-xl border border-gray-200 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 transition-colors"
+                    >
+                      <ChevronRight size={16} />
+                    </button>
+                  </div>
+                )}
+              </>
             )}
           </div>
         ) : activeTab === 'properties' ? (
