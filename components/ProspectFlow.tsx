@@ -1221,15 +1221,28 @@ export const ProspectFlow: React.FC<ProspectFlowProps> = ({ availableZones, comp
                   </div>
 
                   {/* Tarjeta de Zonas más buscadas - Solo para Broker */}
+                  {(() => {
+                    console.log('🔍 Verificando condiciones para tarjeta de zonas:', {
+                      companyRole,
+                      isBroker: companyRole === 'Broker',
+                      zonesLength: preferences.zone.length,
+                      zones: preferences.zone,
+                      shouldShow: companyRole === 'Broker' && preferences.zone.length > 0
+                    });
+                    return null;
+                  })()}
                   {companyRole === 'Broker' && preferences.zone.length > 0 && (
                     <div 
                       onClick={(e) => {
                         e.preventDefault();
                         e.stopPropagation();
-                        console.log('🖱️ Click en tarjeta de zonas, abriendo modal...');
+                        console.log('🖱️ Click en tarjeta de zonas, abriendo modal...', { showZonesModal });
                         setShowZonesModal(true);
+                        console.log('✅ Estado actualizado, showZonesModal debería ser true');
                       }}
-                      className="bg-white rounded-[2rem] p-6 border border-gray-100 shadow-sm hover:shadow-md transition-all cursor-pointer mb-10 max-w-md mx-auto"
+                      onMouseEnter={() => console.log('🖱️ Mouse sobre tarjeta de zonas')}
+                      className="bg-white rounded-[2rem] p-6 border border-gray-100 shadow-sm hover:shadow-md transition-all cursor-pointer mb-10 max-w-md mx-auto relative z-10"
+                      style={{ pointerEvents: 'auto' }}
                     >
                       <div className="flex items-center justify-center mb-4">
                         <div className="w-12 h-12 rounded-full bg-orange-50 flex items-center justify-center">
