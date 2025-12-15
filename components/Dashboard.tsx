@@ -2342,7 +2342,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableZones, onUpdateZo
 
             {/* Card 4: Top Zones (solo para Broker) */}
             {!isPromotora && (
-              <div className="bg-white rounded-[2.5rem] p-8 shadow-[0_10px_40px_-10px_rgba(0,0,0,0.05)] border border-gray-100 flex flex-col items-center justify-center text-center group hover:shadow-lg transition-all duration-500 cursor-pointer" onClick={() => hasMoreZones && setShowZonesModal(true)}>
+              <div className="bg-white rounded-[2.5rem] p-8 shadow-[0_10px_40px_-10px_rgba(0,0,0,0.05)] border border-gray-100 flex flex-col items-center justify-center text-center group hover:shadow-lg transition-all duration-500 cursor-pointer" onClick={() => sortedZones.length > 0 && setShowZonesModal(true)}>
                <div className="w-16 h-16 rounded-3xl bg-orange-50 text-orange-600 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-500">
                  <MapPin size={32} strokeWidth={1.5} />
                </div>
