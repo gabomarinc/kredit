@@ -1908,6 +1908,10 @@ export const ProspectFlow: React.FC<ProspectFlowProps> = ({ availableZones, comp
 
 
       {/* Modal de Zonas más buscadas - Solo para Broker */}
+      {(() => {
+        console.log('🔍 Estado del modal de zonas:', { showZonesModal, companyRole, shouldShow: showZonesModal && companyRole === 'Broker' });
+        return null;
+      })()}
       {showZonesModal && companyRole === 'Broker' && createPortal(
         <div 
           className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
