@@ -13,13 +13,19 @@ type AuthState = 'selection' | 'login' | 'register' | 'authenticated';
 function App() {
   // Check for embed mode query param
   const [isEmbedMode, setIsEmbedMode] = useState(false);
+  const [embedCompanyId, setEmbedCompanyId] = useState<string | null>(null);
+  const [isLoadingEmbedCompany, setIsLoadingEmbedCompany] = useState(false);
   
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const isEmbed = params.get('mode') === 'embed';
+    const companyId = params.get('company_id');
     
     if (isEmbed) {
       setIsEmbedMode(true);
+      if (companyId) {
+        setEmbedCompanyId(companyId);
+      }
       // Removed transparency logic: We want to keep the Aurora background!
     }
   }, []);
@@ -123,10 +129,48 @@ function App() {
     setIsAdminView(true); // Land on dashboard
   };
 
+  // Load company data when in embed mode with company_id
+  useEffect(() => {
+    const loadEmbedCompanyData = async () => {
+      if (isEmbedMode && embedCompanyId && !isLoadingEmbedCompany) {
+        setIsLoadingEmbedCompany(true);
+        try {
+          console.log('🔄 Cargando datos de empresa para embed mode:', embedCompanyId);
+          const company = await getCompanyById(embedCompanyId);
+          if (company) {
+            console.log('✅ Datos de empresa cargados para embed:', company.companyName);
+            setCompanyName(company.companyName);
+            setZones(company.zones.length > 0 ? company.zones : ZONES_PANAMA);
+          } else {
+            console.warn('⚠️ Empresa no encontrada para embed, usando valores por defecto');
+          }
+        } catch (error) {
+          console.error('❌ Error cargando datos de empresa para embed:', error);
+        } finally {
+          setIsLoadingEmbedCompany(false);
+        }
+      }
+    };
+
+    loadEmbedCompanyData();
+  }, [isEmbedMode, embedCompanyId]);
+
   // --- EMBEDDED / PUBLIC VIEW MODE ---
   // This renders ONLY the form, no admin header, no login checks. 
   // Designed to be inside an iframe on the client's website.
   if (isEmbedMode) {
+    // Show loading while fetching company data
+    if (isLoadingEmbedCompany) {
+      return (
+        <div className="min-h-screen flex items-center justify-center">
+          <div className="text-center">
+            <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mb-4"></div>
+            <p className="text-gray-500">Cargando formulario...</p>
+          </div>
+        </div>
+      );
+    }
+
     return (
       <div className="min-h-screen py-4 flex items-center justify-center">
         {/* We pass true to isEmbed to remove header/nav elements in ProspectFlow if needed */}
