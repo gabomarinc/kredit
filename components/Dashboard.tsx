@@ -941,6 +941,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableZones, onUpdateZo
   const [showExportModal, setShowExportModal] = useState(false);
   const [showZonesModal, setShowZonesModal] = useState(false);
   const [showSettingsSubmenu, setShowSettingsSubmenu] = useState(false);
+  const [settingsSubmenuTimeout, setSettingsSubmenuTimeout] = useState<NodeJS.Timeout | null>(null);
   const [selectedProspect, setSelectedProspect] = useState<Prospect | null>(null);
   const [selectedDocument, setSelectedDocument] = useState<{ type: string; url: string; name: string } | null>(null);
   const [newZone, setNewZone] = useState('');
@@ -1491,6 +1492,22 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableZones, onUpdateZo
     loadProspectData();
   }, [selectedProspect?.id]); // Solo depender del ID, no del objeto completo
 
+  // Cerrar submenú cuando cambia el tab activo (excepto si es settings o calculator-config)
+  useEffect(() => {
+    if (activeTab !== 'settings' && activeTab !== 'calculator-config') {
+      setShowSettingsSubmenu(false);
+    }
+  }, [activeTab]);
+
+  // Cleanup del timeout al desmontar
+  useEffect(() => {
+    return () => {
+      if (settingsSubmenuTimeout) {
+        clearTimeout(settingsSubmenuTimeout);
+      }
+    };
+  }, [settingsSubmenuTimeout]);
+
   // Calculate KPIs based on REAL prospects
   const totalForms = prospects.length;
   // Explicitly type accumulator as number to avoid TS arithmetic errors
@@ -1968,8 +1985,21 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableZones, onUpdateZo
             </button>
             <div 
               className="relative settings-submenu-container"
-              onMouseEnter={() => setShowSettingsSubmenu(true)}
-              onMouseLeave={() => setShowSettingsSubmenu(false)}
+              onMouseEnter={() => {
+                // Cancelar cualquier timeout pendiente
+                if (settingsSubmenuTimeout) {
+                  clearTimeout(settingsSubmenuTimeout);
+                  setSettingsSubmenuTimeout(null);
+                }
+                setShowSettingsSubmenu(true);
+              }}
+              onMouseLeave={() => {
+                // Agregar delay antes de ocultar el submenú
+                const timeout = setTimeout(() => {
+                  setShowSettingsSubmenu(false);
+                }, 200); // 200ms de delay
+                setSettingsSubmenuTimeout(timeout);
+              }}
             >
               <button
                 onClick={() => {
@@ -1992,7 +2022,16 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableZones, onUpdateZo
               
               {/* Submenú de Configuración */}
               {showSettingsSubmenu && (
-                <div className="absolute top-full left-0 mt-2 w-72 bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden z-[1000]">
+                <div 
+                  className="absolute top-full left-0 mt-1 w-72 bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden z-[1000]"
+                  onMouseEnter={() => {
+                    // Cancelar timeout si el mouse entra al submenú
+                    if (settingsSubmenuTimeout) {
+                      clearTimeout(settingsSubmenuTimeout);
+                      setSettingsSubmenuTimeout(null);
+                    }
+                  }}
+                >
                   <button
                     onClick={() => {
                       setActiveTab('calculator-config');
