@@ -7,6 +7,12 @@ import {
   Home, Building2, MapPin, User, Upload, FileCheck, ArrowRight, CheckCircle2, Download, HeartHandshake, ChevronLeft, Check, BedDouble, Bath, Star, TrendingDown, X, Loader2
 } from 'lucide-react';
 import { NotificationModal, NotificationType } from './ui/NotificationModal';
+import SignatureCanvas from 'react-signature-canvas';
+import { Document, Page, pdfjs } from 'react-pdf';
+import { PDFDocument, rgb } from 'pdf-lib';
+
+// Configurar worker de pdf.js para react-pdf
+pdfjs.GlobalWorkerOptions.workerSrc = `https://unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.js`;
 
 interface ProspectFlowProps {
   availableZones: string[];
@@ -57,6 +63,214 @@ const FileUpload = ({ label, file, setFile }: { label: string, file: File | null
   </div>
 );
 
+interface ApcSignatureModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  fullName: string;
+  onSigned: (file: File) => void;
+}
+
+const ApcSignatureModal: React.FC<ApcSignatureModalProps> = ({ isOpen, onClose, fullName, onSigned }) => {
+  const [name, setName] = useState(fullName || '');
+  const [idNumber, setIdNumber] = useState('');
+  const [isSigning, setIsSigning] = useState(false);
+  const sigPadRef = useRef<SignatureCanvas | null>(null);
+
+  useEffect(() => {
+    if (isOpen) {
+      setName(fullName || '');
+    }
+  }, [isOpen, fullName]);
+
+  if (!isOpen) return null;
+
+  const handleClear = () => {
+    sigPadRef.current?.clear();
+  };
+
+  const handleConfirm = async () => {
+    if (!sigPadRef.current || sigPadRef.current.isEmpty()) {
+      alert('Por favor firma en el recuadro antes de continuar.');
+      return;
+    }
+
+    try {
+      setIsSigning(true);
+
+      // 1. Cargar PDF base de APC
+      const existingPdfBytes = await fetch('/apc.pdf').then(res => res.arrayBuffer());
+      const pdfDoc = await PDFDocument.load(existingPdfBytes);
+      const pages = pdfDoc.getPages();
+      const firstPage = pages[0];
+
+      // 2. Escribir nombre y cédula en una zona baja del PDF (coordenadas aproximadas)
+      const textX = 120;
+      let textY = 130;
+      const fontSize = 10;
+
+      if (name.trim()) {
+        firstPage.drawText(name.trim(), {
+          x: textX,
+          y: textY,
+          size: fontSize,
+          color: rgb(0, 0, 0)
+        });
+        textY -= 14;
+      }
+
+      if (idNumber.trim()) {
+        firstPage.drawText(idNumber.trim(), {
+          x: textX,
+          y: textY,
+          size: fontSize,
+          color: rgb(0, 0, 0)
+        });
+      }
+
+      // 3. Insertar imagen de la firma
+      const signatureDataUrl = sigPadRef.current.toDataURL('image/png');
+      const base64 = signatureDataUrl.split(',')[1];
+      const sigBytes = Uint8Array.from(atob(base64), c => c.charCodeAt(0));
+      const sigImage = await pdfDoc.embedPng(sigBytes);
+
+      const sigWidth = 180;
+      const sigHeight = 60;
+      const sigX = textX;
+      const sigY = 70;
+
+      firstPage.drawImage(sigImage, {
+        x: sigX,
+        y: sigY,
+        width: sigWidth,
+        height: sigHeight
+      });
+
+      // 4. Guardar nuevo PDF como File
+      const pdfBytes = await pdfDoc.save();
+      const blob = new Blob([pdfBytes], { type: 'application/pdf' });
+      const file = new File([blob], 'APC_Firmada.pdf', { type: 'application/pdf' });
+
+      onSigned(file);
+      onClose();
+    } catch (error) {
+      console.error('❌ Error generando PDF firmado:', error);
+      alert('Ocurrió un error al generar el PDF firmado. Intenta nuevamente.');
+    } finally {
+      setIsSigning(false);
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 z-[120] flex items-center justify-center p-4">
+      <div
+        className="absolute inset-0 bg-gray-900/40 backdrop-blur-sm"
+        onClick={onClose}
+      />
+      <div className="relative bg-white rounded-3xl shadow-2xl max-w-5xl w-full max-h-[90vh] overflow-hidden z-10 flex flex-col">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
+          <h2 className="text-lg font-bold text-gray-900">Firmar Autorización APC</h2>
+          <button
+            onClick={onClose}
+            className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100 transition-colors"
+          >
+            <X size={16} className="text-gray-500" />
+          </button>
+        </div>
+
+        <div className="flex-1 grid md:grid-cols-[2fr,1.5fr] gap-4 p-6 overflow-y-auto">
+          {/* Visor del PDF */}
+          <div className="bg-gray-50 rounded-2xl border border-gray-200 p-3 flex items-center justify-center">
+            <div className="w-full max-h-[70vh] overflow-auto flex justify-center">
+              <Document file="/apc.pdf" loading={<div className="text-sm text-gray-500">Cargando PDF...</div>}>
+                <Page pageNumber={1} width={500} />
+              </Document>
+            </div>
+          </div>
+
+          {/* Datos y firma */}
+          <div className="space-y-4">
+            <div>
+              <h3 className="text-sm font-semibold text-gray-800 mb-2">Datos del titular</h3>
+              <div className="space-y-3">
+                <div>
+                  <label className="block text-xs font-semibold text-gray-500 mb-1">Nombre completo</label>
+                  <input
+                    type="text"
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    className="w-full px-3 py-2 rounded-xl border border-gray-200 text-sm focus:border-indigo-500 focus:outline-none"
+                    placeholder="Nombre del cliente"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-gray-500 mb-1">Cédula / ID</label>
+                  <input
+                    type="text"
+                    value={idNumber}
+                    onChange={(e) => setIdNumber(e.target.value)}
+                    className="w-full px-3 py-2 rounded-xl border border-gray-200 text-sm focus:border-indigo-500 focus:outline-none"
+                    placeholder="Ej: 8-888-888"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div>
+              <h3 className="text-sm font-semibold text-gray-800 mb-2">Firma del cliente</h3>
+              <div className="bg-gray-50 rounded-2xl border border-dashed border-gray-300 p-3">
+                <SignatureCanvas
+                  ref={sigPadRef}
+                  penColor="#111827"
+                  canvasProps={{
+                    className: 'w-full h-32 bg-white rounded-xl'
+                  }}
+                />
+                <div className="flex justify-between items-center mt-2">
+                  <p className="text-[11px] text-gray-400">Firma dentro del recuadro</p>
+                  <button
+                    type="button"
+                    onClick={handleClear}
+                    className="text-xs font-semibold text-gray-500 hover:text-indigo-600"
+                  >
+                    Borrar firma
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <div className="flex justify-end gap-3 pt-2">
+              <button
+                type="button"
+                onClick={onClose}
+                className="px-4 py-2 rounded-xl text-sm font-semibold text-gray-500 hover:text-gray-700 hover:bg-gray-100"
+              >
+                Cancelar
+              </button>
+              <button
+                type="button"
+                onClick={handleConfirm}
+                disabled={isSigning}
+                className="px-5 py-2.5 rounded-xl text-sm font-semibold text-white bg-indigo-600 hover:bg-indigo-700 disabled:opacity-60 disabled:cursor-not-allowed flex items-center gap-2"
+              >
+                {isSigning ? (
+                  <>
+                    <Loader2 size={16} className="animate-spin" />
+                    Generando PDF...
+                  </>
+                ) : (
+                  <>
+                    Firmar y adjuntar
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 export const ProspectFlow: React.FC<ProspectFlowProps> = ({ availableZones, companyName = "Krêdit", isEmbed = false }) => {
   const [step, setStep] = useState<number>(1);
   const [preferences, setPreferences] = useState<UserPreferences>({
@@ -89,6 +303,7 @@ export const ProspectFlow: React.FC<ProspectFlowProps> = ({ availableZones, comp
   const [companyRole, setCompanyRole] = useState<'Promotora' | 'Broker'>('Broker');
   const [isLoadingProperties, setIsLoadingProperties] = useState(false);
   const [wantsValidation, setWantsValidation] = useState<boolean | null>(null); // null = no decidido, true = quiere validar, false = no quiere
+  const [showApcModal, setShowApcModal] = useState(false);
   const [notification, setNotification] = useState<{ isOpen: boolean; type: NotificationType; message: string; title?: string }>({
     isOpen: false,
     type: 'success',
@@ -832,6 +1047,14 @@ export const ProspectFlow: React.FC<ProspectFlowProps> = ({ availableZones, comp
                     </a>
                   </div>
                   <FileUpload label="Subir APC Firmada" file={personal.signedAcpFile} setFile={(f) => setPersonal({...personal, signedAcpFile: f})} />
+                  <button
+                    type="button"
+                    onClick={() => setShowApcModal(true)}
+                    className="mt-3 w-full text-xs font-semibold text-indigo-600 hover:text-indigo-800 bg-indigo-50/60 hover:bg-indigo-100 border border-dashed border-indigo-200 rounded-xl py-2.5 transition-colors flex items-center justify-center gap-2"
+                  >
+                    <FileCheck size={14} />
+                    Firmar APC en línea
+                  </button>
                 </div>
               </div>
 
@@ -865,6 +1088,14 @@ export const ProspectFlow: React.FC<ProspectFlowProps> = ({ availableZones, comp
               </div>
             </div>
         )}
+
+        {/* Modal de firma APC */}
+        <ApcSignatureModal
+          isOpen={showApcModal}
+          onClose={() => setShowApcModal(false)}
+          fullName={personal.fullName}
+          onSigned={(file) => setPersonal(prev => ({ ...prev, signedAcpFile: file }))}
+        />
 
         {/* STEP 6: RESULTADOS FINALES */}
         {step === 6 && result && (
