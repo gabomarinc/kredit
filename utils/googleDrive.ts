@@ -177,6 +177,11 @@ export const createOrGetProspectFolder = async (
     return folderData.id;
   } catch (error) {
     console.error('❌ Error creando/buscando carpeta de prospecto:', error);
+    // Si viene marcado como 401, propagarlo para que la capa superior pueda refrescar el token
+    if ((error as any)?.status === 401) {
+      throw error;
+    }
+    // Para otros errores, solo devolver null y dejar que la lógica superior decida continuar sin carpeta
     return null;
   }
 };

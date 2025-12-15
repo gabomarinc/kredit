@@ -1468,6 +1468,49 @@ export const updateCompanyPlan = async (companyId: string, plan: 'Freshie' | 'Wo
   }
 };
 
+// Actualizar configuración de Google Drive de una empresa (tokens y carpeta)
+export const updateCompanyGoogleDriveConfig = async (
+  companyId: string,
+  accessToken: string,
+  refreshToken: string,
+  folderId?: string | null
+): Promise<boolean> => {
+  if (!pool) {
+    console.error('❌ Pool de base de datos no inicializado.');
+    return false;
+  }
+
+  try {
+    console.log('🔄 Actualizando configuración de Google Drive de la empresa...', {
+      companyId,
+      hasAccessToken: !!accessToken,
+      hasRefreshToken: !!refreshToken,
+      hasFolderId: !!folderId
+    });
+
+    const client = await pool.connect();
+    await ensureTablesExist(client);
+
+    await client.query(
+      `
+        UPDATE companies SET 
+          google_drive_access_token = $1,
+          google_drive_refresh_token = $2,
+          google_drive_folder_id = $3
+        WHERE id = $4
+      `,
+      [accessToken, refreshToken, folderId || null, companyId]
+    );
+
+    client.release();
+    console.log('✅ Configuración de Google Drive actualizada para la empresa:', companyId);
+    return true;
+  } catch (error) {
+    console.error('❌ Error actualizando configuración de Google Drive:', error);
+    return false;
+  }
+};
+
 // ============================================
 // FUNCIONES PARA SISTEMA DE PROPIEDADES
 // ============================================
