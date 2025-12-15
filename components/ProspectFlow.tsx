@@ -1221,47 +1221,71 @@ export const ProspectFlow: React.FC<ProspectFlowProps> = ({ availableZones, comp
                   </div>
 
                   {/* Tarjeta de Zonas más buscadas - Solo para Broker */}
-                  {companyRole === 'Broker' && preferences.zone.length > 0 && (
-                    <div 
-                      onClick={(e) => {
-                        console.log('🖱️ CLICK DETECTADO en tarjeta de zonas!', { 
-                          showZonesModal, 
-                          companyRole,
-                          zones: preferences.zone 
-                        });
-                        e.preventDefault();
-                        e.stopPropagation();
-                        setShowZonesModal(true);
-                        console.log('✅ setShowZonesModal(true) ejecutado');
-                      }}
-                      onMouseDown={(e) => {
-                        console.log('🖱️ MouseDown en tarjeta');
-                        e.stopPropagation();
-                      }}
-                      onMouseUp={(e) => {
-                        console.log('🖱️ MouseUp en tarjeta');
-                        e.stopPropagation();
-                      }}
-                      className="bg-white rounded-[2rem] p-6 border border-gray-100 shadow-sm hover:shadow-md transition-all cursor-pointer mb-10 max-w-md mx-auto relative z-50"
-                      style={{ pointerEvents: 'auto', position: 'relative' }}
-                    >
-                      <div className="flex items-center justify-center mb-4">
-                        <div className="w-12 h-12 rounded-full bg-orange-50 flex items-center justify-center">
-                          <MapPin size={24} className="text-orange-600" />
+                  {(() => {
+                    const shouldShow = companyRole === 'Broker' && preferences.zone.length > 0;
+                    console.log('🔍 [DEBUG] Condiciones para tarjeta de zonas:', {
+                      companyRole,
+                      isBroker: companyRole === 'Broker',
+                      zonesLength: preferences.zone.length,
+                      zones: preferences.zone,
+                      shouldShow,
+                      showZonesModal
+                    });
+                    return shouldShow ? (
+                      <div 
+                        onClick={(e) => {
+                          console.log('🖱️ CLICK DETECTADO en tarjeta de zonas!', { 
+                            showZonesModal, 
+                            companyRole,
+                            zones: preferences.zone 
+                          });
+                          e.preventDefault();
+                          e.stopPropagation();
+                          setShowZonesModal(true);
+                          console.log('✅ setShowZonesModal(true) ejecutado');
+                        }}
+                        onMouseDown={(e) => {
+                          console.log('🖱️ MouseDown en tarjeta');
+                          e.stopPropagation();
+                        }}
+                        onMouseUp={(e) => {
+                          console.log('🖱️ MouseUp en tarjeta');
+                          e.stopPropagation();
+                        }}
+                        onMouseEnter={() => console.log('🖱️ MouseEnter en tarjeta')}
+                        className="bg-white rounded-[2rem] p-6 border-2 border-orange-200 shadow-sm hover:shadow-md hover:border-orange-300 transition-all cursor-pointer mb-10 max-w-md mx-auto relative z-50"
+                        style={{ pointerEvents: 'auto', position: 'relative' }}
+                      >
+                        <div className="flex items-center justify-center mb-4">
+                          <div className="w-12 h-12 rounded-full bg-orange-50 flex items-center justify-center">
+                            <MapPin size={24} className="text-orange-600" />
+                          </div>
+                        </div>
+                        <p className="text-xs text-gray-500 uppercase font-semibold text-center mb-2">ZONAS MÁS BUSCADAS</p>
+                        <p className="text-xl font-bold text-gray-900 text-center mb-3">
+                          {preferences.zone.slice(0, 2).join(', ')}
+                          {preferences.zone.length > 2 && ' y ...'}
+                        </p>
+                        <div className="flex justify-center">
+                          <span className="px-3 py-1 bg-orange-50 text-orange-700 rounded-full text-xs font-semibold">
+                            {preferences.zone.length} {preferences.zone.length === 1 ? 'zona' : 'zonas'}
+                          </span>
+                        </div>
+                        <div className="mt-4 text-center">
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              console.log('🖱️ CLICK en botón dentro de tarjeta');
+                              setShowZonesModal(true);
+                            }}
+                            className="px-4 py-2 bg-orange-600 text-white rounded-lg text-sm font-semibold hover:bg-orange-700"
+                          >
+                            Ver Detalles
+                          </button>
                         </div>
                       </div>
-                      <p className="text-xs text-gray-500 uppercase font-semibold text-center mb-2">ZONAS MÁS BUSCADAS</p>
-                      <p className="text-xl font-bold text-gray-900 text-center mb-3">
-                        {preferences.zone.slice(0, 2).join(', ')}
-                        {preferences.zone.length > 2 && ' y ...'}
-                      </p>
-                      <div className="flex justify-center">
-                        <span className="px-3 py-1 bg-orange-50 text-orange-700 rounded-full text-xs font-semibold">
-                          {preferences.zone.length} {preferences.zone.length === 1 ? 'zona' : 'zonas'}
-                        </span>
-                      </div>
-                    </div>
-                  )}
+                    ) : null;
+                  })()}
 
                   {/* Propiedades/Proyectos Disponibles - Solo si hay plan Premium */}
                   {companyPlan === 'Wolf of Wallstreet' && (
