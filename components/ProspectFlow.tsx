@@ -1863,35 +1863,6 @@ export const ProspectFlow: React.FC<ProspectFlowProps> = ({ availableZones, comp
         </div>
       )}
 
-      {/* Botón "Me interesa" - Removido porque ahora se maneja por modelo individual */}
-              {prospectId && (
-                <div className="pt-6 border-t border-gray-200">
-                  <label className="flex items-center gap-3 cursor-pointer group">
-                    <input
-                      type="checkbox"
-                      onChange={async (e) => {
-                        // TODO: Implementar guardado de interés en proyecto
-                        if (e.target.checked) {
-                          setNotification({
-                            isOpen: true,
-                            type: 'success',
-                            message: '¡Gracias por tu interés! Un agente se pondrá en contacto contigo pronto.',
-                            title: '¡Interés registrado!'
-                          });
-                        }
-                      }}
-                      className="w-5 h-5 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500 focus:ring-2 cursor-pointer"
-                    />
-                    <span className="text-lg font-semibold text-gray-700 group-hover:text-indigo-600 transition-colors">
-                      Me interesa este proyecto
-                    </span>
-                  </label>
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* Notification Modal */}
       <NotificationModal
