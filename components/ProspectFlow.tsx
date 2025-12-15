@@ -411,11 +411,6 @@ export const ProspectFlow: React.FC<ProspectFlowProps> = ({ availableZones, comp
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }, [step]);
 
-  // Debug: Ver cuando cambia showZonesModal
-  useEffect(() => {
-    console.log('🔄 [DEBUG] showZonesModal cambió a:', showZonesModal);
-  }, [showZonesModal]);
-
   // Guardar automáticamente los datos cuando se llega al paso 6 (BACKUP - por si handleFinalSubmit no guardó)
   useEffect(() => {
     const saveFinalDataAutomatically = async () => {
@@ -1940,16 +1935,21 @@ export const ProspectFlow: React.FC<ProspectFlowProps> = ({ availableZones, comp
       {/* Modal de Zonas más buscadas - Solo para Broker */}
       {showZonesModal && companyRole === 'Broker' && createPortal(
         <div 
-          className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
+          className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
           onClick={(e) => {
+            console.log('🖱️ Click en overlay del modal', { target: e.target, currentTarget: e.currentTarget });
             if (e.target === e.currentTarget) {
+              console.log('✅ Cerrando modal desde overlay');
               setShowZonesModal(false);
             }
           }}
         >
           <div 
             className="bg-white rounded-[2rem] w-full max-w-2xl max-h-[80vh] overflow-y-auto shadow-2xl relative animate-fade-in-up"
-            onClick={(e) => e.stopPropagation()}
+            onClick={(e) => {
+              console.log('🖱️ Click dentro del contenido del modal');
+              e.stopPropagation();
+            }}
           >
             {/* Header con botón cerrar */}
             <div className="sticky top-0 bg-white border-b border-gray-100 p-6 flex items-center justify-between z-10">
