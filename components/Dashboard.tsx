@@ -1926,8 +1926,8 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableZones, onUpdateZo
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 animate-fade-in-up">
         
         {/* Top Menu Tabs */}
-        <div className="flex justify-center mb-6 sm:mb-10 relative">
-          <div className="bg-white p-1 sm:p-1.5 rounded-2xl shadow-sm border border-gray-100 inline-flex gap-1 overflow-x-auto">
+        <div className="flex justify-center mb-6 sm:mb-10 relative" style={{ overflow: 'visible' }}>
+          <div className="bg-white p-1 sm:p-1.5 rounded-2xl shadow-sm border border-gray-100 inline-flex gap-1 overflow-x-auto" style={{ overflow: 'visible' }}>
             <button
               onClick={() => setActiveTab('dashboard')}
               className={`px-3 sm:px-6 py-2 sm:py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition-all flex items-center gap-1 sm:gap-2 shrink-0 ${
