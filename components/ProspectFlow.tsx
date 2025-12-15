@@ -1925,20 +1925,16 @@ export const ProspectFlow: React.FC<ProspectFlowProps> = ({ availableZones, comp
       {showZonesModal && companyRole === 'Broker' && createPortal(
         <div 
           className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
+          style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0 }}
           onClick={(e) => {
-            console.log('🖱️ Click en overlay del modal', { target: e.target, currentTarget: e.currentTarget });
             if (e.target === e.currentTarget) {
-              console.log('✅ Cerrando modal desde overlay');
               setShowZonesModal(false);
             }
           }}
         >
           <div 
-            className="bg-white rounded-[2rem] w-full max-w-2xl max-h-[80vh] overflow-y-auto shadow-2xl relative animate-fade-in-up"
-            onClick={(e) => {
-              console.log('🖱️ Click dentro del contenido del modal');
-              e.stopPropagation();
-            }}
+            className="bg-white rounded-[2rem] w-full max-w-2xl max-h-[80vh] overflow-y-auto shadow-2xl relative"
+            onClick={(e) => e.stopPropagation()}
           >
             {/* Header con botón cerrar */}
             <div className="sticky top-0 bg-white border-b border-gray-100 p-6 flex items-center justify-between z-10">
