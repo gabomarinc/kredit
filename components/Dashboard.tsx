@@ -1233,6 +1233,14 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableZones, onUpdateZo
   const endIndex = startIndex + itemsPerPage;
   const paginatedProspects = filteredProspects.slice(startIndex, endIndex);
 
+  // Refrescar prospectos automáticamente cuando se cambia a la pestaña de prospectos
+  useEffect(() => {
+    if (activeTab === 'prospects') {
+      console.log('🔄 Pestaña de prospectos activada - refrescando datos...');
+      loadProspects(true); // Forzar refresh al cambiar a la pestaña
+    }
+  }, [activeTab]);
+
   // Load Data from Neon
   useEffect(() => {
     const fetchData = async () => {
@@ -2353,12 +2361,25 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableZones, onUpdateZo
                 <p className="text-gray-500 text-sm">Gestiona y analiza los datos capturados.</p>
               </div>
               
-              <button 
-                onClick={() => setShowExportModal(true)}
-                className="bg-gray-900 hover:bg-gray-800 text-white px-6 py-3 rounded-xl font-semibold text-sm flex items-center gap-2 transition-all shadow-lg shadow-gray-200"
-              >
-                <Download size={16} /> Exportar Data
-              </button>
+              <div className="flex items-center gap-3">
+                <button 
+                  onClick={() => {
+                    setIsRefreshing(true);
+                    loadProspects(true).finally(() => setIsRefreshing(false));
+                  }}
+                  disabled={isRefreshing}
+                  className="bg-white hover:bg-gray-50 text-gray-700 border border-gray-200 px-4 py-3 rounded-xl font-semibold text-sm flex items-center gap-2 transition-all shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  <RefreshCw size={16} className={isRefreshing ? 'animate-spin' : ''} /> 
+                  {isRefreshing ? 'Actualizando...' : 'Actualizar'}
+                </button>
+                <button 
+                  onClick={() => setShowExportModal(true)}
+                  className="bg-gray-900 hover:bg-gray-800 text-white px-6 py-3 rounded-xl font-semibold text-sm flex items-center gap-2 transition-all shadow-lg shadow-gray-200"
+                >
+                  <Download size={16} /> Exportar Data
+                </button>
+              </div>
             </div>
 
             {/* Table */}
