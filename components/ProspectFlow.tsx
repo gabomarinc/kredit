@@ -1156,7 +1156,7 @@ export const ProspectFlow: React.FC<ProspectFlowProps> = ({ availableZones, comp
 
         {/* STEP 6: RESULTADOS FINALES */}
         {step === 6 && result && (
-            <div className="animate-fade-in-up text-center max-w-3xl mx-auto">
+            <div className="animate-fade-in-up text-center max-w-3xl mx-auto" style={{ position: 'relative', zIndex: 1 }}>
               {/* Check if not eligible */}
               {result.maxPropertyPrice === 0 ? (
                 <div className="py-8">
