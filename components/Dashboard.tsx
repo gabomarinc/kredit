@@ -488,11 +488,11 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableZones, onUpdateZo
             });
             setSelectedProspect(prev => prev ? {
               ...prev,
-              // Priorizar URLs de Drive sobre Base64
-              idFileBase64: documents.idFileDriveUrl || documents.idFileBase64,
-              fichaFileBase64: documents.fichaFileDriveUrl || documents.fichaFileBase64,
-              talonarioFileBase64: documents.talonarioFileDriveUrl || documents.talonarioFileBase64,
-              signedAcpFileBase64: documents.signedAcpFileDriveUrl || documents.signedAcpFileBase64
+              // Priorizar Base64 (descargado) para poder mostrar inline; usar URL de Drive solo como fallback
+              idFileBase64: documents.idFileBase64 || documents.idFileDriveUrl || null,
+              fichaFileBase64: documents.fichaFileBase64 || documents.fichaFileDriveUrl || null,
+              talonarioFileBase64: documents.talonarioFileBase64 || documents.talonarioFileDriveUrl || null,
+              signedAcpFileBase64: documents.signedAcpFileBase64 || documents.signedAcpFileDriveUrl || null
             } : null);
             setProspectDocumentsLoaded(true);
           } catch (e) {
