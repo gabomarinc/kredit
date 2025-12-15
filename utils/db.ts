@@ -912,10 +912,8 @@ export const getProspectDocuments = async (prospectId: string): Promise<{
     const client = await pool.connect();
     await ensureTablesExist(client);
 
-    // Convertir prospectId a número si es necesario (la tabla usa SERIAL)
-    const prospectIdNum = parseInt(prospectId, 10);
-    
-    // Obtener documentos Y company_id para acceder a Google Drive
+    // IMPORTANTE: la columna id de prospects es UUID, así que siempre usamos el string directamente
+    // (antes se intentaba parsear a número para compatibilidad con SERIAL y rompía con UUIDs)
     const res = await client.query(`
       SELECT 
         p.id_file_base64, 
@@ -932,7 +930,7 @@ export const getProspectDocuments = async (prospectId: string): Promise<{
       FROM prospects p
       LEFT JOIN companies c ON p.company_id = c.id
       WHERE p.id = $1
-    `, [isNaN(prospectIdNum) ? prospectId : prospectIdNum]);
+    `, [prospectId]);
 
     if (res.rows.length === 0) {
       client.release();
