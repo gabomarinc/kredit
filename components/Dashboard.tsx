@@ -1158,13 +1158,13 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableZones, onUpdateZo
     // Obtener companyId para filtrar prospectos y usar en caché
     const companyId = localStorage.getItem('companyId');
     const cacheKey = `prospects_cache_${companyId || 'no_company'}`;
-    const cacheTime = 5 * 60 * 1000; // 5 minutos
+    const cacheTime = 2 * 60 * 1000; // 2 minutos (reducido de 5)
 
-    // Si es refresh forzado, limpiar caché primero
+    // Si es refresh forzado, limpiar caché
     if (forceRefresh) {
       try {
         localStorage.removeItem(cacheKey);
-        console.log('🗑️ Caché de prospectos limpiado para refresh forzado');
+        console.log('🔄 Caché de prospectos limpiado para refresh forzado');
       } catch (e) {
         console.warn('⚠️ Error limpiando caché:', e);
       }
@@ -1189,6 +1189,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableZones, onUpdateZo
     }
 
     try {
+      setIsRefreshing(true);
       console.log('🔄 Cargando prospectos desde BD para companyId:', companyId);
       const data = await getProspectsFromDB(companyId || undefined);
       setProspects(data);
@@ -1209,7 +1210,19 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableZones, onUpdateZo
       setCurrentPage(1);
     } catch (error) {
       console.error('❌ Error cargando prospectos:', error);
+    } finally {
+      setIsRefreshing(false);
     }
+  };
+
+  const handleRefreshProspects = async () => {
+    await loadProspects(true);
+    setNotification({
+      isOpen: true,
+      type: 'success',
+      message: 'Prospectos actualizados correctamente.',
+      title: 'Actualizado'
+    });
   };
 
   // Calcular prospectos paginados
@@ -1243,11 +1256,11 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableZones, onUpdateZo
   const endIndex = startIndex + itemsPerPage;
   const paginatedProspects = filteredProspects.slice(startIndex, endIndex);
 
-  // Refrescar prospectos automáticamente cuando se cambia a la pestaña de prospectos
+  // Refrescar prospectos cuando se cambia a la pestaña de prospectos
   useEffect(() => {
     if (activeTab === 'prospects') {
-      console.log('🔄 Pestaña de prospectos activada - refrescando datos...');
-      loadProspects(true); // Forzar refresh al cambiar a la pestaña
+      // Refrescar automáticamente al entrar a la pestaña (con caché si está disponible)
+      loadProspects(false);
     }
   }, [activeTab]);
 
@@ -2007,73 +2020,73 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableZones, onUpdateZo
 
   const exportToExcel = () => {
     try {
-      const filteredData = filterProspectsForExport();
+    const filteredData = filterProspectsForExport();
       
       console.log('📊 Datos filtrados para exportar:', filteredData.length);
-      
-      if (filteredData.length === 0) {
-        setNotification({
-          isOpen: true,
-          type: 'warning',
-          message: 'No hay datos para exportar con los filtros seleccionados.',
-          title: 'Sin datos'
-        });
-        return;
-      }
+    
+    if (filteredData.length === 0) {
+      setNotification({
+        isOpen: true,
+        type: 'warning',
+        message: 'No hay datos para exportar con los filtros seleccionados.',
+        title: 'Sin datos'
+      });
+      return;
+    }
 
-      // Preparar datos para Excel
-      const worksheetData = filteredData.map(p => ({
-        'ID': p.id,
-        'Nombre Completo': p.name || 'N/A',
-        'Email': p.email || 'N/A',
-        'Teléfono': p.phone || 'N/A',
-        'Ingreso Mensual': p.income,
-        'Tipo de Propiedad': p.propertyType || 'N/A',
-        'Habitaciones': p.bedrooms ?? 'N/A',
-        'Baños': p.bathrooms ?? 'N/A',
-        'Zonas de Interés': Array.isArray(p.zone) ? p.zone.join(', ') : (typeof p.zone === 'string' ? p.zone : 'N/A'),
-        'Precio Máximo': p.result?.maxPropertyPrice || 0,
-        'Pago Mensual': p.result?.monthlyPayment || 0,
-        'Enganche (%)': p.result?.downPaymentPercent || 0,
-        'Enganche ($)': p.result?.downPaymentAmount || 0,
-        'Estado': p.status || 'Nuevo',
-        'Fecha de Registro': p.dateDisplay || new Date(p.date).toLocaleDateString('es-PA')
-      }));
+    // Preparar datos para Excel
+    const worksheetData = filteredData.map(p => ({
+      'ID': p.id,
+      'Nombre Completo': p.name || 'N/A',
+      'Email': p.email || 'N/A',
+      'Teléfono': p.phone || 'N/A',
+      'Ingreso Mensual': p.income,
+      'Tipo de Propiedad': p.propertyType || 'N/A',
+      'Habitaciones': p.bedrooms ?? 'N/A',
+      'Baños': p.bathrooms ?? 'N/A',
+      'Zonas de Interés': Array.isArray(p.zone) ? p.zone.join(', ') : (typeof p.zone === 'string' ? p.zone : 'N/A'),
+      'Precio Máximo': p.result?.maxPropertyPrice || 0,
+      'Pago Mensual': p.result?.monthlyPayment || 0,
+      'Enganche (%)': p.result?.downPaymentPercent || 0,
+      'Enganche ($)': p.result?.downPaymentAmount || 0,
+      'Estado': p.status || 'Nuevo',
+      'Fecha de Registro': p.dateDisplay || new Date(p.date).toLocaleDateString('es-PA')
+    }));
 
       console.log('📝 Datos preparados para Excel:', worksheetData.length, 'filas');
 
-      // Crear workbook y worksheet
-      const worksheet = XLSX.utils.json_to_sheet(worksheetData);
-      const workbook = XLSX.utils.book_new();
-      XLSX.utils.book_append_sheet(workbook, worksheet, 'Prospectos');
+    // Crear workbook y worksheet
+    const worksheet = XLSX.utils.json_to_sheet(worksheetData);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, 'Prospectos');
 
-      // Ajustar ancho de columnas
-      const columnWidths = [
-        { wch: 10 }, // ID
-        { wch: 25 }, // Nombre
-        { wch: 30 }, // Email
-        { wch: 15 }, // Teléfono
-        { wch: 15 }, // Ingreso
-        { wch: 18 }, // Tipo Propiedad
-        { wch: 12 }, // Habitaciones
-        { wch: 10 }, // Baños
-        { wch: 30 }, // Zonas
-        { wch: 15 }, // Precio Máximo
-        { wch: 15 }, // Pago Mensual
-        { wch: 12 }, // Enganche %
-        { wch: 15 }, // Enganche $
-        { wch: 15 }, // Estado
-        { wch: 18 }  // Fecha
-      ];
-      worksheet['!cols'] = columnWidths;
+    // Ajustar ancho de columnas
+    const columnWidths = [
+      { wch: 10 }, // ID
+      { wch: 25 }, // Nombre
+      { wch: 30 }, // Email
+      { wch: 15 }, // Teléfono
+      { wch: 15 }, // Ingreso
+      { wch: 18 }, // Tipo Propiedad
+      { wch: 12 }, // Habitaciones
+      { wch: 10 }, // Baños
+      { wch: 30 }, // Zonas
+      { wch: 15 }, // Precio Máximo
+      { wch: 15 }, // Pago Mensual
+      { wch: 12 }, // Enganche %
+      { wch: 15 }, // Enganche $
+      { wch: 15 }, // Estado
+      { wch: 18 }  // Fecha
+    ];
+    worksheet['!cols'] = columnWidths;
 
-      // Descargar archivo
+    // Descargar archivo
       const fileName = `prospectos_${new Date().toISOString().split('T')[0]}.xlsx`;
       console.log('💾 Descargando archivo:', fileName);
       XLSX.writeFile(workbook, fileName);
-      
+    
       console.log('✅ Archivo Excel descargado exitosamente');
-      setShowExportModal(false);
+    setShowExportModal(false);
     } catch (error) {
       console.error('❌ Error exportando a Excel:', error);
       setNotification({
@@ -2095,10 +2108,10 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableZones, onUpdateZo
         totalProspects: prospects.length
       });
       
-      if (exportFormat === 'csv') {
-        exportToCSV();
-      } else {
-        exportToExcel();
+    if (exportFormat === 'csv') {
+      exportToCSV();
+    } else {
+      exportToExcel();
       }
     } catch (error) {
       console.error('❌ Error en handleExport:', error);
@@ -2195,24 +2208,24 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableZones, onUpdateZo
                 setSettingsSubmenuTimeout(timeout);
               }}
             >
-              <button
+            <button
                 onClick={() => {
                   if (activeTab !== 'settings' && activeTab !== 'calculator-config') {
                     setActiveTab('settings');
                   }
                 }}
-                className={`px-3 sm:px-6 py-2 sm:py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition-all flex items-center gap-1 sm:gap-2 shrink-0 ${
+              className={`px-3 sm:px-6 py-2 sm:py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition-all flex items-center gap-1 sm:gap-2 shrink-0 ${
                   (activeTab === 'settings' || activeTab === 'calculator-config')
-                    ? 'bg-indigo-50 text-indigo-600 shadow-sm' 
-                    : 'text-gray-400 hover:text-gray-600 hover:bg-gray-50'
-                }`}
-              >
-                <Settings size={14} className="sm:w-4 sm:h-4" /> <span>Configuración</span>
+                  ? 'bg-indigo-50 text-indigo-600 shadow-sm' 
+                  : 'text-gray-400 hover:text-gray-600 hover:bg-gray-50'
+              }`}
+            >
+              <Settings size={14} className="sm:w-4 sm:h-4" /> <span>Configuración</span>
                 <ChevronDown 
                   size={14} 
                   className={`sm:w-4 sm:h-4 transition-transform ${showSettingsSubmenu ? 'rotate-180' : ''}`} 
                 />
-              </button>
+            </button>
               
               {/* Submenú de Configuración */}
               {showSettingsSubmenu && (
@@ -2241,7 +2254,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableZones, onUpdateZo
                         : 'bg-gray-100 text-gray-600 group-hover:bg-indigo-50'
                     }`}>
                       <Calculator size={22} strokeWidth={1.5} />
-                    </div>
+          </div>
                     <div className="flex-1 min-w-0">
                       <div className={`font-bold text-sm mb-1.5 ${
                         activeTab === 'calculator-config' ? 'text-indigo-600' : 'text-gray-900'
@@ -2373,12 +2386,9 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableZones, onUpdateZo
               
               <div className="flex items-center gap-3">
                 <button 
-                  onClick={() => {
-                    setIsRefreshing(true);
-                    loadProspects(true).finally(() => setIsRefreshing(false));
-                  }}
+                  onClick={handleRefreshProspects}
                   disabled={isRefreshing}
-                  className="bg-white hover:bg-gray-50 text-gray-700 border border-gray-200 px-4 py-3 rounded-xl font-semibold text-sm flex items-center gap-2 transition-all shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="bg-indigo-600 hover:bg-indigo-700 disabled:bg-indigo-400 text-white px-5 py-3 rounded-xl font-semibold text-sm flex items-center gap-2 transition-all shadow-lg shadow-indigo-200 disabled:cursor-not-allowed"
                 >
                   <RefreshCw size={16} className={isRefreshing ? 'animate-spin' : ''} /> 
                   {isRefreshing ? 'Actualizando...' : 'Actualizar'}
@@ -3447,7 +3457,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableZones, onUpdateZo
                   </div>
                           </div>
         ) : null}
-                  </div>
+      </div>
 
       {/* Export Modal */}
       {showExportModal && (
@@ -3514,7 +3524,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableZones, onUpdateZo
                     exportFilterType === 'all' ? 'border-indigo-600' : 'border-gray-300'
                   }`}>
                     {exportFilterType === 'all' && (
-                      <div className="w-2.5 h-2.5 bg-indigo-600 rounded-full"></div>
+                    <div className="w-2.5 h-2.5 bg-indigo-600 rounded-full"></div>
                     )}
                   </div>
                   <span className={`font-semibold text-xs sm:text-sm ${
