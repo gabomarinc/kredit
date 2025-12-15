@@ -3229,6 +3229,37 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableZones, onUpdateZo
                 </div>
               </div>
 
+              {/* Financial Cards */}
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
+                <div className="bg-gray-50 p-4 rounded-2xl border border-gray-100">
+                  <div className="flex items-center gap-2 mb-2">
+                    <DollarSign size={18} className="text-indigo-600" />
+                    <span className="text-xs text-gray-500 font-semibold uppercase">Ingresos</span>
+                  </div>
+                  <p className="text-lg font-bold text-gray-900">
+                    {formatCurrency(selectedProspect.income)}/mes
+                  </p>
+                </div>
+                <div className="bg-gray-50 p-4 rounded-2xl border border-gray-100">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Target size={18} className="text-indigo-600" />
+                    <span className="text-xs text-gray-500 font-semibold uppercase">Busca</span>
+                  </div>
+                  <p className="text-lg font-bold text-gray-900">
+                    {selectedProspect.propertyType || 'N/A'}
+                  </p>
+                </div>
+                <div className="bg-gray-50 p-4 rounded-2xl border border-gray-100">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Briefcase size={18} className="text-indigo-600" />
+                    <span className="text-xs text-gray-500 font-semibold uppercase">Presupuesto</span>
+                  </div>
+                  <p className="text-lg font-bold text-gray-900">
+                    ~{formatCurrency(selectedProspect.result?.maxPropertyPrice || 0)}
+                  </p>
+                </div>
+              </div>
+
               {/* Zone of Interest */}
               <div className="bg-indigo-50/50 p-6 rounded-2xl border border-indigo-100 mb-8">
                 <h3 className="text-sm font-bold text-gray-700 mb-3">INTERESADO EN</h3>
