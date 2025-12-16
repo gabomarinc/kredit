@@ -84,7 +84,6 @@ const ensureTablesExist = async (client: any) => {
         interested_zones TEXT[],
         calculation_result JSONB,
         status TEXT DEFAULT 'Nuevo',
-
         id_file_drive_id TEXT,
         ficha_file_drive_id TEXT,
         talonario_file_drive_id TEXT,
@@ -99,7 +98,6 @@ const ensureTablesExist = async (client: any) => {
       await client.query(`
         DO $$
         BEGIN
-
           IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'prospects' AND column_name = 'company_id') THEN
             ALTER TABLE prospects ADD COLUMN company_id UUID REFERENCES companies(id) ON DELETE SET NULL;
           END IF;
