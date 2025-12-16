@@ -66,10 +66,11 @@ export const WhatsBlastTab: React.FC<WhatsBlastTabProps> = ({ prospects: sourceP
             id: p.id,
             nombre: p.name.split(' ')[0],
             apellido: p.name.split(' ').slice(1).join(' ') || '',
-            // Add full name for filtering
-            nombreCompleto: p.name,
-            telefono: p.phone?.replace(/\D/g, '') || '',
+            // Add full name for filtering with Title Case Key
+            "Nombre Completo": p.name,
+            "Teléfono": p.phone?.replace(/\D/g, '') || '',
             email: p.email || '',
+            telefono: p.phone?.replace(/\D/g, '') || '', // Keep internal key for sending
             empresa: '',
             estado: 'Nuevo',
             // Helpers for template engine
@@ -183,8 +184,9 @@ export const WhatsBlastTab: React.FC<WhatsBlastTabProps> = ({ prospects: sourceP
                         id: `excel-${idx}`,
                         nombre: nombre,
                         apellido: apellido,
-                        nombreCompleto: String(nameVal), // Add full name for filtering
-                        telefono: phoneKey ? String(row[phoneKey]).replace(/\D/g, '') : '',
+                        "Nombre Completo": String(nameVal), // Title Case Key
+                        "Teléfono": phoneKey ? String(row[phoneKey]).replace(/\D/g, '') : '', // Key with accent
+                        telefono: phoneKey ? String(row[phoneKey]).replace(/\D/g, '') : '', // internal key for sending
                         email: emailKey ? row[emailKey] : '',
                         empresa: companyKey ? row[companyKey] : '',
                         estado: 'Nuevo',
@@ -214,11 +216,10 @@ export const WhatsBlastTab: React.FC<WhatsBlastTabProps> = ({ prospects: sourceP
             const term = searchTerm.toLowerCase();
             result = result.filter(p =>
                 (p.nombre?.toLowerCase() || '').includes(term) ||
-                (p.apellido?.toLowerCase() || '').includes(term) ||
+                (typeof p["Nombre Completo"] === 'string' && p["Nombre Completo"].toLowerCase().includes(term)) ||
                 (p.email?.toLowerCase() || '').includes(term) ||
                 (p.telefono?.toLowerCase() || '').includes(term) ||
-                (p.empresa?.toLowerCase() || '').includes(term) ||
-                (typeof p.nombreCompleto === 'string' && p.nombreCompleto.toLowerCase().includes(term))
+                (typeof p["Teléfono"] === 'string' && p["Teléfono"].includes(term))
             );
         }
 
@@ -255,8 +256,8 @@ export const WhatsBlastTab: React.FC<WhatsBlastTabProps> = ({ prospects: sourceP
 
     // Columns for FilterBar - dynamic based on source but simplified
     const filterableColumns = useMemo(() => {
-        // User requested ONLY these specific columns
-        return ['nombreCompleto', 'email', 'telefono'];
+        // User requested ONLY these specific columns with Title Case
+        return ['Nombre Completo', 'Teléfono'];
     }, []);
 
     return (

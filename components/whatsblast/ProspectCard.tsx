@@ -57,20 +57,22 @@ export const ProspectCard: React.FC<ProspectCardProps> = ({
                     {prospect.telefono}
                 </p>
 
-                {/* Dynamic Extra Columns */}
+                {/* Dynamic Extra Columns - Only show if specifically requested and NOT name/phone/email since they are redundant now */}
                 {visibleColumns.length > 0 && (
                     <div className="space-y-3 mt-4 pt-4 border-t border-secondary-50">
-                        {visibleColumns.map(col => {
-                            const val = prospect[col];
-                            if (!val) return null;
+                        {visibleColumns
+                            .filter(col => !['nombre', 'apellido', 'email', 'name', 'last name', 'correo', 'teléfono', 'telefono', 'nombre completo'].includes(col.toLowerCase()))
+                            .map(col => {
+                                const val = prospect[col];
+                                if (!val) return null;
 
-                            return (
-                                <div key={col} className="flex flex-col">
-                                    <span className="text-[9px] text-secondary-400 font-black uppercase tracking-widest">{col}</span>
-                                    <span className="text-sm text-secondary-700 font-medium">{val}</span>
-                                </div>
-                            );
-                        })}
+                                return (
+                                    <div key={col} className="flex flex-col">
+                                        <span className="text-[9px] text-secondary-400 font-black uppercase tracking-widest">{col}</span>
+                                        <span className="text-sm text-secondary-700 font-medium">{val}</span>
+                                    </div>
+                                );
+                            })}
                     </div>
                 )}
             </div>
