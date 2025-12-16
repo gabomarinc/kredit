@@ -2475,7 +2475,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableZones, onUpdateZo
                       {paginatedProspects.map((prospect) => (
                         <div
                           key={prospect.id}
-                          className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 active:bg-gray-50 active:scale-[0.98] transition-all"
+                          className="bg-white rounded-2xl border border-indigo-100 shadow-md p-5 active:bg-gray-50 active:scale-[0.98] transition-all relative overflow-hidden"
                         >
                           <div className="flex justify-between items-start mb-4">
                             <div

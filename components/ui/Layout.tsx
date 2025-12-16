@@ -13,12 +13,12 @@ interface LayoutProps {
 export const Layout: React.FC<LayoutProps> = ({ children, isAdmin, onToggleRole, onLogout, isWelcomeScreen, companyName = "Krêdit" }) => {
   return (
     <div className={`min-h-screen font-sans text-pastel-dark selection:bg-indigo-100 selection:text-indigo-900 ${isWelcomeScreen ? 'flex flex-col justify-center' : ''}`}>
-      
+
       {/* Universal Header */}
       <nav className="fixed top-0 w-full z-50 p-6 pointer-events-none">
         <div className="max-w-7xl mx-auto flex justify-between items-center pointer-events-auto">
           {/* Logo Area */}
-          <div className="flex items-center gap-3 backdrop-blur-md bg-white/70 p-2 pr-4 rounded-2xl border border-white/50 shadow-sm transition-all hover:shadow-md cursor-default">
+          <div className="flex items-center gap-2 md:gap-3 backdrop-blur-md bg-white/70 p-1.5 md:p-2 pr-3 md:pr-4 rounded-2xl border border-white/50 shadow-sm transition-all hover:shadow-md cursor-default">
             <div className={`w-9 h-9 rounded-xl flex items-center justify-center text-white font-bold shadow-sm transition-colors ${isAdmin ? 'bg-indigo-900' : 'bg-indigo-500'}`}>
               ê
             </div>
@@ -32,11 +32,11 @@ export const Layout: React.FC<LayoutProps> = ({ children, isAdmin, onToggleRole,
 
           {/* Logout Button */}
           {onLogout && (
-            <button 
+            <button
               onClick={onLogout}
-              className="group flex items-center gap-2 bg-white/70 backdrop-blur-md hover:bg-white border border-white/50 px-4 py-2.5 rounded-xl shadow-sm hover:shadow-md transition-all text-xs font-semibold text-gray-600 hover:text-red-600"
+              className="group flex items-center gap-2 bg-white/70 backdrop-blur-md hover:bg-white border border-white/50 px-3 md:px-4 py-2.5 rounded-xl shadow-sm hover:shadow-md transition-all text-xs font-semibold text-gray-600 hover:text-red-600"
             >
-              <LogOut size={14} /> Cerrar Sesión
+              <LogOut size={16} className="md:w-3.5 md:h-3.5" /> <span className="hidden md:inline">Cerrar Sesión</span>
             </button>
           )}
         </div>
