@@ -242,7 +242,7 @@ export const WhatsBlastTab: React.FC<WhatsBlastTabProps> = ({ prospects: sourceP
     }, [useExcel, uploadedProspects]);
 
     return (
-        <div className="min-h-screen bg-white pb-20 font-sans text-secondary-800 animate-fade-in">
+        <div className="min-h-screen bg-white pb-20 font-sans text-secondary-800 animate-fade-in rounded-t-[3rem] shadow-2xl shadow-indigo-100/50 border-t border-white/50">
             {/* Note: Header is handled by Dashboard.tsx, we just render the content */}
 
             <div className="max-w-7xl mx-auto px-6 py-10">
