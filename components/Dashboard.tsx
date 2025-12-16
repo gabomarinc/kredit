@@ -2165,10 +2165,10 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableZones, onUpdateZo
 
   return (
     <>
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 animate-fade-in-up">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 animate-fade-in-up pb-24 md:pb-0">
 
-        {/* Top Menu Tabs */}
-        <div className="flex justify-center mb-6 sm:mb-10 relative" style={{ overflow: 'visible' }}>
+        {/* Top Menu Tabs (Desktop Only) */}
+        <div className="hidden md:flex justify-center mb-6 sm:mb-10 relative" style={{ overflow: 'visible' }}>
           <div className="bg-white p-1 sm:p-1.5 rounded-2xl shadow-sm border border-gray-100 inline-flex gap-1 overflow-x-auto" style={{ overflow: 'visible' }}>
             <button
               onClick={() => setActiveTab('dashboard')}
@@ -4419,6 +4419,43 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableZones, onUpdateZo
           }}
         />
       )}
+
+      {/* Mobile Floating Navbar */}
+      <div className="md:hidden fixed bottom-6 left-6 right-6 z-50">
+        <div className="bg-white/90 backdrop-blur-xl border border-white/50 shadow-2xl rounded-2xl p-2 flex justify-between items-center">
+          <button
+            onClick={() => setActiveTab('dashboard')}
+            className={`flex flex-col items-center justify-center w-full p-2 rounded-xl transition-all ${activeTab === 'dashboard' ? 'bg-indigo-50 text-indigo-600' : 'text-gray-400'}`}
+          >
+            <LayoutDashboard size={20} strokeWidth={activeTab === 'dashboard' ? 2.5 : 2} />
+            <span className="text-[10px] font-bold mt-1">Dash</span>
+          </button>
+
+          <button
+            onClick={() => setActiveTab('prospects')}
+            className={`flex flex-col items-center justify-center w-full p-2 rounded-xl transition-all ${activeTab === 'prospects' ? 'bg-indigo-50 text-indigo-600' : 'text-gray-400'}`}
+          >
+            <Users size={20} strokeWidth={activeTab === 'prospects' ? 2.5 : 2} />
+            <span className="text-[10px] font-bold mt-1">Prospectos</span>
+          </button>
+
+          <button
+            onClick={() => setActiveTab('properties')}
+            className={`flex flex-col items-center justify-center w-full p-2 rounded-xl transition-all ${activeTab === 'properties' ? 'bg-indigo-50 text-indigo-600' : 'text-gray-400'}`}
+          >
+            <Building size={20} strokeWidth={activeTab === 'properties' ? 2.5 : 2} />
+            <span className="text-[10px] font-bold mt-1">{isPromotora ? 'Proy' : 'Prop'}</span>
+          </button>
+
+          <button
+            onClick={() => setActiveTab('settings')}
+            className={`flex flex-col items-center justify-center w-full p-2 rounded-xl transition-all ${(activeTab === 'settings' || activeTab === 'calculator-config') ? 'bg-indigo-50 text-indigo-600' : 'text-gray-400'}`}
+          >
+            <Settings size={20} strokeWidth={(activeTab === 'settings' || activeTab === 'calculator-config') ? 2.5 : 2} />
+            <span className="text-[10px] font-bold mt-1">Ajustes</span>
+          </button>
+        </div>
+      </div>
 
       {/* Modal de Zonas más buscadas */}
       {showZonesModal && createPortal(
