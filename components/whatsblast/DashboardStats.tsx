@@ -20,7 +20,7 @@ export const DashboardStats: React.FC<DashboardStatsProps> = ({
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 animate-slide-up">
 
             {/* Card 1: Total & Progress */}
-            <div className="bg-white p-8 rounded-3xl border border-secondary-100 shadow-xl shadow-secondary-100/30 flex flex-col justify-between relative overflow-hidden group hover:-translate-y-1 transition-transform duration-300">
+            <div className="bg-white p-8 rounded-[2.5rem] border border-secondary-100 shadow-xl shadow-secondary-100/30 flex flex-col justify-between relative overflow-hidden group hover:-translate-y-1 transition-transform duration-300">
                 <div className="flex justify-between items-start">
                     <div>
                         <p className="text-xs font-black text-secondary-400 uppercase tracking-widest mb-1">Base Total</p>
@@ -46,7 +46,7 @@ export const DashboardStats: React.FC<DashboardStatsProps> = ({
             </div>
 
             {/* Card 2: Pending Action */}
-            <div className="bg-white p-8 rounded-3xl border border-secondary-100 shadow-xl shadow-secondary-100/30 flex flex-col justify-between group hover:-translate-y-1 transition-transform duration-300">
+            <div className="bg-white p-8 rounded-[2.5rem] border border-secondary-100 shadow-xl shadow-secondary-100/30 flex flex-col justify-between group hover:-translate-y-1 transition-transform duration-300">
                 <div className="flex justify-between items-start">
                     <div>
                         <p className="text-xs font-black text-secondary-400 uppercase tracking-widest mb-1">Por Contactar</p>
@@ -72,7 +72,7 @@ export const DashboardStats: React.FC<DashboardStatsProps> = ({
             </div>
 
             {/* Card 3: Session Impact */}
-            <div className="bg-gradient-to-br from-primary-600 to-primary-800 p-8 rounded-3xl shadow-xl shadow-primary-200 flex flex-col justify-between text-white relative overflow-hidden group hover:-translate-y-1 transition-transform duration-300">
+            <div className="bg-gradient-to-br from-primary-600 to-primary-800 p-8 rounded-[2.5rem] shadow-xl shadow-primary-200 flex flex-col justify-between text-white relative overflow-hidden group hover:-translate-y-1 transition-transform duration-300">
 
                 {/* Background Pattern */}
                 <div className="absolute top-0 right-0 w-40 h-40 bg-white/10 rounded-full blur-3xl -mr-10 -mt-10"></div>

@@ -1,4 +1,5 @@
 import React, { useState, useMemo, useEffect } from 'react';
+import * as XLSX from 'xlsx';
 import { DashboardStats } from './DashboardStats';
 import { FilterBar } from './FilterBar';
 import { ProspectCard } from './ProspectCard';
@@ -37,8 +38,12 @@ export const WhatsBlastTab: React.FC<WhatsBlastTabProps> = ({ prospects: sourceP
         return saved ? new Set(JSON.parse(saved)) : new Set();
     });
 
+    // Excel Upload State
+    const [uploadedProspects, setUploadedProspects] = useState<Prospect[]>([]);
+    const [useExcel, setUseExcel] = useState(false);
+
     // Transform Kredit prospects to WhatsBlast format
-    const wbProspects = useMemo(() => {
+    const dbProspects = useMemo(() => {
         return sourceProspects.map(p => ({
             id: p.id,
             nombre: p.name.split(' ')[0],
@@ -52,6 +57,9 @@ export const WhatsBlastTab: React.FC<WhatsBlastTabProps> = ({ prospects: sourceP
             income: p.income ? `$${p.income}` : ''
         } as Prospect));
     }, [sourceProspects]);
+
+    // Active Prospects Source (DB or Excel)
+    const activeProspects = useExcel ? uploadedProspects : dbProspects;
 
     // Save sentIds when changed
     useEffect(() => {
@@ -97,10 +105,45 @@ export const WhatsBlastTab: React.FC<WhatsBlastTabProps> = ({ prospects: sourceP
         addNotification(`Abriendo WhatsApp para ${prospect.nombre}...`, "info");
     };
 
+    const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = (evt) => {
+            try {
+                const bstr = evt.target?.result;
+                const wb = XLSX.read(bstr, { type: 'binary' });
+                const wsname = wb.SheetNames[0];
+                const ws = wb.Sheets[wsname];
+                const data = XLSX.utils.sheet_to_json(ws);
+
+                // Map loose Excel data to Prospect type
+                const mapped = data.map((row: any, idx) => ({
+                    id: `excel-${idx}`,
+                    nombre: row.nombre || row.Nombre || row.Name || 'Sin Nombre',
+                    apellido: row.apellido || row.Apellido || '',
+                    telefono: String(row.telefono || row.Telefono || row.Phone || row.celular || '').replace(/\D/g, ''),
+                    empresa: row.empresa || row.Empresa || '',
+                    estado: 'Nuevo',
+                    ...row // Keep other fields for dynamic variables
+                } as Prospect));
+
+                setUploadedProspects(mapped);
+                setUseExcel(true);
+                addNotification(`✅ ${mapped.length} contactos cargados desde Excel`);
+            } catch (err) {
+                console.error(err);
+                addNotification("Error al leer el archivo Excel", "error");
+            }
+        };
+        reader.readAsBinaryString(file);
+    };
+
     // Filter Logic
     const filteredProspects = useMemo(() => {
         // 1. Column Filters
-        let result = wbProspects;
+        let result = activeProspects;
         if (Object.keys(activeFilters).length > 0) {
             result = result.filter(p => {
                 return Object.entries(activeFilters).every(([col, val]) => {
@@ -115,11 +158,11 @@ export const WhatsBlastTab: React.FC<WhatsBlastTabProps> = ({ prospects: sourceP
             const isSent = sentIds.has(p.id);
             return viewFilter === 'active' ? !isSent : isSent;
         });
-    }, [wbProspects, activeFilters, viewFilter, sentIds]);
+    }, [activeProspects, activeFilters, viewFilter, sentIds]);
 
     // Statistics
     const stats = useMemo(() => {
-        const total = wbProspects.length;
+        const total = activeProspects.length;
         const sessionSentCount = sentIds.size;
         const pending = total - sessionSentCount; // Simple logic: total - sent
         // We don't track "contacted" from DB in this lite version, so we assume sent = contacted
@@ -129,10 +172,17 @@ export const WhatsBlastTab: React.FC<WhatsBlastTabProps> = ({ prospects: sourceP
             sessionSentCount,
             contactedTotal: sessionSentCount
         };
-    }, [wbProspects, sentIds]);
+    }, [activeProspects, sentIds]);
 
-    // Columns for FilterBar
-    const filterableColumns = ['zone']; // Only zone makes sense to filter for now in Kredit context
+    // Columns for FilterBar - dynamic based on source
+    const filterableColumns = useMemo(() => {
+        if (useExcel && uploadedProspects.length > 0) {
+            // Get all keys from first excel row that are not internal
+            const keys = Object.keys(uploadedProspects[0]).filter(k => k !== 'id' && k !== 'telefono');
+            return keys;
+        }
+        return ['zone', 'income'];
+    }, [useExcel, uploadedProspects]);
 
     return (
         <div className="min-h-screen bg-white pb-20 font-sans text-secondary-800 animate-fade-in">
@@ -158,33 +208,53 @@ export const WhatsBlastTab: React.FC<WhatsBlastTabProps> = ({ prospects: sourceP
                         <button
                             onClick={() => setActiveTab('list')}
                             className={`flex-1 md:flex-none px-6 py-2.5 rounded-xl text-sm font-black transition-all duration-300 flex items-center justify-center gap-2 ${activeTab === 'list'
-                                    ? 'bg-white text-primary-600 shadow-sm ring-1 ring-black/5'
-                                    : 'text-secondary-500 hover:text-secondary-700'
+                                ? 'bg-white text-primary-600 shadow-sm ring-1 ring-black/5'
+                                : 'text-secondary-500 hover:text-secondary-700'
                                 }`}
                         >
-                            <span>📋</span> Lista de Contactos
+                            <span>📋</span> {useExcel ? 'Excel Cargado' : 'Base Kredit'}
                         </button>
                         <button
                             onClick={() => setActiveTab('template')}
                             className={`flex-1 md:flex-none px-6 py-2.5 rounded-xl text-sm font-black transition-all duration-300 flex items-center justify-center gap-2 ${activeTab === 'template'
-                                    ? 'bg-white text-primary-600 shadow-sm ring-1 ring-black/5'
-                                    : 'text-secondary-500 hover:text-secondary-700'
+                                ? 'bg-white text-primary-600 shadow-sm ring-1 ring-black/5'
+                                : 'text-secondary-500 hover:text-secondary-700'
                                 }`}
                         >
                             <span>💬</span> Personalizar Mensaje
                         </button>
                     </div>
+
+                    <div className="flex items-center gap-3">
+                        {useExcel && (
+                            <button
+                                onClick={() => {
+                                    setUseExcel(false);
+                                    setUploadedProspects([]);
+                                    setActiveFilters({}); // Clear filters when switching source
+                                }}
+                                className="text-xs font-bold text-red-500 hover:bg-red-50 px-4 py-2.5 rounded-xl transition-colors"
+                            >
+                                Limpiar Excel
+                            </button>
+                        )}
+                        <label className="cursor-pointer bg-white border border-secondary-200 hover:border-primary-400 hover:shadow-md text-secondary-600 hover:text-primary-600 px-4 py-2.5 rounded-xl text-xs font-black uppercase tracking-wider transition-all flex items-center gap-2 group">
+                            <span className="text-lg group-hover:-translate-y-0.5 transition-transform">📂</span>
+                            <span>Subir Excel</span>
+                            <input type="file" accept=".xlsx, .xls, .csv" className="hidden" onChange={handleFileUpload} />
+                        </label>
+                    </div>
                 </div>
 
                 {activeTab === 'list' && (
                     <>
-                        <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mb-8 bg-white p-4 rounded-2xl border border-secondary-100 shadow-sm">
+                        <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mb-8 bg-white p-4 rounded-[2rem] border border-secondary-100 shadow-sm">
                             <div className="flex gap-2 w-full sm:w-auto">
                                 <button
                                     onClick={() => setViewFilter('active')}
                                     className={`flex-1 sm:flex-none px-5 py-2.5 rounded-xl text-xs font-black uppercase tracking-wider transition-all ${viewFilter === 'active'
-                                            ? 'bg-primary-50 text-primary-700 ring-1 ring-primary-100'
-                                            : 'text-secondary-400 hover:bg-secondary-50'
+                                        ? 'bg-primary-50 text-primary-700 ring-1 ring-primary-100'
+                                        : 'text-secondary-400 hover:bg-secondary-50'
                                         }`}
                                 >
                                     Pendientes
@@ -192,8 +262,8 @@ export const WhatsBlastTab: React.FC<WhatsBlastTabProps> = ({ prospects: sourceP
                                 <button
                                     onClick={() => setViewFilter('sent')}
                                     className={`flex-1 sm:flex-none px-5 py-2.5 rounded-xl text-xs font-black uppercase tracking-wider transition-all ${viewFilter === 'sent'
-                                            ? 'bg-secondary-50 text-secondary-700 ring-1 ring-secondary-200'
-                                            : 'text-secondary-400 hover:bg-secondary-50'
+                                        ? 'bg-secondary-50 text-secondary-700 ring-1 ring-secondary-200'
+                                        : 'text-secondary-400 hover:bg-secondary-50'
                                         }`}
                                 >
                                     Historial
@@ -207,7 +277,7 @@ export const WhatsBlastTab: React.FC<WhatsBlastTabProps> = ({ prospects: sourceP
 
                         <FilterBar
                             columns={filterableColumns}
-                            prospects={wbProspects}
+                            prospects={activeProspects}
                             activeFilters={activeFilters}
                             onFilterChange={(col, val) => setActiveFilters(prev => ({ ...prev, [col]: val }))}
                             onClearFilters={() => setActiveFilters({})}
@@ -240,7 +310,7 @@ export const WhatsBlastTab: React.FC<WhatsBlastTabProps> = ({ prospects: sourceP
                                         prospect={p}
                                         onSend={handleSendMessage}
                                         isSentInSession={sentIds.has(p.id)}
-                                        visibleColumns={['zone', 'income']}
+                                        visibleColumns={filterableColumns.slice(0, 3)}
                                     />
                                 ))}
                             </div>
@@ -253,12 +323,11 @@ export const WhatsBlastTab: React.FC<WhatsBlastTabProps> = ({ prospects: sourceP
                         <TemplateEditor
                             initialTemplate={template}
                             onSave={handleSaveTemplate}
-                            variables={['nombre', 'apellido', 'zone', 'income', 'email']}
-                            sampleProspect={wbProspects[0]}
+                            variables={['nombre', 'apellido', 'empresa', 'telefono', ...filterableColumns]}
+                            sampleProspect={activeProspects[0]}
                         />
                     </div>
                 )}
-
                 <ToastContainer notifications={notifications} removeNotification={removeNotification} />
             </div>
         </div>
