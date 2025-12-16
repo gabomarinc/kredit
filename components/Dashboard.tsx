@@ -3922,7 +3922,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableZones, onUpdateZo
               )}
 
               {/* Loading state for properties */}
-              {isLoadingProspectProperties && (
+              {!isPromotora && isLoadingProspectProperties && (
                 <div className="mb-8 text-center py-8">
                   <div className="inline-block animate-spin rounded-full h-6 w-6 border-b-2 border-indigo-600"></div>
                   <p className="text-gray-500 mt-3 text-sm">Cargando propiedades de interés...</p>
