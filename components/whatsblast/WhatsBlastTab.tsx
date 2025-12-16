@@ -66,6 +66,8 @@ export const WhatsBlastTab: React.FC<WhatsBlastTabProps> = ({ prospects: sourceP
             id: p.id,
             nombre: p.name.split(' ')[0],
             apellido: p.name.split(' ').slice(1).join(' ') || '',
+            // Add full name for filtering
+            nombreCompleto: p.name,
             telefono: p.phone?.replace(/\D/g, '') || '',
             email: p.email || '',
             empresa: '',
@@ -174,10 +176,14 @@ export const WhatsBlastTab: React.FC<WhatsBlastTabProps> = ({ prospects: sourceP
                     // Fallback: If no name key, try to take the first string column that looks like a name
                     const nameVal = nameKey ? row[nameKey] : (row['Nombre'] || row['Name'] || Object.values(row).find(v => typeof v === 'string' && (v as string).length > 2) || 'Sin Nombre');
 
+                    const nombre = String(nameVal).split(' ')[0];
+                    const apellido = String(nameVal).split(' ').slice(1).join(' ');
+
                     return {
                         id: `excel-${idx}`,
-                        nombre: String(nameVal).split(' ')[0], // First name guess
-                        apellido: String(nameVal).split(' ').slice(1).join(' '),
+                        nombre: nombre,
+                        apellido: apellido,
+                        nombreCompleto: String(nameVal), // Add full name for filtering
                         telefono: phoneKey ? String(row[phoneKey]).replace(/\D/g, '') : '',
                         email: emailKey ? row[emailKey] : '',
                         empresa: companyKey ? row[companyKey] : '',
@@ -198,9 +204,25 @@ export const WhatsBlastTab: React.FC<WhatsBlastTabProps> = ({ prospects: sourceP
     };
 
     // Filter Logic
+    const [searchTerm, setSearchTerm] = useState('');
+
     const filteredProspects = useMemo(() => {
-        // 1. Column Filters
         let result = activeProspects;
+
+        // 1. Search Filter (Global)
+        if (searchTerm.trim()) {
+            const term = searchTerm.toLowerCase();
+            result = result.filter(p =>
+                (p.nombre?.toLowerCase() || '').includes(term) ||
+                (p.apellido?.toLowerCase() || '').includes(term) ||
+                (p.email?.toLowerCase() || '').includes(term) ||
+                (p.telefono?.toLowerCase() || '').includes(term) ||
+                (p.empresa?.toLowerCase() || '').includes(term) ||
+                (typeof p.nombreCompleto === 'string' && p.nombreCompleto.toLowerCase().includes(term))
+            );
+        }
+
+        // 2. Column Filters
         if (Object.keys(activeFilters).length > 0) {
             result = result.filter(p => {
                 return Object.entries(activeFilters).every(([col, val]) => {
@@ -210,12 +232,12 @@ export const WhatsBlastTab: React.FC<WhatsBlastTabProps> = ({ prospects: sourceP
             });
         }
 
-        // 2. View Filter (Sent vs Pending)
+        // 3. View Filter (Sent vs Pending)
         return result.filter(p => {
             const isSent = sentIds.has(p.id);
             return viewFilter === 'active' ? !isSent : isSent;
         });
-    }, [activeProspects, activeFilters, viewFilter, sentIds]);
+    }, [activeProspects, activeFilters, viewFilter, sentIds, searchTerm]);
 
     // Statistics
     const stats = useMemo(() => {
@@ -231,15 +253,11 @@ export const WhatsBlastTab: React.FC<WhatsBlastTabProps> = ({ prospects: sourceP
         };
     }, [activeProspects, sentIds]);
 
-    // Columns for FilterBar - dynamic based on source
+    // Columns for FilterBar - dynamic based on source but simplified
     const filterableColumns = useMemo(() => {
-        if (useExcel && uploadedProspects.length > 0) {
-            // Get all keys from first excel row that are not internal
-            const keys = Object.keys(uploadedProspects[0]).filter(k => k !== 'id' && k !== 'telefono');
-            return keys;
-        }
-        return ['zone', 'income'];
-    }, [useExcel, uploadedProspects]);
+        // User requested ONLY these specific columns
+        return ['nombreCompleto', 'email', 'telefono'];
+    }, []);
 
     return (
         <div className="min-h-screen bg-white pb-20 font-sans text-secondary-800 animate-fade-in rounded-[3rem] shadow-2xl shadow-indigo-100/50 border border-white/50">
@@ -306,29 +324,57 @@ export const WhatsBlastTab: React.FC<WhatsBlastTabProps> = ({ prospects: sourceP
                 {activeTab === 'list' && (
                     <>
                         <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mb-8 bg-white p-4 rounded-[2rem] border border-secondary-100 shadow-sm">
-                            <div className="flex gap-2 w-full sm:w-auto">
-                                <button
-                                    onClick={() => setViewFilter('active')}
-                                    className={`flex-1 sm:flex-none px-5 py-2.5 rounded-xl text-xs font-black uppercase tracking-wider transition-all ${viewFilter === 'active'
-                                        ? 'bg-primary-50 text-primary-700 ring-1 ring-primary-100'
-                                        : 'text-secondary-400 hover:bg-secondary-50'
-                                        }`}
-                                >
-                                    Pendientes
-                                </button>
-                                <button
-                                    onClick={() => setViewFilter('sent')}
-                                    className={`flex-1 sm:flex-none px-5 py-2.5 rounded-xl text-xs font-black uppercase tracking-wider transition-all ${viewFilter === 'sent'
-                                        ? 'bg-secondary-50 text-secondary-700 ring-1 ring-secondary-200'
-                                        : 'text-secondary-400 hover:bg-secondary-50'
-                                        }`}
-                                >
-                                    Historial
-                                </button>
-                            </div>
+                            {/* SEARCH & FILTERS CONTAINER */}
+                            <div className="flex flex-col md:flex-row w-full gap-4">
+                                {/* SEARCH BAR */}
+                                <div className="relative flex-1">
+                                    <span className="absolute inset-y-0 left-0 flex items-center pl-4 text-secondary-400">
+                                        🔍
+                                    </span>
+                                    <input
+                                        type="text"
+                                        placeholder="Buscar por nombre, email o teléfono..."
+                                        value={searchTerm}
+                                        onChange={(e) => setSearchTerm(e.target.value)}
+                                        className="w-full py-3 px-12 rounded-xl bg-secondary-50 border border-secondary-100 text-sm font-medium focus:border-primary-400 focus:ring-2 focus:ring-primary-100 outline-none transition-all placeholder:text-secondary-400"
+                                    />
+                                    {searchTerm && (
+                                        <button
+                                            onClick={() => setSearchTerm('')}
+                                            className="absolute inset-y-0 right-0 flex items-center pr-4 text-secondary-400 hover:text-red-500"
+                                        >
+                                            ✕
+                                        </button>
+                                    )}
+                                </div>
 
+                                {/* VIEW TOGGLE */}
+                                <div className="flex bg-secondary-50 p-1.5 rounded-xl border border-secondary-100 shrink-0">
+                                    <button
+                                        onClick={() => setViewFilter('active')}
+                                        className={`px-5 py-2 rounded-lg text-xs font-black uppercase tracking-wider transition-all ${viewFilter === 'active'
+                                            ? 'bg-white text-primary-700 shadow-sm'
+                                            : 'text-secondary-400 hover:text-secondary-600'
+                                            }`}
+                                    >
+                                        Pendientes
+                                    </button>
+                                    <button
+                                        onClick={() => setViewFilter('sent')}
+                                        className={`px-5 py-2 rounded-lg text-xs font-black uppercase tracking-wider transition-all ${viewFilter === 'sent'
+                                            ? 'bg-white text-secondary-700 shadow-sm'
+                                            : 'text-secondary-400 hover:text-secondary-600'
+                                            }`}
+                                    >
+                                        Historial
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="mb-4 flex justify-between items-center px-2">
                             <span className="text-xs font-bold text-secondary-400 bg-secondary-50 px-3 py-1.5 rounded-lg border border-secondary-100">
-                                {filteredProspects.length} registros visibles
+                                {filteredProspects.length} registros encontrados
                             </span>
                         </div>
 
