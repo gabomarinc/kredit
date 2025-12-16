@@ -379,6 +379,8 @@ export const saveProspectToDB = async (
     return 'temp-id-' + Date.now();
   }
 
+
+
   try {
     console.log('🔄 Intentando conectar a la base de datos...');
     const client = await pool.connect();
@@ -387,23 +389,7 @@ export const saveProspectToDB = async (
     // Aseguramos que las tablas existan (Auto-migración simple)
     await ensureTablesExist(client);
 
-    // Convertir archivos a Base64
-    console.log('🔄 Convirtiendo archivos a Base64...');
-    const [idFileBase64, fichaFileBase64, talonarioFileBase64, signedAcpFileBase64] = await Promise.all([
-      fileToBase64(personal.idFile),
-      fileToBase64(personal.fichaFile),
-      fileToBase64(personal.talonarioFile),
-      fileToBase64(personal.signedAcpFile)
-    ]);
-
-    console.log('✅ Archivos convertidos:', {
-      hasIdFile: !!idFileBase64,
-      hasFichaFile: !!fichaFileBase64,
-      hasTalonarioFile: !!talonarioFileBase64,
-      hasSignedAcpFile: !!signedAcpFileBase64
-    });
-
-    // Insertamos en la tabla prospects
+    // 1. Insertamos prospecto inicial SIN archivos base64
     const query = `
       INSERT INTO prospects (
         company_id,
@@ -417,12 +403,8 @@ export const saveProspectToDB = async (
         interested_zones, 
         calculation_result,
         status,
-        id_file_base64,
-        ficha_file_base64,
-        talonario_file_base64,
-        signed_acp_file_base64,
         created_at
-      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, 'Nuevo', $11, $12, $13, $14, NOW())
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, 'Nuevo', NOW())
       RETURNING id
     `;
 
@@ -435,19 +417,115 @@ export const saveProspectToDB = async (
       preferences.propertyType,
       preferences.bedrooms,
       preferences.bathrooms,
-      preferences.zone, // Postgres lo guardará como Array text[]
-      JSON.stringify(result), // Guardamos el resultado como JSON
-      idFileBase64,
-      fichaFileBase64,
-      talonarioFileBase64,
-      signedAcpFileBase64
+      preferences.zone,
+      JSON.stringify(result)
     ];
 
     const res = await client.query(query, values);
+    const prospectId = res.rows[0].id;
     client.release();
-    console.log("✅ Prospect saved with ID:", res.rows[0].id);
-    console.log("✅ Datos guardados correctamente en Neon");
-    return res.rows[0].id;
+
+    console.log("✅ Prospect saved with ID:", prospectId);
+
+    // 2. Si hay archivos y companyId, intentar subirlos a Google Drive
+    const hasFiles = personal.idFile || personal.fichaFile || personal.talonarioFile || personal.signedAcpFile;
+
+    if (hasFiles && companyId) {
+      console.log('🔄 Archivos detectados, intentando subir a Google Drive...');
+
+      try {
+        // Obtener credenciales de la empresa
+        const credsClient = await pool.connect();
+        const credsRes = await credsClient.query(
+          'SELECT google_drive_access_token, google_drive_refresh_token, google_drive_folder_id FROM companies WHERE id = $1',
+          [companyId]
+        );
+        credsClient.release();
+
+        if (credsRes.rows.length > 0 && credsRes.rows[0].google_drive_folder_id) {
+          const { google_drive_access_token, google_drive_refresh_token, google_drive_folder_id } = credsRes.rows[0];
+          let accessToken = google_drive_access_token;
+
+          if (accessToken) {
+            // Intentar subir archivos
+            let driveFileIds;
+            try {
+              driveFileIds = await uploadProspectFilesToDrive(
+                accessToken,
+                google_drive_folder_id,
+                personal.fullName,
+                prospectId,
+                {
+                  idFile: personal.idFile,
+                  fichaFile: personal.fichaFile,
+                  talonarioFile: personal.talonarioFile,
+                  signedAcpFile: personal.signedAcpFile
+                }
+              );
+            } catch (error: any) {
+              // Manejo de token expirado
+              if (error?.status === 401 && google_drive_refresh_token) {
+                console.log('🔄 Token expirado al guardar, intentando renovar...');
+                const newAccessToken = await refreshAccessToken(google_drive_refresh_token);
+                if (newAccessToken) {
+                  // Actualizar token en BD
+                  const updateClient = await pool.connect();
+                  await updateClient.query(
+                    'UPDATE companies SET google_drive_access_token = $1 WHERE id = $2',
+                    [newAccessToken, companyId]
+                  );
+                  updateClient.release();
+
+                  // Reintentar subida
+                  driveFileIds = await uploadProspectFilesToDrive(
+                    newAccessToken,
+                    google_drive_folder_id,
+                    personal.fullName,
+                    prospectId,
+                    {
+                      idFile: personal.idFile,
+                      fichaFile: personal.fichaFile,
+                      talonarioFile: personal.talonarioFile,
+                      signedAcpFile: personal.signedAcpFile
+                    }
+                  );
+                }
+              } else {
+                throw error;
+              }
+            }
+
+            if (driveFileIds) {
+              // 3. Actualizar prospecto con IDs de Drive
+              console.log('✅ Archivos subidos a Drive, actualizando prospecto...');
+              const updateClient = await pool.connect();
+              await updateClient.query(`
+                UPDATE prospects SET
+                  id_file_drive_id = $1,
+                  ficha_file_drive_id = $2,
+                  talonario_file_drive_id = $3,
+                  signed_acp_file_drive_id = $4,
+                  updated_at = NOW()
+                WHERE id = $5
+              `, [
+                driveFileIds.idFileUrl || null,
+                driveFileIds.fichaFileUrl || null,
+                driveFileIds.talonarioFileUrl || null,
+                driveFileIds.signedAcpFileUrl || null,
+                prospectId
+              ]);
+              updateClient.release();
+            }
+          }
+        }
+      } catch (driveError) {
+        console.error('❌ Error subiendo archivos a Drive al guardar prospecto:', driveError);
+        // No fallamos la operación principal, el prospecto ya se guardó
+      }
+    }
+
+    console.log("✅ Proceso completado exitosamente");
+    return prospectId;
 
   } catch (error) {
     console.error('❌ CRITICAL Error saving prospect:', error);
@@ -457,7 +535,6 @@ export const saveProspectToDB = async (
       connectionString: CONNECTION_STRING ? 'Configurada' : 'NO CONFIGURADA'
     });
     // No lanzamos error para no interrumpir la experiencia de usuario (Emotional Design)
-    // El usuario verá la pantalla de éxito aunque la DB fallé.
     return 'temp-id-' + Date.now();
   }
 };
@@ -925,10 +1002,6 @@ export const getProspectDocuments = async (prospectId: string): Promise<{
     // (antes se intentaba parsear a número para compatibilidad con SERIAL y rompía con UUIDs)
     const res = await client.query(`
       SELECT 
-        p.id_file_base64, 
-        p.ficha_file_base64, 
-        p.talonario_file_base64, 
-        p.signed_acp_file_base64,
         p.id_file_drive_id,
         p.ficha_file_drive_id,
         p.talonario_file_drive_id,
@@ -964,13 +1037,8 @@ export const getProspectDocuments = async (prospectId: string): Promise<{
     const hasDriveIds = !!(row.id_file_drive_id || row.ficha_file_drive_id || row.talonario_file_drive_id || row.signed_acp_file_drive_id);
 
     // Función helper para descargar archivo de Drive y convertirlo a Base64
-    const downloadFileIfNeeded = async (fileId: string | null, fallbackBase64: string | null): Promise<string | null> => {
-      // Si hay Base64 antiguo y no hay ID de Drive, usar Base64
-      if (!fileId && fallbackBase64) {
-        return fallbackBase64;
-      }
-
-      // Si no hay ID de Drive, retornar null
+    const downloadFileIfNeeded = async (fileId: string | null): Promise<string | null> => {
+      // Si no hay ID de Drive, retornar null (ya NO usamos base64 de BD)
       if (!fileId) {
         return null;
       }
@@ -1023,10 +1091,10 @@ export const getProspectDocuments = async (prospectId: string): Promise<{
     if (hasDriveIds && accessToken) {
       console.log('🔄 Descargando archivos de Google Drive...');
       const [idFileBase64, fichaFileBase64, talonarioFileBase64, signedAcpFileBase64] = await Promise.all([
-        downloadFileIfNeeded(row.id_file_drive_id, row.id_file_base64),
-        downloadFileIfNeeded(row.ficha_file_drive_id, row.ficha_file_base64),
-        downloadFileIfNeeded(row.talonario_file_drive_id, row.talonario_file_base64),
-        downloadFileIfNeeded(row.signed_acp_file_drive_id, row.signed_acp_file_base64)
+        downloadFileIfNeeded(row.id_file_drive_id),
+        downloadFileIfNeeded(row.ficha_file_drive_id),
+        downloadFileIfNeeded(row.talonario_file_drive_id),
+        downloadFileIfNeeded(row.signed_acp_file_drive_id)
       ]);
 
       return {
