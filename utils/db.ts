@@ -2171,6 +2171,67 @@ export const getPropertyInterestsByProspect = async (prospectId: string): Promis
   }
 };
 
+// Obtener modelos de proyectos en los que un prospecto está interesado
+export const getProjectModelInterestsByProspect = async (prospectId: string): Promise<Array<{ model: ProjectModel; project: Project }>> => {
+  if (!pool) {
+    return [];
+  }
+
+  try {
+    const client = await pool.connect();
+    await ensureTablesExist(client);
+
+    const res = await client.query(`
+      SELECT 
+        pm.*,
+        p.id as project_id,
+        p.name as project_name,
+        p.description as project_description,
+        p.zone as project_zone,
+        p.address as project_address,
+        p.images as project_images,
+        p.status as project_status
+      FROM project_model_interests pmi
+      INNER JOIN project_models pm ON pmi.project_model_id = pm.id
+      INNER JOIN projects p ON pm.project_id = p.id
+      WHERE pmi.prospect_id = $1 AND pmi.interested = true
+      ORDER BY pmi.created_at DESC
+    `, [prospectId]);
+
+    client.release();
+
+    return res.rows.map((row: any) => ({
+      model: {
+        id: row.id,
+        name: row.name,
+        areaM2: row.area_m2 ? parseFloat(row.area_m2) : undefined,
+        bedrooms: row.bedrooms,
+        bathrooms: row.bathrooms,
+        amenities: Array.isArray(row.amenities) ? row.amenities : [],
+        unitsTotal: row.units_total || 0,
+        unitsAvailable: row.units_available || 0,
+        price: parseFloat(row.price || 0),
+        images: Array.isArray(row.images) ? row.images : []
+      },
+      project: {
+        id: row.project_id,
+        companyId: row.company_id || '',
+        name: row.project_name,
+        description: row.project_description,
+        zone: row.project_zone,
+        address: row.project_address,
+        images: Array.isArray(row.project_images) ? row.project_images : [],
+        status: row.project_status as 'Activo' | 'Inactivo',
+        models: [] // No necesitamos todos los modelos aquí
+      }
+    }));
+
+  } catch (error) {
+    console.error('❌ Error obteniendo modelos de proyectos del prospecto:', error);
+    return [];
+  }
+};
+
 // ========== FUNCIONES PARA PROYECTOS (PROMOTORA) ==========
 
 // Guardar proyecto con sus modelos

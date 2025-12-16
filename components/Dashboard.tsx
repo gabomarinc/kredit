@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
-import { 
+import {
   Users, DollarSign, LayoutDashboard, FileText, Download, Filter, Calendar, CheckCircle2, X, ChevronDown, MapPin, Briefcase, Settings, Plus, Trash2, Building, Image as ImageIcon, Shield, Save, Code, Copy, ExternalLink, Loader2, User, Target, MessageCircle, ShieldCheck, TrendingUp, Eye, FileText as FileTextIcon, BedDouble, Bath, Heart, ArrowRight, Upload, Check, ChevronLeft, RefreshCw, ChevronRight, Cloud, Calculator, FileCheck
 } from 'lucide-react';
-import { getProspectsFromDB, getCompanyById, updateCompanyZones, updateCompanyLogo, Company, getPropertiesByCompany, saveProperty, updateProperty, deleteProperty, getPropertyInterestsByCompany, updateCompanyPlan, getPropertyInterestsByProspect, saveProject, getProjectsByCompany, updateProject, deleteProject, updateCompanyName, getProspectDocuments, getPropertyImages, getProjectImages, updateCompanyGoogleDriveConfig, updateCompanyRequestedDocuments, updateCompanyApcDocument } from '../utils/db';
+import { getProspectsFromDB, getCompanyById, updateCompanyZones, updateCompanyLogo, Company, getPropertiesByCompany, saveProperty, updateProperty, deleteProperty, getPropertyInterestsByCompany, updateCompanyPlan, getPropertyInterestsByProspect, getProjectModelInterestsByProspect, saveProject, getProjectsByCompany, updateProject, deleteProject, updateCompanyName, getProspectDocuments, getPropertyImages, getProjectImages, updateCompanyGoogleDriveConfig, updateCompanyRequestedDocuments, updateCompanyApcDocument } from '../utils/db';
 import { initiateGoogleDriveAuth, uploadFileToDrive, refreshAccessToken } from '../utils/googleDrive';
 import { Prospect, Property, PropertyInterest, PlanType, Project, ProjectModel } from '../types';
 import { NotificationModal, NotificationType } from './ui/NotificationModal';
@@ -367,7 +367,7 @@ const ProjectModal: React.FC<ProjectModalProps> = ({ project, zones, onClose, on
     images: []
   });
   const [newAmenity, setNewAmenity] = useState('');
-  
+
   // Amenidades predefinidas
   const predefinedAmenities = ['Gym', 'Piscina', 'Terraza', 'Padel'];
 
@@ -413,7 +413,7 @@ const ProjectModal: React.FC<ProjectModalProps> = ({ project, zones, onClose, on
     if (!currentModel.name || currentModel.unitsTotal === 0 || currentModel.price === 0) {
       return;
     }
-    
+
     if (editingModelIndex !== null) {
       // Actualizar modelo existente
       const updatedModels = [...models];
@@ -424,7 +424,7 @@ const ProjectModal: React.FC<ProjectModalProps> = ({ project, zones, onClose, on
       // Agregar nuevo modelo
       setModels([...models, { ...currentModel }]);
     }
-    
+
     // Limpiar formulario
     setCurrentModel({
       name: '',
@@ -526,9 +526,8 @@ const ProjectModal: React.FC<ProjectModalProps> = ({ project, zones, onClose, on
               {Array.from({ length: totalSteps }).map((_, idx) => (
                 <div
                   key={idx}
-                  className={`h-2 rounded-full transition-all ${
-                    idx + 1 <= step ? 'bg-indigo-600 w-8' : 'bg-gray-200 w-2'
-                  }`}
+                  className={`h-2 rounded-full transition-all ${idx + 1 <= step ? 'bg-indigo-600 w-8' : 'bg-gray-200 w-2'
+                    }`}
                 />
               ))}
             </div>
@@ -582,11 +581,10 @@ const ProjectModal: React.FC<ProjectModalProps> = ({ project, zones, onClose, on
                     <button
                       key={z}
                       onClick={() => setZone(z)}
-                      className={`px-4 py-3 rounded-2xl text-sm font-medium transition-all duration-200 border flex items-center justify-center ${
-                        zone === z
-                          ? 'bg-indigo-600 text-white border-indigo-600 shadow-md transform scale-[1.02]'
-                          : 'bg-white text-gray-500 border-gray-100 hover:border-indigo-200 hover:bg-indigo-50/50 hover:text-indigo-600'
-                      }`}
+                      className={`px-4 py-3 rounded-2xl text-sm font-medium transition-all duration-200 border flex items-center justify-center ${zone === z
+                        ? 'bg-indigo-600 text-white border-indigo-600 shadow-md transform scale-[1.02]'
+                        : 'bg-white text-gray-500 border-gray-100 hover:border-indigo-200 hover:bg-indigo-50/50 hover:text-indigo-600'
+                        }`}
                     >
                       {zone === z && <Check size={14} className="mr-2" />}
                       {z}
@@ -611,15 +609,13 @@ const ProjectModal: React.FC<ProjectModalProps> = ({ project, zones, onClose, on
                 <div className="grid grid-cols-2 gap-4">
                   <button
                     onClick={() => setStatus('Activo')}
-                    className={`p-6 rounded-2xl border-2 transition-all duration-300 ${
-                      status === 'Activo'
-                        ? 'border-green-500 bg-green-50 shadow-lg scale-[1.02]'
-                        : 'border-gray-100 bg-white hover:border-green-200 hover:shadow-md'
-                    }`}
+                    className={`p-6 rounded-2xl border-2 transition-all duration-300 ${status === 'Activo'
+                      ? 'border-green-500 bg-green-50 shadow-lg scale-[1.02]'
+                      : 'border-gray-100 bg-white hover:border-green-200 hover:shadow-md'
+                      }`}
                   >
-                    <div className={`w-12 h-12 rounded-xl flex items-center justify-center mb-4 ${
-                      status === 'Activo' ? 'bg-green-100 text-green-600' : 'bg-gray-100 text-gray-400'
-                    }`}>
+                    <div className={`w-12 h-12 rounded-xl flex items-center justify-center mb-4 ${status === 'Activo' ? 'bg-green-100 text-green-600' : 'bg-gray-100 text-gray-400'
+                      }`}>
                       <CheckCircle2 size={24} />
                     </div>
                     <h4 className="font-bold text-gray-900 mb-1">Activo</h4>
@@ -627,15 +623,13 @@ const ProjectModal: React.FC<ProjectModalProps> = ({ project, zones, onClose, on
                   </button>
                   <button
                     onClick={() => setStatus('Inactivo')}
-                    className={`p-6 rounded-2xl border-2 transition-all duration-300 ${
-                      status === 'Inactivo'
-                        ? 'border-gray-400 bg-gray-50 shadow-lg scale-[1.02]'
-                        : 'border-gray-100 bg-white hover:border-gray-200 hover:shadow-md'
-                    }`}
+                    className={`p-6 rounded-2xl border-2 transition-all duration-300 ${status === 'Inactivo'
+                      ? 'border-gray-400 bg-gray-50 shadow-lg scale-[1.02]'
+                      : 'border-gray-100 bg-white hover:border-gray-200 hover:shadow-md'
+                      }`}
                   >
-                    <div className={`w-12 h-12 rounded-xl flex items-center justify-center mb-4 ${
-                      status === 'Inactivo' ? 'bg-gray-200 text-gray-600' : 'bg-gray-100 text-gray-400'
-                    }`}>
+                    <div className={`w-12 h-12 rounded-xl flex items-center justify-center mb-4 ${status === 'Inactivo' ? 'bg-gray-200 text-gray-600' : 'bg-gray-100 text-gray-400'
+                      }`}>
                       <X size={24} />
                     </div>
                     <h4 className="font-bold text-gray-900 mb-1">Inactivo</h4>
@@ -792,7 +786,7 @@ const ProjectModal: React.FC<ProjectModalProps> = ({ project, zones, onClose, on
                     <Shield size={16} className="text-indigo-500" />
                     Amenidades
                   </label>
-                  
+
                   {/* Amenidades Predefinidas */}
                   <div className="mb-4">
                     <p className="text-xs text-gray-500 mb-2 font-medium">Amenidades Predefinidas</p>
@@ -810,11 +804,10 @@ const ProjectModal: React.FC<ProjectModalProps> = ({ project, zones, onClose, on
                                 addAmenity(amenity);
                               }
                             }}
-                            className={`px-4 py-2 rounded-xl text-sm font-semibold transition-all ${
-                              isAdded
-                                ? 'bg-indigo-600 text-white hover:bg-indigo-700'
-                                : 'bg-gray-100 text-gray-700 hover:bg-gray-200 border border-gray-200'
-                            }`}
+                            className={`px-4 py-2 rounded-xl text-sm font-semibold transition-all ${isAdded
+                              ? 'bg-indigo-600 text-white hover:bg-indigo-700'
+                              : 'bg-gray-100 text-gray-700 hover:bg-gray-200 border border-gray-200'
+                              }`}
                           >
                             {isAdded ? (
                               <span className="flex items-center gap-1.5">
@@ -867,9 +860,9 @@ const ProjectModal: React.FC<ProjectModalProps> = ({ project, zones, onClose, on
                             className="px-4 py-2 bg-indigo-100 text-indigo-700 rounded-full text-sm font-medium flex items-center gap-2"
                           >
                             {amenity}
-                            <button 
+                            <button
                               type="button"
-                              onClick={() => removeAmenity(amenity)} 
+                              onClick={() => removeAmenity(amenity)}
                               className="text-indigo-500 hover:text-indigo-700 transition-colors"
                             >
                               <X size={14} />
@@ -1035,11 +1028,10 @@ const ProjectModal: React.FC<ProjectModalProps> = ({ project, zones, onClose, on
                   setStep(step + 1);
                 }}
                 disabled={(step === 1 && !name) || (step === 2 && models.length === 0)}
-                className={`flex-1 sm:flex-none flex items-center justify-center gap-3 px-8 py-4 rounded-full font-bold text-lg transition-all duration-300 shadow-xl order-1 sm:order-2 w-full sm:w-auto ${
-                  (step === 1 && name) || (step === 2 && models.length > 0)
-                    ? 'bg-indigo-600 text-white hover:bg-indigo-700 shadow-indigo-200'
-                    : 'bg-gray-100 text-gray-400 cursor-not-allowed shadow-none'
-                }`}
+                className={`flex-1 sm:flex-none flex items-center justify-center gap-3 px-8 py-4 rounded-full font-bold text-lg transition-all duration-300 shadow-xl order-1 sm:order-2 w-full sm:w-auto ${(step === 1 && name) || (step === 2 && models.length > 0)
+                  ? 'bg-indigo-600 text-white hover:bg-indigo-700 shadow-indigo-200'
+                  : 'bg-gray-100 text-gray-400 cursor-not-allowed shadow-none'
+                  }`}
               >
                 Continuar <ArrowRight size={20} className="shrink-0" />
               </button>
@@ -1047,11 +1039,10 @@ const ProjectModal: React.FC<ProjectModalProps> = ({ project, zones, onClose, on
               <button
                 onClick={handleSave}
                 disabled={!name || !zone || models.length === 0 || isSaving}
-                className={`flex-1 sm:flex-none flex items-center justify-center gap-3 px-8 py-4 rounded-full font-bold text-lg transition-all duration-300 shadow-xl order-1 sm:order-2 w-full sm:w-auto ${
-                  name && zone && models.length > 0 && !isSaving
-                    ? 'bg-indigo-600 text-white hover:bg-indigo-700 shadow-indigo-200'
-                    : 'bg-gray-100 text-gray-400 cursor-not-allowed shadow-none'
-                }`}
+                className={`flex-1 sm:flex-none flex items-center justify-center gap-3 px-8 py-4 rounded-full font-bold text-lg transition-all duration-300 shadow-xl order-1 sm:order-2 w-full sm:w-auto ${name && zone && models.length > 0 && !isSaving
+                  ? 'bg-indigo-600 text-white hover:bg-indigo-700 shadow-indigo-200'
+                  : 'bg-gray-100 text-gray-400 cursor-not-allowed shadow-none'
+                  }`}
               >
                 {isSaving ? (
                   <>
@@ -1097,7 +1088,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableZones, onUpdateZo
   const [prospects, setProspects] = useState<Prospect[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
-  
+
   // Pagination State
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
@@ -1113,13 +1104,15 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableZones, onUpdateZo
   const [showPropertySelectionModal, setShowPropertySelectionModal] = useState(false);
   const [prospectInterestedProperties, setProspectInterestedProperties] = useState<Property[]>([]);
   const [isLoadingProspectProperties, setIsLoadingProspectProperties] = useState(false);
-  
+  const [prospectInterestedModels, setProspectInterestedModels] = useState<Array<{ model: ProjectModel; project: Project }>>([]);
+  const [isLoadingProspectModels, setIsLoadingProspectModels] = useState(false);
+
   // Projects State (Promotora)
   const [projects, setProjects] = useState<Project[]>([]);
   const [showProjectModal, setShowProjectModal] = useState(false);
   const [selectedProjectForEdit, setSelectedProjectForEdit] = useState<Project | null>(null);
   const [showProjectSelectionModal, setShowProjectSelectionModal] = useState(false);
-  
+
   const [notification, setNotification] = useState<{ isOpen: boolean; type: NotificationType; message: string; title?: string }>({
     isOpen: false,
     type: 'error',
@@ -1195,7 +1188,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableZones, onUpdateZo
       const data = await getProspectsFromDB(companyId || undefined);
       setProspects(data);
       console.log('✅ Prospectos cargados:', data.length, 'para companyId:', companyId);
-      
+
       // Guardar en caché
       try {
         localStorage.setItem(cacheKey, JSON.stringify({
@@ -1206,7 +1199,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableZones, onUpdateZo
       } catch (e) {
         console.warn('⚠️ Error guardando en caché:', e);
       }
-      
+
       // Resetear a la primera página cuando se cargan nuevos datos
       setCurrentPage(1);
     } catch (error) {
@@ -1235,12 +1228,12 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableZones, onUpdateZo
       const matchesName = prospect.name.toLowerCase().includes(searchLower);
       const matchesEmail = prospect.email.toLowerCase().includes(searchLower);
       const matchesPhone = prospect.phone?.toLowerCase().includes(searchLower) || false;
-      
+
       if (!matchesName && !matchesEmail && !matchesPhone) {
         return false;
       }
     }
-    
+
     // Filtro por estado
     if (statusFilter !== 'all') {
       const prospectStatus = prospect.status?.toLowerCase() || 'new';
@@ -1248,7 +1241,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableZones, onUpdateZo
       if (statusFilter === 'contacted' && prospectStatus !== 'contacted') return false;
       if (statusFilter === 'qualified' && prospectStatus !== 'qualified') return false;
     }
-    
+
     return true;
   });
 
@@ -1409,7 +1402,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableZones, onUpdateZo
       const props = await getPropertiesByCompany(companyId);
       setProperties(props);
       console.log('✅ Propiedades cargadas:', props.length);
-      
+
       try {
         localStorage.setItem(cacheKey, JSON.stringify({
           data: props,
@@ -1452,7 +1445,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableZones, onUpdateZo
       const projs = await getProjectsByCompany(companyId);
       setProjects(projs);
       console.log('✅ Proyectos cargados:', projs.length);
-      
+
       try {
         localStorage.setItem(cacheKey, JSON.stringify({
           data: projs,
@@ -1508,7 +1501,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableZones, onUpdateZo
 
     try {
       setIsLoadingProperties(true);
-      
+
       const fileExtension = file.name.split('.').pop()?.toLowerCase();
       let importedData: any[] = [];
 
@@ -1517,7 +1510,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableZones, onUpdateZo
         const text = await file.text();
         const lines = text.split('\n');
         const headers = lines[0].split(',').map(h => h.trim());
-        
+
         importedData = lines.slice(1).map(line => {
           const values = line.split(',').map(v => v.trim());
           const obj: any = {};
@@ -1592,7 +1585,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableZones, onUpdateZo
       setNotification({
         isOpen: true,
         type: successCount > 0 ? 'success' : 'error',
-        message: successCount > 0 
+        message: successCount > 0
           ? `Se importaron ${successCount} propiedades exitosamente${errorCount > 0 ? `. ${errorCount} propiedades tuvieron errores.` : '.'}`
           : `No se pudieron importar las propiedades. Verifica el formato del archivo.`,
         title: successCount > 0 ? 'Importación exitosa' : 'Error en importación'
@@ -1618,7 +1611,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableZones, onUpdateZo
         if (!prospectDocumentsLoaded && !loadingProspectDocuments) {
           setIsLoadingProspectProperties(true);
           setProspectDocumentsLoaded(false);
-          
+
           // Cargar documentos Base64 bajo demanda (lazy loading)
           setLoadingProspectDocuments(true);
           try {
@@ -1647,18 +1640,34 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableZones, onUpdateZo
           }
         }
 
-        // Cargar propiedades de interés
-        setIsLoadingProspectProperties(true);
-        try {
-          const props = await getPropertyInterestsByProspect(selectedProspect.id);
-          setProspectInterestedProperties(props);
-        } catch (e) {
-          console.error("Error loading prospect properties:", e);
-        } finally {
-          setIsLoadingProspectProperties(false);
+        // Cargar propiedades de interés (Broker)
+        if (!isPromotora) {
+          setIsLoadingProspectProperties(true);
+          try {
+            const props = await getPropertyInterestsByProspect(selectedProspect.id);
+            setProspectInterestedProperties(props);
+          } catch (e) {
+            console.error("Error loading prospect properties:", e);
+          } finally {
+            setIsLoadingProspectProperties(false);
+          }
+        }
+
+        // Cargar modelos de proyectos de interés (Promotora)
+        if (isPromotora) {
+          setIsLoadingProspectModels(true);
+          try {
+            const models = await getProjectModelInterestsByProspect(selectedProspect.id);
+            setProspectInterestedModels(models);
+          } catch (e) {
+            console.error("Error loading prospect project models:", e);
+          } finally {
+            setIsLoadingProspectModels(false);
+          }
         }
       } else {
         setProspectInterestedProperties([]);
+        setProspectInterestedModels([]);
         setProspectDocumentsLoaded(false);
       }
     };
@@ -1686,7 +1695,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableZones, onUpdateZo
   // Explicitly type accumulator as number to avoid TS arithmetic errors
   const totalIncome = prospects.reduce((acc: number, curr) => acc + (curr.income || 0), 0);
   const avgSalary = totalForms > 0 ? totalIncome / totalForms : 0;
-  
+
   // Explicitly type accumulator as number
   const totalCapacity = prospects.reduce((acc: number, curr) => acc + (Number(curr.result?.maxPropertyPrice) || 0), 0);
   const avgCapacity = totalForms > 0 ? totalCapacity / totalForms : 0;
@@ -1701,11 +1710,11 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableZones, onUpdateZo
       });
     } else {
       const z = curr.zone || 'Sin zona';
-    acc[z] = (acc[z] || 0) + 1;
+      acc[z] = (acc[z] || 0) + 1;
     }
     return acc;
   }, {} as Record<string, number>);
-  
+
   const sortedZones = Object.entries(zoneCounts).sort((a, b) => (b[1] as number) - (a[1] as number));
   const topZone = sortedZones[0]?.[0] || 'Aún no tenemos datos';
   const topZoneCount = sortedZones[0]?.[1] || 0;
@@ -1721,7 +1730,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableZones, onUpdateZo
       const updatedZones = [...availableZones, newZone.trim()];
       onUpdateZones(updatedZones);
       setNewZone('');
-      
+
       // Guardar en la base de datos
       const companyId = localStorage.getItem('companyId');
       if (companyId) {
@@ -1744,7 +1753,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableZones, onUpdateZo
   const handleDeleteZone = async (zoneToDelete: string) => {
     const updatedZones = availableZones.filter(z => z !== zoneToDelete);
     onUpdateZones(updatedZones);
-    
+
     // Guardar en la base de datos
     const companyId = localStorage.getItem('companyId');
     if (companyId) {
@@ -1917,7 +1926,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableZones, onUpdateZo
       startDate.setHours(0, 0, 0, 0);
       const endDate = new Date(dateRangeEnd);
       endDate.setHours(23, 59, 59, 999); // Incluir todo el día final
-      
+
       filtered = filtered.filter(p => {
         const prospectDate = new Date(p.date);
         return prospectDate >= startDate && prospectDate <= endDate;
@@ -1950,7 +1959,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableZones, onUpdateZo
 
   const exportToCSV = () => {
     const filteredData = filterProspectsForExport();
-    
+
     if (filteredData.length === 0) {
       setNotification({
         isOpen: true,
@@ -2021,73 +2030,73 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableZones, onUpdateZo
 
   const exportToExcel = () => {
     try {
-    const filteredData = filterProspectsForExport();
-      
-      console.log('📊 Datos filtrados para exportar:', filteredData.length);
-    
-    if (filteredData.length === 0) {
-      setNotification({
-        isOpen: true,
-        type: 'warning',
-        message: 'No hay datos para exportar con los filtros seleccionados.',
-        title: 'Sin datos'
-      });
-      return;
-    }
+      const filteredData = filterProspectsForExport();
 
-    // Preparar datos para Excel
-    const worksheetData = filteredData.map(p => ({
-      'ID': p.id,
-      'Nombre Completo': p.name || 'N/A',
-      'Email': p.email || 'N/A',
-      'Teléfono': p.phone || 'N/A',
-      'Ingreso Mensual': p.income,
-      'Tipo de Propiedad': p.propertyType || 'N/A',
-      'Habitaciones': p.bedrooms ?? 'N/A',
-      'Baños': p.bathrooms ?? 'N/A',
-      'Zonas de Interés': Array.isArray(p.zone) ? p.zone.join(', ') : (typeof p.zone === 'string' ? p.zone : 'N/A'),
-      'Precio Máximo': p.result?.maxPropertyPrice || 0,
-      'Pago Mensual': p.result?.monthlyPayment || 0,
-      'Enganche (%)': p.result?.downPaymentPercent || 0,
-      'Enganche ($)': p.result?.downPaymentAmount || 0,
-      'Estado': p.status || 'Nuevo',
-      'Fecha de Registro': p.dateDisplay || new Date(p.date).toLocaleDateString('es-PA')
-    }));
+      console.log('📊 Datos filtrados para exportar:', filteredData.length);
+
+      if (filteredData.length === 0) {
+        setNotification({
+          isOpen: true,
+          type: 'warning',
+          message: 'No hay datos para exportar con los filtros seleccionados.',
+          title: 'Sin datos'
+        });
+        return;
+      }
+
+      // Preparar datos para Excel
+      const worksheetData = filteredData.map(p => ({
+        'ID': p.id,
+        'Nombre Completo': p.name || 'N/A',
+        'Email': p.email || 'N/A',
+        'Teléfono': p.phone || 'N/A',
+        'Ingreso Mensual': p.income,
+        'Tipo de Propiedad': p.propertyType || 'N/A',
+        'Habitaciones': p.bedrooms ?? 'N/A',
+        'Baños': p.bathrooms ?? 'N/A',
+        'Zonas de Interés': Array.isArray(p.zone) ? p.zone.join(', ') : (typeof p.zone === 'string' ? p.zone : 'N/A'),
+        'Precio Máximo': p.result?.maxPropertyPrice || 0,
+        'Pago Mensual': p.result?.monthlyPayment || 0,
+        'Enganche (%)': p.result?.downPaymentPercent || 0,
+        'Enganche ($)': p.result?.downPaymentAmount || 0,
+        'Estado': p.status || 'Nuevo',
+        'Fecha de Registro': p.dateDisplay || new Date(p.date).toLocaleDateString('es-PA')
+      }));
 
       console.log('📝 Datos preparados para Excel:', worksheetData.length, 'filas');
 
-    // Crear workbook y worksheet
-    const worksheet = XLSX.utils.json_to_sheet(worksheetData);
-    const workbook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(workbook, worksheet, 'Prospectos');
+      // Crear workbook y worksheet
+      const worksheet = XLSX.utils.json_to_sheet(worksheetData);
+      const workbook = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(workbook, worksheet, 'Prospectos');
 
-    // Ajustar ancho de columnas
-    const columnWidths = [
-      { wch: 10 }, // ID
-      { wch: 25 }, // Nombre
-      { wch: 30 }, // Email
-      { wch: 15 }, // Teléfono
-      { wch: 15 }, // Ingreso
-      { wch: 18 }, // Tipo Propiedad
-      { wch: 12 }, // Habitaciones
-      { wch: 10 }, // Baños
-      { wch: 30 }, // Zonas
-      { wch: 15 }, // Precio Máximo
-      { wch: 15 }, // Pago Mensual
-      { wch: 12 }, // Enganche %
-      { wch: 15 }, // Enganche $
-      { wch: 15 }, // Estado
-      { wch: 18 }  // Fecha
-    ];
-    worksheet['!cols'] = columnWidths;
+      // Ajustar ancho de columnas
+      const columnWidths = [
+        { wch: 10 }, // ID
+        { wch: 25 }, // Nombre
+        { wch: 30 }, // Email
+        { wch: 15 }, // Teléfono
+        { wch: 15 }, // Ingreso
+        { wch: 18 }, // Tipo Propiedad
+        { wch: 12 }, // Habitaciones
+        { wch: 10 }, // Baños
+        { wch: 30 }, // Zonas
+        { wch: 15 }, // Precio Máximo
+        { wch: 15 }, // Pago Mensual
+        { wch: 12 }, // Enganche %
+        { wch: 15 }, // Enganche $
+        { wch: 15 }, // Estado
+        { wch: 18 }  // Fecha
+      ];
+      worksheet['!cols'] = columnWidths;
 
-    // Descargar archivo
+      // Descargar archivo
       const fileName = `prospectos_${new Date().toISOString().split('T')[0]}.xlsx`;
       console.log('💾 Descargando archivo:', fileName);
       XLSX.writeFile(workbook, fileName);
-    
+
       console.log('✅ Archivo Excel descargado exitosamente');
-    setShowExportModal(false);
+      setShowExportModal(false);
     } catch (error) {
       console.error('❌ Error exportando a Excel:', error);
       setNotification({
@@ -2108,11 +2117,11 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableZones, onUpdateZo
         dateRange: { start: dateRangeStart, end: dateRangeEnd },
         totalProspects: prospects.length
       });
-      
-    if (exportFormat === 'csv') {
-      exportToCSV();
-    } else {
-      exportToExcel();
+
+      if (exportFormat === 'csv') {
+        exportToCSV();
+      } else {
+        exportToExcel();
       }
     } catch (error) {
       console.error('❌ Error en handleExport:', error);
@@ -2128,10 +2137,10 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableZones, onUpdateZo
   // Generate Embed Code with ROUNDED CORNERS and SHADOW enforced on the iframe
   const appUrl = window.location.href.split('?')[0];
   const companyId = localStorage.getItem('companyId');
-  const embedUrl = companyId 
+  const embedUrl = companyId
     ? `${appUrl}?mode=embed&company_id=${companyId}`
     : `${appUrl}?mode=embed`;
-  
+
   const embedCode = `<iframe 
   src="${embedUrl}" 
   width="100%" 
@@ -2148,7 +2157,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableZones, onUpdateZo
 
   const openPreview = () => {
     const companyId = localStorage.getItem('companyId');
-    const previewUrl = companyId 
+    const previewUrl = companyId
       ? `${appUrl}?mode=embed&company_id=${companyId}`
       : `${appUrl}?mode=embed`;
     window.open(previewUrl, '_blank');
@@ -2157,41 +2166,38 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableZones, onUpdateZo
   return (
     <>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 animate-fade-in-up">
-        
+
         {/* Top Menu Tabs */}
         <div className="flex justify-center mb-6 sm:mb-10 relative" style={{ overflow: 'visible' }}>
           <div className="bg-white p-1 sm:p-1.5 rounded-2xl shadow-sm border border-gray-100 inline-flex gap-1 overflow-x-auto" style={{ overflow: 'visible' }}>
             <button
               onClick={() => setActiveTab('dashboard')}
-              className={`px-3 sm:px-6 py-2 sm:py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition-all flex items-center gap-1 sm:gap-2 shrink-0 ${
-                activeTab === 'dashboard' 
-                  ? 'bg-indigo-50 text-indigo-600 shadow-sm' 
-                  : 'text-gray-400 hover:text-gray-600 hover:bg-gray-50'
-              }`}
+              className={`px-3 sm:px-6 py-2 sm:py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition-all flex items-center gap-1 sm:gap-2 shrink-0 ${activeTab === 'dashboard'
+                ? 'bg-indigo-50 text-indigo-600 shadow-sm'
+                : 'text-gray-400 hover:text-gray-600 hover:bg-gray-50'
+                }`}
             >
               <LayoutDashboard size={14} className="sm:w-4 sm:h-4" /> <span>Dashboard</span>
             </button>
             <button
               onClick={() => setActiveTab('prospects')}
-              className={`px-3 sm:px-6 py-2 sm:py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition-all flex items-center gap-1 sm:gap-2 shrink-0 ${
-                activeTab === 'prospects' 
-                  ? 'bg-indigo-50 text-indigo-600 shadow-sm' 
-                  : 'text-gray-400 hover:text-gray-600 hover:bg-gray-50'
-              }`}
+              className={`px-3 sm:px-6 py-2 sm:py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition-all flex items-center gap-1 sm:gap-2 shrink-0 ${activeTab === 'prospects'
+                ? 'bg-indigo-50 text-indigo-600 shadow-sm'
+                : 'text-gray-400 hover:text-gray-600 hover:bg-gray-50'
+                }`}
             >
               <Users size={14} className="sm:w-4 sm:h-4" /> <span>Prospectos</span>
             </button>
             <button
               onClick={() => setActiveTab('properties')}
-              className={`px-3 sm:px-6 py-2 sm:py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition-all flex items-center gap-1 sm:gap-2 shrink-0 ${
-                activeTab === 'properties' 
-                  ? 'bg-indigo-50 text-indigo-600 shadow-sm' 
-                  : 'text-gray-400 hover:text-gray-600 hover:bg-gray-50'
-              }`}
+              className={`px-3 sm:px-6 py-2 sm:py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition-all flex items-center gap-1 sm:gap-2 shrink-0 ${activeTab === 'properties'
+                ? 'bg-indigo-50 text-indigo-600 shadow-sm'
+                : 'text-gray-400 hover:text-gray-600 hover:bg-gray-50'
+                }`}
             >
               <Building size={14} className="sm:w-4 sm:h-4" /> <span>{isPromotora ? 'Proyectos' : 'Propiedades'}</span>
             </button>
-            <div 
+            <div
               className="relative settings-submenu-container"
               onMouseEnter={() => {
                 // Cancelar cualquier timeout pendiente
@@ -2209,28 +2215,27 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableZones, onUpdateZo
                 setSettingsSubmenuTimeout(timeout);
               }}
             >
-            <button
+              <button
                 onClick={() => {
                   if (activeTab !== 'settings' && activeTab !== 'calculator-config') {
                     setActiveTab('settings');
                   }
                 }}
-              className={`px-3 sm:px-6 py-2 sm:py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition-all flex items-center gap-1 sm:gap-2 shrink-0 ${
-                  (activeTab === 'settings' || activeTab === 'calculator-config')
-                  ? 'bg-indigo-50 text-indigo-600 shadow-sm' 
+                className={`px-3 sm:px-6 py-2 sm:py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition-all flex items-center gap-1 sm:gap-2 shrink-0 ${(activeTab === 'settings' || activeTab === 'calculator-config')
+                  ? 'bg-indigo-50 text-indigo-600 shadow-sm'
                   : 'text-gray-400 hover:text-gray-600 hover:bg-gray-50'
-              }`}
-            >
-              <Settings size={14} className="sm:w-4 sm:h-4" /> <span>Configuración</span>
-                <ChevronDown 
-                  size={14} 
-                  className={`sm:w-4 sm:h-4 transition-transform ${showSettingsSubmenu ? 'rotate-180' : ''}`} 
+                  }`}
+              >
+                <Settings size={14} className="sm:w-4 sm:h-4" /> <span>Configuración</span>
+                <ChevronDown
+                  size={14}
+                  className={`sm:w-4 sm:h-4 transition-transform ${showSettingsSubmenu ? 'rotate-180' : ''}`}
                 />
-            </button>
-              
+              </button>
+
               {/* Submenú de Configuración */}
               {showSettingsSubmenu && (
-                <div 
+                <div
                   className="absolute top-full left-0 mt-1 w-72 bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden z-[1000]"
                   onMouseEnter={() => {
                     // Cancelar timeout si el mouse entra al submenú
@@ -2245,21 +2250,18 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableZones, onUpdateZo
                       setActiveTab('calculator-config');
                       setShowSettingsSubmenu(false);
                     }}
-                    className={`w-full px-5 py-4 text-left hover:bg-indigo-50/50 transition-colors flex items-start gap-4 border-b border-gray-50 last:border-b-0 ${
-                      activeTab === 'calculator-config' ? 'bg-indigo-50' : ''
-                    }`}
+                    className={`w-full px-5 py-4 text-left hover:bg-indigo-50/50 transition-colors flex items-start gap-4 border-b border-gray-50 last:border-b-0 ${activeTab === 'calculator-config' ? 'bg-indigo-50' : ''
+                      }`}
                   >
-                    <div className={`w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0 transition-colors ${
-                      activeTab === 'calculator-config' 
-                        ? 'bg-indigo-100 text-indigo-600' 
-                        : 'bg-gray-100 text-gray-600 group-hover:bg-indigo-50'
-                    }`}>
-                      <Calculator size={22} strokeWidth={1.5} />
-          </div>
-                    <div className="flex-1 min-w-0">
-                      <div className={`font-bold text-sm mb-1.5 ${
-                        activeTab === 'calculator-config' ? 'text-indigo-600' : 'text-gray-900'
+                    <div className={`w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0 transition-colors ${activeTab === 'calculator-config'
+                      ? 'bg-indigo-100 text-indigo-600'
+                      : 'bg-gray-100 text-gray-600 group-hover:bg-indigo-50'
                       }`}>
+                      <Calculator size={22} strokeWidth={1.5} />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className={`font-bold text-sm mb-1.5 ${activeTab === 'calculator-config' ? 'text-indigo-600' : 'text-gray-900'
+                        }`}>
                         Configurar Calculadora
                       </div>
                       <div className="text-xs text-gray-500 leading-relaxed">
@@ -2267,27 +2269,24 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableZones, onUpdateZo
                       </div>
                     </div>
                   </button>
-                  
+
                   <button
                     onClick={() => {
                       setActiveTab('settings');
                       setShowSettingsSubmenu(false);
                     }}
-                    className={`w-full px-5 py-4 text-left hover:bg-indigo-50/50 transition-colors flex items-start gap-4 ${
-                      activeTab === 'settings' ? 'bg-indigo-50' : ''
-                    }`}
+                    className={`w-full px-5 py-4 text-left hover:bg-indigo-50/50 transition-colors flex items-start gap-4 ${activeTab === 'settings' ? 'bg-indigo-50' : ''
+                      }`}
                   >
-                    <div className={`w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0 transition-colors ${
-                      activeTab === 'settings' 
-                        ? 'bg-indigo-100 text-indigo-600' 
-                        : 'bg-gray-100 text-gray-600 group-hover:bg-indigo-50'
-                    }`}>
+                    <div className={`w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0 transition-colors ${activeTab === 'settings'
+                      ? 'bg-indigo-100 text-indigo-600'
+                      : 'bg-gray-100 text-gray-600 group-hover:bg-indigo-50'
+                      }`}>
                       <Shield size={22} strokeWidth={1.5} />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <div className={`font-bold text-sm mb-1.5 ${
-                        activeTab === 'settings' ? 'text-indigo-600' : 'text-gray-900'
-                      }`}>
+                      <div className={`font-bold text-sm mb-1.5 ${activeTab === 'settings' ? 'text-indigo-600' : 'text-gray-900'
+                        }`}>
                         Configuración General
                       </div>
                       <div className="text-xs text-gray-500 leading-relaxed">
@@ -2306,95 +2305,95 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableZones, onUpdateZo
           <div className="grid md:grid-cols-2 lg:grid-cols-2 gap-8">
             {/* Card 1: Total Forms */}
             <div className="bg-white rounded-[2.5rem] p-8 shadow-[0_10px_40px_-10px_rgba(0,0,0,0.05)] border border-gray-100 flex flex-col items-center justify-center text-center group hover:shadow-lg transition-all duration-500">
-               <div className="w-16 h-16 rounded-3xl bg-indigo-50 text-indigo-600 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-500">
-                 <FileText size={32} strokeWidth={1.5} />
-               </div>
-               <h3 className="text-gray-400 font-semibold uppercase tracking-wider text-xs mb-2">Formularios Completados</h3>
-               <p className="text-5xl font-bold text-gray-900 tracking-tight">
-                 {isLoading ? <Loader2 className="animate-spin" /> : totalForms}
-               </p>
-               <span className="mt-4 px-3 py-1 bg-green-50 text-green-600 text-[10px] font-bold rounded-full">Actualizado hoy</span>
+              <div className="w-16 h-16 rounded-3xl bg-indigo-50 text-indigo-600 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-500">
+                <FileText size={32} strokeWidth={1.5} />
+              </div>
+              <h3 className="text-gray-400 font-semibold uppercase tracking-wider text-xs mb-2">Formularios Completados</h3>
+              <p className="text-5xl font-bold text-gray-900 tracking-tight">
+                {isLoading ? <Loader2 className="animate-spin" /> : totalForms}
+              </p>
+              <span className="mt-4 px-3 py-1 bg-green-50 text-green-600 text-[10px] font-bold rounded-full">Actualizado hoy</span>
             </div>
 
             {/* Card 2: Average Salary */}
             <div className="bg-white rounded-[2.5rem] p-8 shadow-[0_10px_40px_-10px_rgba(0,0,0,0.05)] border border-gray-100 flex flex-col items-center justify-center text-center group hover:shadow-lg transition-all duration-500">
-               <div className="w-16 h-16 rounded-3xl bg-emerald-50 text-emerald-600 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-500">
-                 <DollarSign size={32} strokeWidth={1.5} />
-               </div>
-               <h3 className="text-gray-400 font-semibold uppercase tracking-wider text-xs mb-2">Promedio Salarial</h3>
-               <p className="text-5xl font-bold text-gray-900 tracking-tight">
-                 {isLoading ? <Loader2 className="animate-spin" /> : formatCurrency(avgSalary)}
-               </p>
-               <span className="mt-4 text-gray-400 text-[10px] font-medium">Basado en {totalForms} registros</span>
+              <div className="w-16 h-16 rounded-3xl bg-emerald-50 text-emerald-600 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-500">
+                <DollarSign size={32} strokeWidth={1.5} />
+              </div>
+              <h3 className="text-gray-400 font-semibold uppercase tracking-wider text-xs mb-2">Promedio Salarial</h3>
+              <p className="text-5xl font-bold text-gray-900 tracking-tight">
+                {isLoading ? <Loader2 className="animate-spin" /> : formatCurrency(avgSalary)}
+              </p>
+              <span className="mt-4 text-gray-400 text-[10px] font-medium">Basado en {totalForms} registros</span>
             </div>
 
             {/* Card 3: Avg Purchasing Capacity */}
-             <div className="bg-white rounded-[2.5rem] p-8 shadow-[0_10px_40px_-10px_rgba(0,0,0,0.05)] border border-gray-100 flex flex-col items-center justify-center text-center group hover:shadow-lg transition-all duration-500">
-               <div className="w-16 h-16 rounded-3xl bg-blue-50 text-blue-600 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-500">
-                 <Briefcase size={32} strokeWidth={1.5} />
-               </div>
-               <h3 className="text-gray-400 font-semibold uppercase tracking-wider text-xs mb-2">Capacidad de Compra Prom.</h3>
-               <p className="text-5xl font-bold text-gray-900 tracking-tight">
-                 {isLoading ? <Loader2 className="animate-spin" /> : formatCurrency(avgCapacity)}
-               </p>
-               <span className="mt-4 text-gray-400 text-[10px] font-medium">Potencial de cierre</span>
+            <div className="bg-white rounded-[2.5rem] p-8 shadow-[0_10px_40px_-10px_rgba(0,0,0,0.05)] border border-gray-100 flex flex-col items-center justify-center text-center group hover:shadow-lg transition-all duration-500">
+              <div className="w-16 h-16 rounded-3xl bg-blue-50 text-blue-600 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-500">
+                <Briefcase size={32} strokeWidth={1.5} />
+              </div>
+              <h3 className="text-gray-400 font-semibold uppercase tracking-wider text-xs mb-2">Capacidad de Compra Prom.</h3>
+              <p className="text-5xl font-bold text-gray-900 tracking-tight">
+                {isLoading ? <Loader2 className="animate-spin" /> : formatCurrency(avgCapacity)}
+              </p>
+              <span className="mt-4 text-gray-400 text-[10px] font-medium">Potencial de cierre</span>
             </div>
 
             {/* Card 4: Top Zones (solo para Broker) */}
             {!isPromotora && (
               <div className="bg-white rounded-[2.5rem] p-8 shadow-[0_10px_40px_-10px_rgba(0,0,0,0.05)] border border-gray-100 flex flex-col items-center justify-center text-center group hover:shadow-lg transition-all duration-500 cursor-pointer" onClick={() => sortedZones.length > 0 && setShowZonesModal(true)}>
-               <div className="w-16 h-16 rounded-3xl bg-orange-50 text-orange-600 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-500">
-                 <MapPin size={32} strokeWidth={1.5} />
-               </div>
-                 <h3 className="text-gray-400 font-semibold uppercase tracking-wider text-xs mb-2">Zonas Más Buscadas</h3>
-                 <p className="text-2xl font-bold text-gray-900 tracking-tight px-4 leading-tight">
-                   {isLoading ? (
-                     <Loader2 className="animate-spin mx-auto" />
-                   ) : sortedZones.length === 0 ? (
-                     'Aún no tenemos datos'
-                   ) : (
-                     <>
-                       {topTwoZones.join(', ')}
-                       {hasMoreZones && (
-                         <span 
-                           className="text-orange-600 hover:text-orange-700 cursor-pointer ml-1"
-                           onClick={(e) => {
-                             e.stopPropagation();
-                             setShowZonesModal(true);
-                           }}
-                         >
-                           y ...
-                         </span>
-                       )}
-                     </>
-                   )}
-                 </p>
-                 <span className="mt-4 px-3 py-1 bg-orange-50 text-orange-600 text-[10px] font-bold rounded-full">
-                   {totalZones > 0 ? `${totalZones} ${totalZones === 1 ? 'zona' : 'zonas'}` : '0 zonas'}
-                 </span>
-            </div>
+                <div className="w-16 h-16 rounded-3xl bg-orange-50 text-orange-600 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-500">
+                  <MapPin size={32} strokeWidth={1.5} />
+                </div>
+                <h3 className="text-gray-400 font-semibold uppercase tracking-wider text-xs mb-2">Zonas Más Buscadas</h3>
+                <p className="text-2xl font-bold text-gray-900 tracking-tight px-4 leading-tight">
+                  {isLoading ? (
+                    <Loader2 className="animate-spin mx-auto" />
+                  ) : sortedZones.length === 0 ? (
+                    'Aún no tenemos datos'
+                  ) : (
+                    <>
+                      {topTwoZones.join(', ')}
+                      {hasMoreZones && (
+                        <span
+                          className="text-orange-600 hover:text-orange-700 cursor-pointer ml-1"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setShowZonesModal(true);
+                          }}
+                        >
+                          y ...
+                        </span>
+                      )}
+                    </>
+                  )}
+                </p>
+                <span className="mt-4 px-3 py-1 bg-orange-50 text-orange-600 text-[10px] font-bold rounded-full">
+                  {totalZones > 0 ? `${totalZones} ${totalZones === 1 ? 'zona' : 'zonas'}` : '0 zonas'}
+                </span>
+              </div>
             )}
           </div>
         ) : activeTab === 'prospects' ? (
           <div className="bg-white rounded-[2.5rem] shadow-[0_10px_40px_-10px_rgba(0,0,0,0.05)] border border-gray-100 overflow-hidden min-h-[500px] flex flex-col">
-            
+
             {/* List Header */}
             <div className="p-8 border-b border-gray-100 flex flex-col md:flex-row justify-between items-center gap-4">
               <div>
                 <h2 className="text-2xl font-bold text-gray-900">Base de Prospectos</h2>
                 <p className="text-gray-500 text-sm">Gestiona y analiza los datos capturados.</p>
               </div>
-              
+
               <div className="flex items-center gap-3">
-                <button 
+                <button
                   onClick={handleRefreshProspects}
                   disabled={isRefreshing}
                   className="bg-indigo-600 hover:bg-indigo-700 disabled:bg-indigo-400 text-white px-5 py-3 rounded-xl font-semibold text-sm flex items-center gap-2 transition-all shadow-lg shadow-indigo-200 disabled:cursor-not-allowed"
                 >
-                  <RefreshCw size={16} className={isRefreshing ? 'animate-spin' : ''} /> 
+                  <RefreshCw size={16} className={isRefreshing ? 'animate-spin' : ''} />
                   {isRefreshing ? 'Actualizando...' : 'Actualizar'}
                 </button>
-                <button 
+                <button
                   onClick={() => setShowExportModal(true)}
                   className="bg-gray-900 hover:bg-gray-800 text-white px-6 py-3 rounded-xl font-semibold text-sm flex items-center gap-2 transition-all shadow-lg shadow-gray-200"
                 >
@@ -2414,7 +2413,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableZones, onUpdateZo
                 </div>
               ) : paginatedProspects.length === 0 ? (
                 <div className="flex justify-center items-center h-full text-gray-400">
-                   <p>Aún no hay prospectos registrados.</p>
+                  <p>Aún no hay prospectos registrados.</p>
                 </div>
               ) : (
                 <>
@@ -2432,8 +2431,8 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableZones, onUpdateZo
                       </thead>
                       <tbody className="divide-y divide-gray-50">
                         {paginatedProspects.map((prospect) => (
-                          <tr 
-                            key={prospect.id} 
+                          <tr
+                            key={prospect.id}
                             onClick={() => setSelectedProspect(prospect)}
                             className="hover:bg-indigo-50/30 transition-colors group cursor-pointer"
                           >
@@ -2562,19 +2561,18 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableZones, onUpdateZo
                   >
                     <div className="relative h-48 bg-gray-100 overflow-hidden">
                       {project.images && project.images.length > 0 ? (
-                        <img 
-                          src={project.images[0]} 
-                          alt={project.name} 
-                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" 
+                        <img
+                          src={project.images[0]}
+                          alt={project.name}
+                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                         />
                       ) : (
                         <div className="w-full h-full flex items-center justify-center text-gray-400 bg-gray-50">
                           <Building size={48} />
                         </div>
                       )}
-                      <div className={`absolute top-3 left-3 px-3 py-1 rounded-full text-xs font-bold ${
-                        project.status === 'Activo' ? 'bg-green-600 text-white' : 'bg-gray-400 text-white'
-                      }`}>
+                      <div className={`absolute top-3 left-3 px-3 py-1 rounded-full text-xs font-bold ${project.status === 'Activo' ? 'bg-green-600 text-white' : 'bg-gray-400 text-white'
+                        }`}>
                         {project.status}
                       </div>
                     </div>
@@ -2657,17 +2655,15 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableZones, onUpdateZo
                           <Building size={48} className="text-indigo-300" />
                         </div>
                       )}
-                      <div className={`absolute top-3 left-3 px-3 py-1 rounded-lg text-xs font-bold text-white ${
-                        property.type === 'Venta' ? 'bg-purple-600' : 'bg-green-600'
-                      }`}>
+                      <div className={`absolute top-3 left-3 px-3 py-1 rounded-lg text-xs font-bold text-white ${property.type === 'Venta' ? 'bg-purple-600' : 'bg-green-600'
+                        }`}>
                         {property.type}
                       </div>
-                      <div className={`absolute top-3 right-3 px-2 py-1 rounded-lg text-xs font-semibold ${
-                        property.status === 'Activa' ? 'bg-green-50 text-green-700' :
+                      <div className={`absolute top-3 right-3 px-2 py-1 rounded-lg text-xs font-semibold ${property.status === 'Activa' ? 'bg-green-50 text-green-700' :
                         property.status === 'Vendida' ? 'bg-gray-100 text-gray-600' :
-                        property.status === 'Alquilada' ? 'bg-blue-50 text-blue-700' :
-                        'bg-gray-100 text-gray-500'
-                      }`}>
+                          property.status === 'Alquilada' ? 'bg-blue-50 text-blue-700' :
+                            'bg-gray-100 text-gray-500'
+                        }`}>
                         {property.status}
                       </div>
                     </div>
@@ -2679,7 +2675,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableZones, onUpdateZo
                         <MapPin size={14} />
                         <span>{property.zone}</span>
                       </div>
-                      
+
                       <div className="flex items-center gap-4 text-sm text-gray-600 mb-4">
                         {property.bedrooms && (
                           <div className="flex items-center gap-1.5">
@@ -2739,44 +2735,44 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableZones, onUpdateZo
             )}
           </div>
         ) : activeTab === 'calculator-config' ? (
-            <div className="space-y-8">
-              
+          <div className="space-y-8">
+
             {/* Integración Web */}
             <div className="bg-white rounded-[2.5rem] shadow-[0_10px_40px_-10px_rgba(0,0,0,0.05)] border border-gray-100 overflow-hidden relative">
-                <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-50 rounded-full blur-2xl -mr-16 -mt-16 pointer-events-none"></div>
+              <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-50 rounded-full blur-2xl -mr-16 -mt-16 pointer-events-none"></div>
 
-                <div className="p-8 border-b border-gray-50">
-                  <div className="w-12 h-12 rounded-2xl bg-gray-900 text-white flex items-center justify-center mb-4 shadow-lg shadow-gray-200">
-                    <Code size={24} strokeWidth={1.5} />
-                  </div>
-                  <h3 className="text-xl font-bold text-gray-900">Integración Web</h3>
-                  <p className="text-sm text-gray-500 mt-2">Copia este código para añadir la calculadora a tu sitio web.</p>
+              <div className="p-8 border-b border-gray-50">
+                <div className="w-12 h-12 rounded-2xl bg-gray-900 text-white flex items-center justify-center mb-4 shadow-lg shadow-gray-200">
+                  <Code size={24} strokeWidth={1.5} />
                 </div>
-                
-                <div className="p-6 bg-gray-50/50">
-                  <div className="bg-gray-900 rounded-xl p-4 mb-4 relative">
-                    <code className="text-xs text-gray-300 font-mono whitespace-pre-wrap block overflow-visible">
-                      {embedCode}
-                    </code>
-                    <div className="absolute right-2 top-2">
-                       <button 
-                        onClick={copyToClipboard}
-                        className="bg-white/10 hover:bg-white/20 text-white p-2 rounded-lg transition-colors backdrop-blur-sm"
-                        title="Copiar código"
-                       >
-                         {copied ? <CheckCircle2 size={16} className="text-green-400"/> : <Copy size={16} />}
-                       </button>
-                    </div>
-                  </div>
-                  
-                  <button 
-                    onClick={openPreview}
-                    className="w-full py-3 rounded-xl border border-gray-200 bg-white text-gray-700 font-semibold text-sm hover:border-indigo-300 hover:text-indigo-600 transition-colors flex items-center justify-center gap-2"
-                  >
-                    <ExternalLink size={16} /> Previsualizar Formulario
-                  </button>
-                </div>
+                <h3 className="text-xl font-bold text-gray-900">Integración Web</h3>
+                <p className="text-sm text-gray-500 mt-2">Copia este código para añadir la calculadora a tu sitio web.</p>
               </div>
+
+              <div className="p-6 bg-gray-50/50">
+                <div className="bg-gray-900 rounded-xl p-4 mb-4 relative">
+                  <code className="text-xs text-gray-300 font-mono whitespace-pre-wrap block overflow-visible">
+                    {embedCode}
+                  </code>
+                  <div className="absolute right-2 top-2">
+                    <button
+                      onClick={copyToClipboard}
+                      className="bg-white/10 hover:bg-white/20 text-white p-2 rounded-lg transition-colors backdrop-blur-sm"
+                      title="Copiar código"
+                    >
+                      {copied ? <CheckCircle2 size={16} className="text-green-400" /> : <Copy size={16} />}
+                    </button>
+                  </div>
+                </div>
+
+                <button
+                  onClick={openPreview}
+                  className="w-full py-3 rounded-xl border border-gray-200 bg-white text-gray-700 font-semibold text-sm hover:border-indigo-300 hover:text-indigo-600 transition-colors flex items-center justify-center gap-2"
+                >
+                  <ExternalLink size={16} /> Previsualizar Formulario
+                </button>
+              </div>
+            </div>
 
             {/* Documentación Solicitada */}
             <div className="bg-white rounded-[2.5rem] shadow-[0_10px_40px_-10px_rgba(0,0,0,0.05)] border border-gray-100 overflow-hidden">
@@ -2787,7 +2783,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableZones, onUpdateZo
                 <h3 className="text-xl font-bold text-gray-900">Documentación Solicitada</h3>
                 <p className="text-sm text-gray-500 mt-2">Configura qué documentos solicitar a los prospectos en el formulario.</p>
               </div>
-              
+
               <div className="p-8 space-y-4">
                 <div className="space-y-3">
                   <label className="flex items-center gap-3 p-4 rounded-xl border border-gray-200 hover:border-indigo-300 hover:bg-indigo-50/30 transition-colors cursor-pointer">
@@ -2874,7 +2870,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableZones, onUpdateZo
                 <h3 className="text-xl font-bold text-gray-900">Documento APC Personalizado</h3>
                 <p className="text-sm text-gray-500 mt-2">Sube tu propio documento APC. Los prospectos podrán descargarlo y firmarlo en línea.</p>
               </div>
-              
+
               <div className="p-8 space-y-4">
                 {companyData?.apcDocumentDriveId ? (
                   <div className="bg-green-50 border border-green-200 rounded-xl p-4">
@@ -2948,171 +2944,169 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableZones, onUpdateZo
 
             {/* Zonas de Preferencia */}
             <div className="bg-white rounded-[2.5rem] shadow-[0_10px_40px_-10px_rgba(0,0,0,0.05)] border border-gray-100 overflow-hidden">
-                <div className="p-8 border-b border-gray-50">
-                  <div className="w-12 h-12 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center mb-4">
-                    <MapPin size={24} strokeWidth={1.5} />
-                  </div>
-                  <h3 className="text-xl font-bold text-gray-900">Zonas de Preferencia</h3>
-                  <p className="text-sm text-gray-500 mt-2">Gestiona las áreas que se muestran a los clientes potenciales.</p>
+              <div className="p-8 border-b border-gray-50">
+                <div className="w-12 h-12 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center mb-4">
+                  <MapPin size={24} strokeWidth={1.5} />
                 </div>
-                
+                <h3 className="text-xl font-bold text-gray-900">Zonas de Preferencia</h3>
+                <p className="text-sm text-gray-500 mt-2">Gestiona las áreas que se muestran a los clientes potenciales.</p>
+              </div>
+
               <div className="p-6 bg-gray-50/50">
-                  <div className="flex flex-wrap gap-2 mb-6">
-                    {availableZones.map(zone => (
-                      <div key={zone} className="bg-white border border-gray-200 text-gray-600 px-3 py-1.5 rounded-full text-sm font-medium flex items-center gap-2 shadow-sm group hover:border-red-200 hover:bg-red-50 transition-colors">
-                        {zone}
-                        <button 
-                          onClick={() => handleDeleteZone(zone)}
-                          className="text-gray-400 hover:text-red-500 transition-colors"
-                        >
-                          <X size={14} />
-                        </button>
-                      </div>
-                    ))}
-                  </div>
-                  
-                  <div className="flex gap-2">
-                    <input 
-                      type="text" 
-                      value={newZone}
-                      onChange={(e) => setNewZone(e.target.value)}
-                      onKeyPress={(e) => e.key === 'Enter' && handleAddZone()}
-                      placeholder="Nueva Zona..."
-                      className="flex-1 px-4 py-2.5 rounded-xl border border-gray-200 text-sm focus:border-indigo-500 outline-none bg-white"
-                    />
-                    <button 
-                      onClick={handleAddZone}
-                      disabled={isSavingZones || !newZone.trim()}
-                      className="bg-gray-900 text-white p-2.5 rounded-xl hover:bg-gray-800 disabled:opacity-50 transition-colors flex items-center justify-center"
-                    >
-                      {isSavingZones ? (
-                        <Loader2 size={20} className="animate-spin" />
-                      ) : (
+                <div className="flex flex-wrap gap-2 mb-6">
+                  {availableZones.map(zone => (
+                    <div key={zone} className="bg-white border border-gray-200 text-gray-600 px-3 py-1.5 rounded-full text-sm font-medium flex items-center gap-2 shadow-sm group hover:border-red-200 hover:bg-red-50 transition-colors">
+                      {zone}
+                      <button
+                        onClick={() => handleDeleteZone(zone)}
+                        className="text-gray-400 hover:text-red-500 transition-colors"
+                      >
+                        <X size={14} />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    value={newZone}
+                    onChange={(e) => setNewZone(e.target.value)}
+                    onKeyPress={(e) => e.key === 'Enter' && handleAddZone()}
+                    placeholder="Nueva Zona..."
+                    className="flex-1 px-4 py-2.5 rounded-xl border border-gray-200 text-sm focus:border-indigo-500 outline-none bg-white"
+                  />
+                  <button
+                    onClick={handleAddZone}
+                    disabled={isSavingZones || !newZone.trim()}
+                    className="bg-gray-900 text-white p-2.5 rounded-xl hover:bg-gray-800 disabled:opacity-50 transition-colors flex items-center justify-center"
+                  >
+                    {isSavingZones ? (
+                      <Loader2 size={20} className="animate-spin" />
+                    ) : (
                       <Plus size={20} />
-                      )}
-                    </button>
-                  </div>
+                    )}
+                  </button>
                 </div>
               </div>
             </div>
+          </div>
         ) : activeTab === 'settings' ? (
           <div className="space-y-8">
 
             {/* Plan de Suscripción */}
-              <div className="bg-white rounded-[2.5rem] shadow-[0_10px_40px_-10px_rgba(0,0,0,0.05)] border border-gray-100 overflow-hidden">
-                <div className="p-8 border-b border-gray-50 flex items-center gap-4">
-                  <div className="w-12 h-12 rounded-2xl bg-purple-50 text-purple-600 flex items-center justify-center">
-                    <ShieldCheck size={24} strokeWidth={1.5} />
-                  </div>
-                  <div>
-                    <h3 className="text-xl font-bold text-gray-900">Plan de Suscripción</h3>
-                    <p className="text-sm text-gray-500">Elige el plan que mejor se adapte a tus necesidades.</p>
-                  </div>
+            <div className="bg-white rounded-[2.5rem] shadow-[0_10px_40px_-10px_rgba(0,0,0,0.05)] border border-gray-100 overflow-hidden">
+              <div className="p-8 border-b border-gray-50 flex items-center gap-4">
+                <div className="w-12 h-12 rounded-2xl bg-purple-50 text-purple-600 flex items-center justify-center">
+                  <ShieldCheck size={24} strokeWidth={1.5} />
                 </div>
-
-                <div className="p-8">
-                  <div className="grid md:grid-cols-2 gap-4">
-                    <button
-                      onClick={async () => {
-                        const companyId = localStorage.getItem('companyId');
-                        if (companyId) {
-                          const success = await updateCompanyPlan(companyId, 'Freshie');
-                          if (success && companyData) {
-                            setCompanyData({ ...companyData, plan: 'Freshie' });
-                          }
-                        }
-                      }}
-                      className={`p-6 rounded-2xl border-2 transition-all text-left ${
-                        companyData?.plan === 'Freshie'
-                          ? 'border-indigo-500 bg-indigo-50/30 shadow-lg'
-                          : 'border-gray-200 hover:border-indigo-200 hover:bg-indigo-50/20'
-                      }`}
-                    >
-                      <div className="font-bold text-xl text-gray-900 mb-2">Plan Freshie</div>
-                      <div className="text-sm text-gray-600 mb-4">Plan gratuito con funciones básicas</div>
-                      <div className="space-y-2 text-sm text-gray-500">
-                        <div className="flex items-center gap-2">
-                          <CheckCircle2 size={16} className="text-green-500" />
-                          <span>Gestión de prospectos</span>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <CheckCircle2 size={16} className="text-green-500" />
-                          <span>Dashboard de análisis</span>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <X size={16} className="text-gray-300" />
-                          <span className="text-gray-400">Gestión de propiedades</span>
-                        </div>
-                      </div>
-                      <div className="mt-6 pt-4 border-t border-gray-200">
-                        <div className="text-3xl font-bold text-gray-900">$0.00</div>
-                        <div className="text-sm text-gray-500">/ mes</div>
-                      </div>
-                      {companyData?.plan === 'Freshie' && (
-                        <div className="mt-4 text-xs font-semibold text-indigo-600 bg-indigo-100 px-3 py-1 rounded-full inline-block">
-                          Plan Actual
-                        </div>
-                      )}
-                    </button>
-
-                    <button
-                      onClick={async () => {
-                        const companyId = localStorage.getItem('companyId');
-                        if (companyId) {
-                          const success = await updateCompanyPlan(companyId, 'Wolf of Wallstreet');
-                          if (success && companyData) {
-                            setCompanyData({ ...companyData, plan: 'Wolf of Wallstreet' });
-                            if (activeTab === 'properties') {
-                              await loadProperties(true);
-                            }
-                          }
-                        }
-                      }}
-                      className={`p-6 rounded-2xl border-2 transition-all text-left relative overflow-hidden ${
-                        companyData?.plan === 'Wolf of Wallstreet'
-                          ? 'border-purple-500 bg-purple-50/30 shadow-lg'
-                          : 'border-gray-200 hover:border-purple-200 hover:bg-purple-50/20'
-                      }`}
-                    >
-                      {companyData?.plan === 'Wolf of Wallstreet' && (
-                        <div className="absolute top-3 right-3 bg-purple-600 text-white text-xs font-bold px-3 py-1 rounded-full">
-                          Premium
-                        </div>
-                      )}
-                      <div className="font-bold text-xl text-gray-900 mb-2">Plan Wolf of Wallstreet</div>
-                      <div className="text-sm text-gray-600 mb-4">Plan premium con todas las funciones</div>
-                      <div className="space-y-2 text-sm text-gray-500">
-                        <div className="flex items-center gap-2">
-                          <CheckCircle2 size={16} className="text-green-500" />
-                          <span>Todas las funciones del plan Freshie</span>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <CheckCircle2 size={16} className="text-purple-500" />
-                          <span className="font-semibold text-purple-600">Gestión de propiedades</span>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <CheckCircle2 size={16} className="text-purple-500" />
-                          <span className="font-semibold text-purple-600">Mostrar propiedades a prospectos</span>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <CheckCircle2 size={16} className="text-purple-500" />
-                          <span className="font-semibold text-purple-600">Seguimiento de intereses</span>
-                        </div>
-                      </div>
-                      <div className="mt-6 pt-4 border-t border-gray-200">
-                        <div className="text-3xl font-bold text-gray-900">$6.99</div>
-                        <div className="text-sm text-gray-500">/ mes</div>
-                      </div>
-                      {companyData?.plan === 'Wolf of Wallstreet' && (
-                        <div className="mt-4 text-xs font-semibold text-purple-600 bg-purple-100 px-3 py-1 rounded-full inline-block">
-                          Plan Actual
-                        </div>
-                      )}
-                    </button>
-                  </div>
+                <div>
+                  <h3 className="text-xl font-bold text-gray-900">Plan de Suscripción</h3>
+                  <p className="text-sm text-gray-500">Elige el plan que mejor se adapte a tus necesidades.</p>
                 </div>
               </div>
-              
+
+              <div className="p-8">
+                <div className="grid md:grid-cols-2 gap-4">
+                  <button
+                    onClick={async () => {
+                      const companyId = localStorage.getItem('companyId');
+                      if (companyId) {
+                        const success = await updateCompanyPlan(companyId, 'Freshie');
+                        if (success && companyData) {
+                          setCompanyData({ ...companyData, plan: 'Freshie' });
+                        }
+                      }
+                    }}
+                    className={`p-6 rounded-2xl border-2 transition-all text-left ${companyData?.plan === 'Freshie'
+                      ? 'border-indigo-500 bg-indigo-50/30 shadow-lg'
+                      : 'border-gray-200 hover:border-indigo-200 hover:bg-indigo-50/20'
+                      }`}
+                  >
+                    <div className="font-bold text-xl text-gray-900 mb-2">Plan Freshie</div>
+                    <div className="text-sm text-gray-600 mb-4">Plan gratuito con funciones básicas</div>
+                    <div className="space-y-2 text-sm text-gray-500">
+                      <div className="flex items-center gap-2">
+                        <CheckCircle2 size={16} className="text-green-500" />
+                        <span>Gestión de prospectos</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <CheckCircle2 size={16} className="text-green-500" />
+                        <span>Dashboard de análisis</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <X size={16} className="text-gray-300" />
+                        <span className="text-gray-400">Gestión de propiedades</span>
+                      </div>
+                    </div>
+                    <div className="mt-6 pt-4 border-t border-gray-200">
+                      <div className="text-3xl font-bold text-gray-900">$0.00</div>
+                      <div className="text-sm text-gray-500">/ mes</div>
+                    </div>
+                    {companyData?.plan === 'Freshie' && (
+                      <div className="mt-4 text-xs font-semibold text-indigo-600 bg-indigo-100 px-3 py-1 rounded-full inline-block">
+                        Plan Actual
+                      </div>
+                    )}
+                  </button>
+
+                  <button
+                    onClick={async () => {
+                      const companyId = localStorage.getItem('companyId');
+                      if (companyId) {
+                        const success = await updateCompanyPlan(companyId, 'Wolf of Wallstreet');
+                        if (success && companyData) {
+                          setCompanyData({ ...companyData, plan: 'Wolf of Wallstreet' });
+                          if (activeTab === 'properties') {
+                            await loadProperties(true);
+                          }
+                        }
+                      }
+                    }}
+                    className={`p-6 rounded-2xl border-2 transition-all text-left relative overflow-hidden ${companyData?.plan === 'Wolf of Wallstreet'
+                      ? 'border-purple-500 bg-purple-50/30 shadow-lg'
+                      : 'border-gray-200 hover:border-purple-200 hover:bg-purple-50/20'
+                      }`}
+                  >
+                    {companyData?.plan === 'Wolf of Wallstreet' && (
+                      <div className="absolute top-3 right-3 bg-purple-600 text-white text-xs font-bold px-3 py-1 rounded-full">
+                        Premium
+                      </div>
+                    )}
+                    <div className="font-bold text-xl text-gray-900 mb-2">Plan Wolf of Wallstreet</div>
+                    <div className="text-sm text-gray-600 mb-4">Plan premium con todas las funciones</div>
+                    <div className="space-y-2 text-sm text-gray-500">
+                      <div className="flex items-center gap-2">
+                        <CheckCircle2 size={16} className="text-green-500" />
+                        <span>Todas las funciones del plan Freshie</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <CheckCircle2 size={16} className="text-purple-500" />
+                        <span className="font-semibold text-purple-600">Gestión de propiedades</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <CheckCircle2 size={16} className="text-purple-500" />
+                        <span className="font-semibold text-purple-600">Mostrar propiedades a prospectos</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <CheckCircle2 size={16} className="text-purple-500" />
+                        <span className="font-semibold text-purple-600">Seguimiento de intereses</span>
+                      </div>
+                    </div>
+                    <div className="mt-6 pt-4 border-t border-gray-200">
+                      <div className="text-3xl font-bold text-gray-900">$6.99</div>
+                      <div className="text-sm text-gray-500">/ mes</div>
+                    </div>
+                    {companyData?.plan === 'Wolf of Wallstreet' && (
+                      <div className="mt-4 text-xs font-semibold text-purple-600 bg-purple-100 px-3 py-1 rounded-full inline-block">
+                        Plan Actual
+                      </div>
+                    )}
+                  </button>
+                </div>
+              </div>
+            </div>
+
             {/* Integración con Google Drive */}
             <div className="bg-white rounded-[2.5rem] shadow-[0_10px_40px_-10px_rgba(0,0,0,0.05)] border border-gray-100 overflow-hidden">
               <div className="p-8 border-b border-gray-50 flex items-center gap-4">
@@ -3183,10 +3177,10 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableZones, onUpdateZo
                     className="w-full py-4 px-6 bg-white border-2 border-gray-300 rounded-xl font-semibold text-gray-700 hover:border-indigo-500 hover:bg-indigo-50 transition-all flex items-center justify-center gap-3 shadow-sm"
                   >
                     <svg className="w-5 h-5" viewBox="0 0 24 24">
-                      <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
-                      <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
-                      <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
-                      <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+                      <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
+                      <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
+                      <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" />
+                      <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" />
                     </svg>
                     Conectar con Google Drive
                   </button>
@@ -3195,280 +3189,280 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableZones, onUpdateZo
             </div>
 
             {/* Perfil de Empresa */}
-              <div className="bg-white rounded-[2.5rem] shadow-[0_10px_40px_-10px_rgba(0,0,0,0.05)] border border-gray-100 overflow-hidden">
-                <div className="p-8 border-b border-gray-50 flex items-center gap-4">
-                  <div className="w-12 h-12 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center">
-                    <Building size={24} strokeWidth={1.5} />
-                  </div>
-                  <div>
-                    <h3 className="text-xl font-bold text-gray-900">Perfil de Empresa</h3>
-                    <p className="text-sm text-gray-500">Personaliza la identidad visual de la plataforma.</p>
-                  </div>
+            <div className="bg-white rounded-[2.5rem] shadow-[0_10px_40px_-10px_rgba(0,0,0,0.05)] border border-gray-100 overflow-hidden">
+              <div className="p-8 border-b border-gray-50 flex items-center gap-4">
+                <div className="w-12 h-12 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center">
+                  <Building size={24} strokeWidth={1.5} />
                 </div>
-
-                <div className="p-8 grid md:grid-cols-3 gap-8 items-center">
-                   <div className="text-center md:text-left">
-                     <label className="cursor-pointer">
-                       {(() => {
-                         const hasLogo = companyData?.logoUrl && companyData.logoUrl.trim() !== '' && companyData.logoUrl !== 'null' && companyData.logoUrl !== 'undefined';
-                         const shouldShow = hasLogo && !logoError;
-                         
-                         if (companyData) {
-                           console.log('🔍 Verificando logo:', {
-                             hasCompanyData: true,
-                             hasLogoUrl: !!companyData.logoUrl,
-                             logoUrlPreview: companyData.logoUrl ? companyData.logoUrl.substring(0, 80) + '...' : 'none',
-                             logoUrlType: companyData.logoUrl ? (companyData.logoUrl.startsWith('data:') ? 'base64' : companyData.logoUrl.startsWith('blob:') ? 'blob' : 'url') : 'none',
-                             logoError,
-                             shouldShow
-                           });
-                         }
-                         
-                         return shouldShow;
-                       })() ? (
-                         <div className="w-32 h-32 rounded-3xl border-2 border-gray-200 overflow-hidden bg-white flex items-center justify-center mx-auto md:mx-0 shadow-sm relative group">
-                           <img 
-                             src={companyData.logoUrl} 
-                             alt="Logo de la empresa" 
-                             className="w-full h-full object-contain p-2"
-                             onLoad={() => {
-                               console.log('✅ Logo cargado exitosamente');
-                             }}
-                             onError={(e) => {
-                               console.error('❌ Error cargando logo:', {
-                                 src: companyData.logoUrl,
-                                 srcType: companyData.logoUrl.startsWith('data:') ? 'base64' : companyData.logoUrl.startsWith('blob:') ? 'blob' : 'url',
-                                 error: e
-                               });
-                               setLogoError(true);
-                             }}
-                           />
-                           {isUpdatingLogo ? (
-                             <div className="absolute inset-0 bg-white/90 flex items-center justify-center rounded-3xl">
-                               <Loader2 className="animate-spin text-indigo-600" size={24} />
-                             </div>
-                           ) : (
-                             <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center rounded-3xl">
-                               <span className="text-white text-xs font-semibold">Cambiar</span>
-                             </div>
-                           )}
-                         </div>
-                       ) : (
-                         <div className="w-32 h-32 rounded-3xl border-2 border-dashed border-gray-200 flex flex-col items-center justify-center text-gray-400 hover:border-indigo-300 hover:bg-indigo-50/30 transition-all mx-auto md:mx-0">
-                           {isUpdatingLogo ? (
-                             <Loader2 className="animate-spin text-indigo-600" size={32} />
-                           ) : (
-                             <>
-                        <ImageIcon size={32} strokeWidth={1} />
-                        <span className="text-xs font-semibold mt-2">Cambiar Logo</span>
-                             </>
-                           )}
-                     </div>
-                       )}
-                       <input 
-                         type="file" 
-                         accept="image/*"
-                         className="hidden"
-                         onChange={async (e) => {
-                           const file = e.target.files?.[0];
-                           if (!file) return;
-
-                          // Validar tamaño (máx 2MB)
-                          if (file.size > 2 * 1024 * 1024) {
-                            setNotification({
-                              isOpen: true,
-                              type: 'warning',
-                              message: 'El logo debe ser menor a 2MB.',
-                              title: 'Archivo muy grande'
-                            });
-                            return;
-                          }
-
-                           setIsUpdatingLogo(true);
-                           setLogoError(false);
-
-                           try {
-                             // Convertir a base64
-                             const reader = new FileReader();
-                             reader.readAsDataURL(file);
-                             reader.onload = async () => {
-                               const base64 = reader.result as string;
-                               
-                               const companyId = localStorage.getItem('companyId');
-                               if (!companyId) {
-                                setNotification({
-                                  isOpen: true,
-                                  type: 'error',
-                                  message: 'No se encontró el ID de la empresa. Por favor, inicia sesión nuevamente.',
-                                  title: 'Error de sesión'
-                                });
-                                setIsUpdatingLogo(false);
-                                return;
-                               }
-
-                               // Actualizar en la base de datos
-                               const success = await updateCompanyLogo(companyId, base64);
-                               
-                               if (success) {
-                                 // Actualizar el estado local
-                                 if (companyData) {
-                                   setCompanyData({ ...companyData, logoUrl: base64 });
-                                 }
-                                 console.log('✅ Logo actualizado exitosamente');
-                               } else {
-                                setNotification({
-                                  isOpen: true,
-                                  type: 'error',
-                                  message: 'Error al actualizar el logo. Por favor intenta de nuevo.',
-                                  title: 'Error al actualizar'
-                                });
-                              }
-                              
-                              setIsUpdatingLogo(false);
-                            };
-                            reader.onerror = () => {
-                              setNotification({
-                                isOpen: true,
-                                type: 'error',
-                                message: 'Error al leer el archivo. Verifica que sea una imagen válida.',
-                                title: 'Error de archivo'
-                              });
-                              setIsUpdatingLogo(false);
-                            };
-                          } catch (error) {
-                            console.error('Error actualizando logo:', error);
-                            setNotification({
-                              isOpen: true,
-                              type: 'error',
-                              message: 'Error al actualizar el logo. Por favor intenta de nuevo.',
-                              title: 'Error al actualizar'
-                            });
-                            setIsUpdatingLogo(false);
-                          }
-                         }}
-                       />
-                     </label>
-                   </div>
-                   <div className="md:col-span-2 space-y-4">
-                      <div>
-                        <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Nombre de la Empresa</label>
-                        <input 
-                          type="text" 
-                          value={companyName}
-                          onChange={(e) => onUpdateCompanyName(e.target.value)}
-                          className="w-full px-5 py-3 rounded-xl border border-gray-200 focus:border-indigo-500 outline-none bg-gray-50 focus:bg-white transition-colors text-gray-900 font-medium"
-                        />
-                      </div>
-                      <div className="flex justify-end">
-                        <button 
-                          onClick={async () => {
-                            const companyId = localStorage.getItem('companyId');
-                            if (!companyId) return;
-                            
-                            setIsSavingCompanyName(true);
-                            try {
-                              const success = await updateCompanyName(companyId, companyName);
-                              if (success) {
-                                setNotification({
-                                  isOpen: true,
-                                  type: 'success',
-                                  message: 'Nombre de la empresa actualizado exitosamente.',
-                                  title: 'Actualizado'
-                                });
-                                onUpdateCompanyName(companyName);
-                              } else {
-                                setNotification({
-                                  isOpen: true,
-                                  type: 'error',
-                                  message: 'Error al actualizar el nombre de la empresa.',
-                                  title: 'Error'
-                                });
-                              }
-                            } catch (error) {
-                              console.error('Error actualizando nombre:', error);
-                              setNotification({
-                                isOpen: true,
-                                type: 'error',
-                                message: 'Error al actualizar el nombre de la empresa.',
-                                title: 'Error'
-                              });
-                            } finally {
-                              setIsSavingCompanyName(false);
-                            }
-                          }}
-                          disabled={isSavingCompanyName}
-                        className="px-6 py-2.5 rounded-xl bg-gray-900 text-white font-semibold text-sm hover:bg-gray-800 disabled:opacity-60 disabled:cursor-not-allowed transition-colors flex items-center gap-2"
-                        >
-                          {isSavingCompanyName ? (
-                            <>
-                              <Loader2 size={16} className="animate-spin" />
-                              Guardando...
-                            </>
-                          ) : (
-                            <>
-                            <Save size={16} />
-                            Guardar Cambios
-                            </>
-                          )}
-                        </button>
-                      </div>
-                   </div>
+                <div>
+                  <h3 className="text-xl font-bold text-gray-900">Perfil de Empresa</h3>
+                  <p className="text-sm text-gray-500">Personaliza la identidad visual de la plataforma.</p>
                 </div>
               </div>
 
-            {/* Cuenta & Seguridad */}
-              <div className="bg-white rounded-[2.5rem] shadow-[0_10px_40px_-10px_rgba(0,0,0,0.05)] border border-gray-100 overflow-hidden">
-                <div className="p-8 border-b border-gray-50 flex items-center gap-4">
-                <div className="w-12 h-12 rounded-2xl bg-gray-50 text-gray-600 flex items-center justify-center">
-                    <Shield size={24} strokeWidth={1.5} />
-                  </div>
+              <div className="p-8 grid md:grid-cols-3 gap-8 items-center">
+                <div className="text-center md:text-left">
+                  <label className="cursor-pointer">
+                    {(() => {
+                      const hasLogo = companyData?.logoUrl && companyData.logoUrl.trim() !== '' && companyData.logoUrl !== 'null' && companyData.logoUrl !== 'undefined';
+                      const shouldShow = hasLogo && !logoError;
+
+                      if (companyData) {
+                        console.log('🔍 Verificando logo:', {
+                          hasCompanyData: true,
+                          hasLogoUrl: !!companyData.logoUrl,
+                          logoUrlPreview: companyData.logoUrl ? companyData.logoUrl.substring(0, 80) + '...' : 'none',
+                          logoUrlType: companyData.logoUrl ? (companyData.logoUrl.startsWith('data:') ? 'base64' : companyData.logoUrl.startsWith('blob:') ? 'blob' : 'url') : 'none',
+                          logoError,
+                          shouldShow
+                        });
+                      }
+
+                      return shouldShow;
+                    })() ? (
+                      <div className="w-32 h-32 rounded-3xl border-2 border-gray-200 overflow-hidden bg-white flex items-center justify-center mx-auto md:mx-0 shadow-sm relative group">
+                        <img
+                          src={companyData.logoUrl}
+                          alt="Logo de la empresa"
+                          className="w-full h-full object-contain p-2"
+                          onLoad={() => {
+                            console.log('✅ Logo cargado exitosamente');
+                          }}
+                          onError={(e) => {
+                            console.error('❌ Error cargando logo:', {
+                              src: companyData.logoUrl,
+                              srcType: companyData.logoUrl.startsWith('data:') ? 'base64' : companyData.logoUrl.startsWith('blob:') ? 'blob' : 'url',
+                              error: e
+                            });
+                            setLogoError(true);
+                          }}
+                        />
+                        {isUpdatingLogo ? (
+                          <div className="absolute inset-0 bg-white/90 flex items-center justify-center rounded-3xl">
+                            <Loader2 className="animate-spin text-indigo-600" size={24} />
+                          </div>
+                        ) : (
+                          <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center rounded-3xl">
+                            <span className="text-white text-xs font-semibold">Cambiar</span>
+                          </div>
+                        )}
+                      </div>
+                    ) : (
+                      <div className="w-32 h-32 rounded-3xl border-2 border-dashed border-gray-200 flex flex-col items-center justify-center text-gray-400 hover:border-indigo-300 hover:bg-indigo-50/30 transition-all mx-auto md:mx-0">
+                        {isUpdatingLogo ? (
+                          <Loader2 className="animate-spin text-indigo-600" size={32} />
+                        ) : (
+                          <>
+                            <ImageIcon size={32} strokeWidth={1} />
+                            <span className="text-xs font-semibold mt-2">Cambiar Logo</span>
+                          </>
+                        )}
+                      </div>
+                    )}
+                    <input
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      onChange={async (e) => {
+                        const file = e.target.files?.[0];
+                        if (!file) return;
+
+                        // Validar tamaño (máx 2MB)
+                        if (file.size > 2 * 1024 * 1024) {
+                          setNotification({
+                            isOpen: true,
+                            type: 'warning',
+                            message: 'El logo debe ser menor a 2MB.',
+                            title: 'Archivo muy grande'
+                          });
+                          return;
+                        }
+
+                        setIsUpdatingLogo(true);
+                        setLogoError(false);
+
+                        try {
+                          // Convertir a base64
+                          const reader = new FileReader();
+                          reader.readAsDataURL(file);
+                          reader.onload = async () => {
+                            const base64 = reader.result as string;
+
+                            const companyId = localStorage.getItem('companyId');
+                            if (!companyId) {
+                              setNotification({
+                                isOpen: true,
+                                type: 'error',
+                                message: 'No se encontró el ID de la empresa. Por favor, inicia sesión nuevamente.',
+                                title: 'Error de sesión'
+                              });
+                              setIsUpdatingLogo(false);
+                              return;
+                            }
+
+                            // Actualizar en la base de datos
+                            const success = await updateCompanyLogo(companyId, base64);
+
+                            if (success) {
+                              // Actualizar el estado local
+                              if (companyData) {
+                                setCompanyData({ ...companyData, logoUrl: base64 });
+                              }
+                              console.log('✅ Logo actualizado exitosamente');
+                            } else {
+                              setNotification({
+                                isOpen: true,
+                                type: 'error',
+                                message: 'Error al actualizar el logo. Por favor intenta de nuevo.',
+                                title: 'Error al actualizar'
+                              });
+                            }
+
+                            setIsUpdatingLogo(false);
+                          };
+                          reader.onerror = () => {
+                            setNotification({
+                              isOpen: true,
+                              type: 'error',
+                              message: 'Error al leer el archivo. Verifica que sea una imagen válida.',
+                              title: 'Error de archivo'
+                            });
+                            setIsUpdatingLogo(false);
+                          };
+                        } catch (error) {
+                          console.error('Error actualizando logo:', error);
+                          setNotification({
+                            isOpen: true,
+                            type: 'error',
+                            message: 'Error al actualizar el logo. Por favor intenta de nuevo.',
+                            title: 'Error al actualizar'
+                          });
+                          setIsUpdatingLogo(false);
+                        }
+                      }}
+                    />
+                  </label>
+                </div>
+                <div className="md:col-span-2 space-y-4">
                   <div>
-                    <h3 className="text-xl font-bold text-gray-900">Cuenta & Seguridad</h3>
-                  <p className="text-sm text-gray-500">Información de tu cuenta y configuración de seguridad.</p>
+                    <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Nombre de la Empresa</label>
+                    <input
+                      type="text"
+                      value={companyName}
+                      onChange={(e) => onUpdateCompanyName(e.target.value)}
+                      className="w-full px-5 py-3 rounded-xl border border-gray-200 focus:border-indigo-500 outline-none bg-gray-50 focus:bg-white transition-colors text-gray-900 font-medium"
+                    />
+                  </div>
+                  <div className="flex justify-end">
+                    <button
+                      onClick={async () => {
+                        const companyId = localStorage.getItem('companyId');
+                        if (!companyId) return;
+
+                        setIsSavingCompanyName(true);
+                        try {
+                          const success = await updateCompanyName(companyId, companyName);
+                          if (success) {
+                            setNotification({
+                              isOpen: true,
+                              type: 'success',
+                              message: 'Nombre de la empresa actualizado exitosamente.',
+                              title: 'Actualizado'
+                            });
+                            onUpdateCompanyName(companyName);
+                          } else {
+                            setNotification({
+                              isOpen: true,
+                              type: 'error',
+                              message: 'Error al actualizar el nombre de la empresa.',
+                              title: 'Error'
+                            });
+                          }
+                        } catch (error) {
+                          console.error('Error actualizando nombre:', error);
+                          setNotification({
+                            isOpen: true,
+                            type: 'error',
+                            message: 'Error al actualizar el nombre de la empresa.',
+                            title: 'Error'
+                          });
+                        } finally {
+                          setIsSavingCompanyName(false);
+                        }
+                      }}
+                      disabled={isSavingCompanyName}
+                      className="px-6 py-2.5 rounded-xl bg-gray-900 text-white font-semibold text-sm hover:bg-gray-800 disabled:opacity-60 disabled:cursor-not-allowed transition-colors flex items-center gap-2"
+                    >
+                      {isSavingCompanyName ? (
+                        <>
+                          <Loader2 size={16} className="animate-spin" />
+                          Guardando...
+                        </>
+                      ) : (
+                        <>
+                          <Save size={16} />
+                          Guardar Cambios
+                        </>
+                      )}
+                    </button>
                   </div>
                 </div>
+              </div>
+            </div>
+
+            {/* Cuenta & Seguridad */}
+            <div className="bg-white rounded-[2.5rem] shadow-[0_10px_40px_-10px_rgba(0,0,0,0.05)] border border-gray-100 overflow-hidden">
+              <div className="p-8 border-b border-gray-50 flex items-center gap-4">
+                <div className="w-12 h-12 rounded-2xl bg-gray-50 text-gray-600 flex items-center justify-center">
+                  <Shield size={24} strokeWidth={1.5} />
+                </div>
+                <div>
+                  <h3 className="text-xl font-bold text-gray-900">Cuenta & Seguridad</h3>
+                  <p className="text-sm text-gray-500">Información de tu cuenta y configuración de seguridad.</p>
+                </div>
+              </div>
 
               <div className="p-8 space-y-4">
-                      <div>
-                        <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Nombre del Administrador</label>
-                        <input 
-                          type="text" 
-                          value={adminName}
-                          onChange={(e) => setAdminName(e.target.value)}
-                          className="w-full px-5 py-3 rounded-xl border border-gray-200 focus:border-indigo-500 outline-none bg-gray-50 focus:bg-white transition-colors text-gray-900 font-medium"
+                <div>
+                  <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Nombre del Administrador</label>
+                  <input
+                    type="text"
+                    value={adminName}
+                    onChange={(e) => setAdminName(e.target.value)}
+                    className="w-full px-5 py-3 rounded-xl border border-gray-200 focus:border-indigo-500 outline-none bg-gray-50 focus:bg-white transition-colors text-gray-900 font-medium"
                     placeholder="Nombre del administrador"
-                        />
-                      </div>
-                      <div>
+                  />
+                </div>
+                <div>
                   <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Email</label>
-                        <input 
-                          type="email" 
-                          value={adminEmail}
+                  <input
+                    type="email"
+                    value={adminEmail}
                     onChange={(e) => setAdminEmail(e.target.value)}
                     className="w-full px-5 py-3 rounded-xl border border-gray-200 focus:border-indigo-500 outline-none bg-gray-50 focus:bg-white transition-colors text-gray-900 font-medium"
                     placeholder="email@ejemplo.com"
-                        />
-                      </div>
+                  />
+                </div>
                 <div className="pt-4 border-t border-gray-100">
                   <p className="text-xs text-gray-500">
                     Para cambiar tu contraseña o realizar cambios adicionales en tu cuenta, contacta con el soporte.
-                            </p>
-                          </div>
-                      </div>
-                  </div>
-                          </div>
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
         ) : null}
       </div>
 
       {/* Export Modal */}
       {showExportModal && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
-          <div 
+          <div
             className="absolute inset-0 bg-gray-900/40 backdrop-blur-sm transition-opacity"
             onClick={() => setShowExportModal(false)}
           ></div>
           <div className="bg-white rounded-[2rem] p-8 w-full max-w-md shadow-2xl relative animate-fade-in-up z-10">
-            <button 
+            <button
               onClick={() => setShowExportModal(false)}
               className="absolute top-6 right-6 text-gray-400 hover:text-gray-600"
             >
@@ -3490,21 +3484,19 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableZones, onUpdateZo
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <button
                     onClick={() => setExportFormat('excel')}
-                    className={`p-4 rounded-xl border-2 transition-all font-semibold text-sm ${
-                      exportFormat === 'excel'
-                        ? 'border-indigo-500 bg-indigo-50 text-indigo-700'
-                        : 'border-gray-200 bg-gray-50 text-gray-600 hover:border-gray-300'
-                    }`}
+                    className={`p-4 rounded-xl border-2 transition-all font-semibold text-sm ${exportFormat === 'excel'
+                      ? 'border-indigo-500 bg-indigo-50 text-indigo-700'
+                      : 'border-gray-200 bg-gray-50 text-gray-600 hover:border-gray-300'
+                      }`}
                   >
                     Excel (.xlsx)
                   </button>
                   <button
                     onClick={() => setExportFormat('csv')}
-                    className={`p-4 rounded-xl border-2 transition-all font-semibold text-sm ${
-                      exportFormat === 'csv'
-                        ? 'border-indigo-500 bg-indigo-50 text-indigo-700'
-                        : 'border-gray-200 bg-gray-50 text-gray-600 hover:border-gray-300'
-                    }`}
+                    className={`p-4 rounded-xl border-2 transition-all font-semibold text-sm ${exportFormat === 'csv'
+                      ? 'border-indigo-500 bg-indigo-50 text-indigo-700'
+                      : 'border-gray-200 bg-gray-50 text-gray-600 hover:border-gray-300'
+                      }`}
                   >
                     CSV (.csv)
                   </button>
@@ -3513,44 +3505,38 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableZones, onUpdateZo
 
               {/* Filter: Range Type */}
               <div className="space-y-3">
-                <label 
+                <label
                   onClick={() => setExportFilterType('all')}
-                  className={`flex items-center gap-3 p-3 sm:p-4 border rounded-xl cursor-pointer transition-colors ${
-                    exportFilterType === 'all'
-                      ? 'border-indigo-500 bg-indigo-50/30'
-                      : 'border-gray-200 hover:bg-gray-50'
-                  }`}
+                  className={`flex items-center gap-3 p-3 sm:p-4 border rounded-xl cursor-pointer transition-colors ${exportFilterType === 'all'
+                    ? 'border-indigo-500 bg-indigo-50/30'
+                    : 'border-gray-200 hover:bg-gray-50'
+                    }`}
                 >
-                  <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 ${
-                    exportFilterType === 'all' ? 'border-indigo-600' : 'border-gray-300'
-                  }`}>
+                  <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 ${exportFilterType === 'all' ? 'border-indigo-600' : 'border-gray-300'
+                    }`}>
                     {exportFilterType === 'all' && (
-                    <div className="w-2.5 h-2.5 bg-indigo-600 rounded-full"></div>
+                      <div className="w-2.5 h-2.5 bg-indigo-600 rounded-full"></div>
                     )}
                   </div>
-                  <span className={`font-semibold text-xs sm:text-sm ${
-                    exportFilterType === 'all' ? 'text-gray-900' : 'text-gray-600'
-                  }`}>Toda la base de datos</span>
+                  <span className={`font-semibold text-xs sm:text-sm ${exportFilterType === 'all' ? 'text-gray-900' : 'text-gray-600'
+                    }`}>Toda la base de datos</span>
                 </label>
-                
-                <label 
+
+                <label
                   onClick={() => setExportFilterType('dateRange')}
-                  className={`flex items-center gap-3 p-3 sm:p-4 border rounded-xl cursor-pointer transition-colors ${
-                    exportFilterType === 'dateRange'
-                      ? 'border-indigo-500 bg-indigo-50/30'
-                      : 'border-gray-200 hover:bg-gray-50'
-                  }`}
+                  className={`flex items-center gap-3 p-3 sm:p-4 border rounded-xl cursor-pointer transition-colors ${exportFilterType === 'dateRange'
+                    ? 'border-indigo-500 bg-indigo-50/30'
+                    : 'border-gray-200 hover:bg-gray-50'
+                    }`}
                 >
-                  <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 ${
-                    exportFilterType === 'dateRange' ? 'border-indigo-600' : 'border-gray-300'
-                  }`}>
+                  <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 ${exportFilterType === 'dateRange' ? 'border-indigo-600' : 'border-gray-300'
+                    }`}>
                     {exportFilterType === 'dateRange' && (
                       <div className="w-2.5 h-2.5 bg-indigo-600 rounded-full"></div>
                     )}
                   </div>
-                  <span className={`font-medium text-xs sm:text-sm ${
-                    exportFilterType === 'dateRange' ? 'text-gray-900' : 'text-gray-600'
-                  }`}>Filtrar por rango de fechas</span>
+                  <span className={`font-medium text-xs sm:text-sm ${exportFilterType === 'dateRange' ? 'text-gray-900' : 'text-gray-600'
+                    }`}>Filtrar por rango de fechas</span>
                 </label>
               </div>
 
@@ -3589,7 +3575,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableZones, onUpdateZo
                 <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Rango Salarial (Opcional)</label>
                 <div className="relative">
                   <DollarSign className="absolute left-4 top-3.5 text-gray-400" size={18} />
-                  <select 
+                  <select
                     value={exportSalaryRange}
                     onChange={(e) => setExportSalaryRange(e.target.value)}
                     className="w-full pl-12 pr-10 py-3.5 bg-gray-50 border border-gray-200 rounded-xl text-sm outline-none focus:border-indigo-500 appearance-none cursor-pointer hover:bg-white transition-colors text-gray-700 font-medium"
@@ -3605,7 +3591,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableZones, onUpdateZo
                 </div>
               </div>
 
-              <button 
+              <button
                 onClick={handleExport}
                 className="w-full bg-gray-900 text-white py-4 rounded-xl font-bold hover:bg-gray-800 transition-all shadow-lg shadow-gray-200 flex justify-center items-center gap-2"
               >
@@ -3620,14 +3606,14 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableZones, onUpdateZo
       {/* Prospect Detail Modal */}
       {selectedProspect && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
-          <div 
+          <div
             className="absolute inset-0 bg-gray-900/40 backdrop-blur-sm transition-opacity"
             onClick={() => setSelectedProspect(null)}
           ></div>
           <div className="bg-white rounded-[2rem] w-full max-w-4xl max-h-[90vh] overflow-y-auto shadow-2xl relative animate-fade-in-up z-10 m-4">
             {/* Header with gradient */}
             <div className="bg-gradient-to-r from-indigo-400 to-purple-400 rounded-t-[2rem] p-4 sm:p-6 pr-16 sm:pr-20 relative">
-              <button 
+              <button
                 onClick={() => setSelectedProspect(null)}
                 className="absolute top-4 right-4 w-8 h-8 flex items-center justify-center transition-colors z-10 hover:opacity-70"
               >
@@ -3693,10 +3679,10 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableZones, onUpdateZo
                 <div className="flex items-center justify-between">
                   <div className="flex-1">
                     {(() => {
-                      const zones = Array.isArray(selectedProspect.zone) 
-                        ? selectedProspect.zone 
+                      const zones = Array.isArray(selectedProspect.zone)
+                        ? selectedProspect.zone
                         : (typeof selectedProspect.zone === 'string' ? [selectedProspect.zone] : []);
-                      
+
                       if (zones.length === 0) {
                         return (
                           <>
@@ -3708,7 +3694,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableZones, onUpdateZo
                           </>
                         );
                       }
-                      
+
                       return (
                         <>
                           <p className="text-xl font-bold text-gray-900 mb-1">
@@ -3739,128 +3725,128 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableZones, onUpdateZo
                     </div>
                   </div>
                 ) : (
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  {/* Foto de Cédula */}
-                  {selectedProspect.idFileBase64 && (
-                    <div className="bg-gray-50 p-4 rounded-xl border border-gray-200">
-                      <h4 className="text-sm font-semibold text-gray-700 mb-2">Foto de Cédula / ID</h4>
-                      <div 
-                        onClick={() => setSelectedDocument({ 
-                          type: selectedProspect.idFileBase64!.startsWith('data:image/') || selectedProspect.idFileBase64!.startsWith('http') ? 'image' : 'pdf',
-                          url: selectedProspect.idFileBase64!,
-                          name: 'Foto de Cédula / ID'
-                        })}
-                        className="cursor-pointer hover:opacity-80 transition-opacity"
-                      >
-                        {(selectedProspect.idFileBase64.startsWith('data:image/') || selectedProspect.idFileBase64.startsWith('http')) ? (
-                          <img 
-                            src={selectedProspect.idFileBase64} 
-                            alt="Cédula" 
-                            className="w-full h-48 object-contain rounded-lg border border-gray-200 bg-white"
-                          />
-                        ) : (
-                          <div className="p-4 bg-white rounded-lg border border-gray-200 hover:bg-gray-50 transition-colors">
-                            <FileTextIcon size={32} className="text-indigo-600 mx-auto mb-2" />
-                            <p className="text-xs text-center text-gray-600">Click para ver PDF</p>
-                          </div>
-                        )}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    {/* Foto de Cédula */}
+                    {selectedProspect.idFileBase64 && (
+                      <div className="bg-gray-50 p-4 rounded-xl border border-gray-200">
+                        <h4 className="text-sm font-semibold text-gray-700 mb-2">Foto de Cédula / ID</h4>
+                        <div
+                          onClick={() => setSelectedDocument({
+                            type: selectedProspect.idFileBase64!.startsWith('data:image/') || selectedProspect.idFileBase64!.startsWith('http') ? 'image' : 'pdf',
+                            url: selectedProspect.idFileBase64!,
+                            name: 'Foto de Cédula / ID'
+                          })}
+                          className="cursor-pointer hover:opacity-80 transition-opacity"
+                        >
+                          {(selectedProspect.idFileBase64.startsWith('data:image/') || selectedProspect.idFileBase64.startsWith('http')) ? (
+                            <img
+                              src={selectedProspect.idFileBase64}
+                              alt="Cédula"
+                              className="w-full h-48 object-contain rounded-lg border border-gray-200 bg-white"
+                            />
+                          ) : (
+                            <div className="p-4 bg-white rounded-lg border border-gray-200 hover:bg-gray-50 transition-colors">
+                              <FileTextIcon size={32} className="text-indigo-600 mx-auto mb-2" />
+                              <p className="text-xs text-center text-gray-600">Click para ver PDF</p>
+                            </div>
+                          )}
+                        </div>
                       </div>
-                    </div>
-                  )}
+                    )}
 
-                  {/* Ficha de Seguro Social */}
-                  {selectedProspect.fichaFileBase64 && (
-                    <div className="bg-gray-50 p-4 rounded-xl border border-gray-200">
-                      <h4 className="text-sm font-semibold text-gray-700 mb-2">Ficha de Seguro Social</h4>
-                      <div 
-                        onClick={() => setSelectedDocument({ 
-                          type: selectedProspect.fichaFileBase64!.startsWith('data:image/') || selectedProspect.fichaFileBase64!.startsWith('http') ? 'image' : 'pdf',
-                          url: selectedProspect.fichaFileBase64!,
-                          name: 'Ficha de Seguro Social'
-                        })}
-                        className="cursor-pointer hover:opacity-80 transition-opacity"
-                      >
-                        {(selectedProspect.fichaFileBase64.startsWith('data:image/') || selectedProspect.fichaFileBase64.startsWith('http')) ? (
-                          <img 
-                            src={selectedProspect.fichaFileBase64} 
-                            alt="Ficha Seguro Social" 
-                            className="w-full h-48 object-contain rounded-lg border border-gray-200 bg-white"
-                          />
-                        ) : (
-                          <div className="p-4 bg-white rounded-lg border border-gray-200 hover:bg-gray-50 transition-colors">
-                            <FileTextIcon size={32} className="text-indigo-600 mx-auto mb-2" />
-                            <p className="text-xs text-center text-gray-600">Click para ver PDF</p>
-                          </div>
-                        )}
+                    {/* Ficha de Seguro Social */}
+                    {selectedProspect.fichaFileBase64 && (
+                      <div className="bg-gray-50 p-4 rounded-xl border border-gray-200">
+                        <h4 className="text-sm font-semibold text-gray-700 mb-2">Ficha de Seguro Social</h4>
+                        <div
+                          onClick={() => setSelectedDocument({
+                            type: selectedProspect.fichaFileBase64!.startsWith('data:image/') || selectedProspect.fichaFileBase64!.startsWith('http') ? 'image' : 'pdf',
+                            url: selectedProspect.fichaFileBase64!,
+                            name: 'Ficha de Seguro Social'
+                          })}
+                          className="cursor-pointer hover:opacity-80 transition-opacity"
+                        >
+                          {(selectedProspect.fichaFileBase64.startsWith('data:image/') || selectedProspect.fichaFileBase64.startsWith('http')) ? (
+                            <img
+                              src={selectedProspect.fichaFileBase64}
+                              alt="Ficha Seguro Social"
+                              className="w-full h-48 object-contain rounded-lg border border-gray-200 bg-white"
+                            />
+                          ) : (
+                            <div className="p-4 bg-white rounded-lg border border-gray-200 hover:bg-gray-50 transition-colors">
+                              <FileTextIcon size={32} className="text-indigo-600 mx-auto mb-2" />
+                              <p className="text-xs text-center text-gray-600">Click para ver PDF</p>
+                            </div>
+                          )}
+                        </div>
                       </div>
-                    </div>
-                  )}
+                    )}
 
-                  {/* Talonario de Pago */}
-                  {selectedProspect.talonarioFileBase64 && (
-                    <div className="bg-gray-50 p-4 rounded-xl border border-gray-200">
-                      <h4 className="text-sm font-semibold text-gray-700 mb-2">Talonario de Pago</h4>
-                      <div 
-                        onClick={() => setSelectedDocument({ 
-                          type: selectedProspect.talonarioFileBase64!.startsWith('data:image/') || selectedProspect.talonarioFileBase64!.startsWith('http') ? 'image' : 'pdf',
-                          url: selectedProspect.talonarioFileBase64!,
-                          name: 'Talonario de Pago'
-                        })}
-                        className="cursor-pointer hover:opacity-80 transition-opacity"
-                      >
-                        {(selectedProspect.talonarioFileBase64.startsWith('data:image/') || selectedProspect.talonarioFileBase64.startsWith('http')) ? (
-                          <img 
-                            src={selectedProspect.talonarioFileBase64} 
-                            alt="Talonario" 
-                            className="w-full h-48 object-contain rounded-lg border border-gray-200 bg-white"
-                          />
-                        ) : (
-                          <div className="p-4 bg-white rounded-lg border border-gray-200 hover:bg-gray-50 transition-colors">
-                            <FileTextIcon size={32} className="text-indigo-600 mx-auto mb-2" />
-                            <p className="text-xs text-center text-gray-600">Click para ver PDF</p>
-                          </div>
-                        )}
+                    {/* Talonario de Pago */}
+                    {selectedProspect.talonarioFileBase64 && (
+                      <div className="bg-gray-50 p-4 rounded-xl border border-gray-200">
+                        <h4 className="text-sm font-semibold text-gray-700 mb-2">Talonario de Pago</h4>
+                        <div
+                          onClick={() => setSelectedDocument({
+                            type: selectedProspect.talonarioFileBase64!.startsWith('data:image/') || selectedProspect.talonarioFileBase64!.startsWith('http') ? 'image' : 'pdf',
+                            url: selectedProspect.talonarioFileBase64!,
+                            name: 'Talonario de Pago'
+                          })}
+                          className="cursor-pointer hover:opacity-80 transition-opacity"
+                        >
+                          {(selectedProspect.talonarioFileBase64.startsWith('data:image/') || selectedProspect.talonarioFileBase64.startsWith('http')) ? (
+                            <img
+                              src={selectedProspect.talonarioFileBase64}
+                              alt="Talonario"
+                              className="w-full h-48 object-contain rounded-lg border border-gray-200 bg-white"
+                            />
+                          ) : (
+                            <div className="p-4 bg-white rounded-lg border border-gray-200 hover:bg-gray-50 transition-colors">
+                              <FileTextIcon size={32} className="text-indigo-600 mx-auto mb-2" />
+                              <p className="text-xs text-center text-gray-600">Click para ver PDF</p>
+                            </div>
+                          )}
+                        </div>
                       </div>
-                    </div>
-                  )}
+                    )}
 
-                  {/* APC Firmada */}
-                  {selectedProspect.signedAcpFileBase64 && (
-                    <div className="bg-gray-50 p-4 rounded-xl border border-gray-200">
-                      <h4 className="text-sm font-semibold text-gray-700 mb-2">APC Firmada</h4>
-                      <div 
-                        onClick={() => setSelectedDocument({ 
-                          type: selectedProspect.signedAcpFileBase64!.startsWith('data:image/') || selectedProspect.signedAcpFileBase64!.startsWith('http') ? 'image' : 'pdf',
-                          url: selectedProspect.signedAcpFileBase64!,
-                          name: 'APC Firmada'
-                        })}
-                        className="cursor-pointer hover:opacity-80 transition-opacity"
-                      >
-                        {(selectedProspect.signedAcpFileBase64.startsWith('data:image/') || selectedProspect.signedAcpFileBase64.startsWith('http')) ? (
-                          <img 
-                            src={selectedProspect.signedAcpFileBase64} 
-                            alt="APC Firmada" 
-                            className="w-full h-48 object-contain rounded-lg border border-gray-200 bg-white"
-                          />
-                        ) : (
-                          <div className="p-4 bg-white rounded-lg border border-gray-200 hover:bg-gray-50 transition-colors">
-                            <FileTextIcon size={32} className="text-indigo-600 mx-auto mb-2" />
-                            <p className="text-xs text-center text-gray-600">Click para ver PDF</p>
-                          </div>
-                        )}
+                    {/* APC Firmada */}
+                    {selectedProspect.signedAcpFileBase64 && (
+                      <div className="bg-gray-50 p-4 rounded-xl border border-gray-200">
+                        <h4 className="text-sm font-semibold text-gray-700 mb-2">APC Firmada</h4>
+                        <div
+                          onClick={() => setSelectedDocument({
+                            type: selectedProspect.signedAcpFileBase64!.startsWith('data:image/') || selectedProspect.signedAcpFileBase64!.startsWith('http') ? 'image' : 'pdf',
+                            url: selectedProspect.signedAcpFileBase64!,
+                            name: 'APC Firmada'
+                          })}
+                          className="cursor-pointer hover:opacity-80 transition-opacity"
+                        >
+                          {(selectedProspect.signedAcpFileBase64.startsWith('data:image/') || selectedProspect.signedAcpFileBase64.startsWith('http')) ? (
+                            <img
+                              src={selectedProspect.signedAcpFileBase64}
+                              alt="APC Firmada"
+                              className="w-full h-48 object-contain rounded-lg border border-gray-200 bg-white"
+                            />
+                          ) : (
+                            <div className="p-4 bg-white rounded-lg border border-gray-200 hover:bg-gray-50 transition-colors">
+                              <FileTextIcon size={32} className="text-indigo-600 mx-auto mb-2" />
+                              <p className="text-xs text-center text-gray-600">Click para ver PDF</p>
+                            </div>
+                          )}
+                        </div>
                       </div>
-                    </div>
-                  )}
+                    )}
 
-                  {/* Mensaje si no hay documentos */}
-                  {!selectedProspect.idFileBase64 && !selectedProspect.fichaFileBase64 && 
-                   !selectedProspect.talonarioFileBase64 && !selectedProspect.signedAcpFileBase64 && (
-                    <div className="col-span-2 text-center py-8 text-gray-400">
-                      <FileTextIcon size={48} className="mx-auto mb-2 opacity-50" />
-                      <p className="text-sm">No hay documentos subidos</p>
-                    </div>
-                  )}
-                </div>
+                    {/* Mensaje si no hay documentos */}
+                    {!selectedProspect.idFileBase64 && !selectedProspect.fichaFileBase64 &&
+                      !selectedProspect.talonarioFileBase64 && !selectedProspect.signedAcpFileBase64 && (
+                        <div className="col-span-2 text-center py-8 text-gray-400">
+                          <FileTextIcon size={48} className="mx-auto mb-2 opacity-50" />
+                          <p className="text-sm">No hay documentos subidos</p>
+                        </div>
+                      )}
+                  </div>
                 )}
               </div>
 
@@ -3890,9 +3876,8 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableZones, onUpdateZo
                               <Building size={32} className="text-indigo-300" />
                             </div>
                           )}
-                          <div className={`absolute top-3 left-3 px-3 py-1 rounded-lg text-xs font-bold text-white ${
-                            property.type === 'Venta' ? 'bg-purple-600' : 'bg-green-600'
-                          }`}>
+                          <div className={`absolute top-3 left-3 px-3 py-1 rounded-lg text-xs font-bold text-white ${property.type === 'Venta' ? 'bg-purple-600' : 'bg-green-600'
+                            }`}>
                             {property.type}
                           </div>
                         </div>
@@ -3904,7 +3889,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableZones, onUpdateZo
                             <MapPin size={12} />
                             <span className="truncate">{property.zone}</span>
                           </div>
-                          
+
                           <div className="flex items-center gap-3 text-xs text-gray-600 mb-3">
                             {property.bedrooms && (
                               <div className="flex items-center gap-1">
@@ -3944,6 +3929,93 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableZones, onUpdateZo
                 </div>
               )}
 
+              {/* Interés en Modelos de Proyectos Section (Promotora) */}
+              {prospectInterestedModels.length > 0 && (
+                <div className="mb-8">
+                  <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
+                    <Heart size={20} className="text-pink-500" />
+                    Interés en Modelos
+                  </h3>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    {prospectInterestedModels.map(({ model, project }) => (
+                      <div
+                        key={model.id}
+                        className="bg-white border border-gray-200 rounded-xl overflow-hidden hover:shadow-lg transition-shadow cursor-pointer group"
+                      >
+                        {/* Imagen */}
+                        <div className="relative h-40 bg-gray-100 overflow-hidden">
+                          {model.images && model.images.length > 0 ? (
+                            <img
+                              src={model.images[0]}
+                              alt={model.name}
+                              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                            />
+                          ) : project.images && project.images.length > 0 ? (
+                            <img
+                              src={project.images[0]}
+                              alt={project.name}
+                              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                            />
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-indigo-50 to-purple-50">
+                              <Building size={32} className="text-indigo-300" />
+                            </div>
+                          )}
+                          <div className="absolute top-3 left-3 px-3 py-1 rounded-lg text-xs font-bold text-white bg-indigo-600">
+                            {formatCurrency(model.price)}
+                          </div>
+                        </div>
+
+                        {/* Contenido */}
+                        <div className="p-4">
+                          <h4 className="font-bold text-gray-900 mb-1 text-sm line-clamp-1">{model.name}</h4>
+                          <p className="text-xs text-gray-500 mb-3">{project.name}</p>
+                          <div className="flex items-center gap-1.5 text-gray-500 text-xs mb-3">
+                            <MapPin size={12} />
+                            <span className="truncate">{project.zone || 'Zona no especificada'}</span>
+                          </div>
+
+                          <div className="flex items-center gap-3 text-xs text-gray-600 mb-3">
+                            {model.bedrooms && (
+                              <div className="flex items-center gap-1">
+                                <BedDouble size={14} className="text-gray-400" />
+                                <span>{model.bedrooms}</span>
+                              </div>
+                            )}
+                            {model.bathrooms && (
+                              <div className="flex items-center gap-1">
+                                <Bath size={14} className="text-gray-400" />
+                                <span>{model.bathrooms}</span>
+                              </div>
+                            )}
+                            {model.areaM2 && (
+                              <span className="text-gray-400">
+                                {model.areaM2}m²
+                              </span>
+                            )}
+                          </div>
+
+                          <div className="pt-3 border-t border-gray-100">
+                            <div className="text-xs text-gray-400 uppercase font-semibold mb-1">Disponibilidad</div>
+                            <div className="text-sm font-semibold text-green-600">
+                              {model.unitsAvailable} {model.unitsAvailable === 1 ? 'unidad' : 'unidades'}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Loading state for models */}
+              {isLoadingProspectModels && (
+                <div className="mb-8 text-center py-8">
+                  <div className="inline-block animate-spin rounded-full h-6 w-6 border-b-2 border-indigo-600"></div>
+                  <p className="text-gray-500 mt-3 text-sm">Cargando modelos de interés...</p>
+                </div>
+              )}
+
             </div>
           </div>
         </div>
@@ -3952,7 +4024,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableZones, onUpdateZo
       {/* Document Viewer Modal */}
       {selectedDocument && (
         <div className="fixed inset-0 z-[200] flex items-center justify-center p-4">
-          <div 
+          <div
             className="absolute inset-0 bg-black/80 backdrop-blur-sm transition-opacity"
             onClick={() => setSelectedDocument(null)}
           ></div>
@@ -3961,21 +4033,21 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableZones, onUpdateZo
             <div className="bg-gray-900 text-white p-4 sm:p-6 flex items-center justify-between gap-4">
               <h3 className="text-sm sm:text-lg font-bold truncate">{selectedDocument.name}</h3>
               <div className="flex items-center gap-2 sm:gap-3 shrink-0">
-              <button 
-                onClick={() => {
+                <button
+                  onClick={() => {
                     // Función para descargar
                     const link = document.createElement('a');
                     link.href = selectedDocument.url;
-                    
+
                     // Determinar extensión y nombre del archivo
                     let extension = '';
                     let mimeType = '';
-                    
+
                     if (selectedDocument.type === 'image') {
                       // Extraer el tipo MIME de la data URL
                       const mimeMatch = selectedDocument.url.match(/data:([^;]+);/);
                       mimeType = mimeMatch ? mimeMatch[1] : 'image/png';
-                      
+
                       if (mimeType.includes('jpeg') || mimeType.includes('jpg')) {
                         extension = '.jpg';
                       } else if (mimeType.includes('png')) {
@@ -3990,10 +4062,10 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableZones, onUpdateZo
                       extension = '.pdf';
                       mimeType = 'application/pdf';
                     }
-                    
+
                     // Crear nombre de archivo
                     const fileName = `${selectedDocument.name.replace(/\s+/g, '_')}${extension}`;
-                    
+
                     link.download = fileName;
                     document.body.appendChild(link);
                     link.click();
@@ -4004,25 +4076,25 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableZones, onUpdateZo
                   <Download size={14} className="sm:w-4 sm:h-4" />
                   <span className="hidden sm:inline">Descargar</span>
                 </button>
-                <button 
+                <button
                   onClick={() => setSelectedDocument(null)}
                   className="w-10 h-10 rounded-full bg-white/20 hover:bg-white/30 flex items-center justify-center transition-colors"
                 >
                   <X size={20} className="text-white" />
-              </button>
+                </button>
               </div>
             </div>
 
             {/* Content */}
             <div className="flex-1 overflow-auto p-8 flex items-center justify-center bg-gray-50">
               {selectedDocument.type === 'image' ? (
-                <img 
-                  src={selectedDocument.url} 
+                <img
+                  src={selectedDocument.url}
                   alt={selectedDocument.name}
                   className="max-w-full max-h-[70vh] object-contain rounded-lg shadow-lg"
                 />
               ) : (
-                <iframe 
+                <iframe
                   src={selectedDocument.url}
                   className="w-full h-[70vh] rounded-lg border border-gray-200 shadow-lg bg-white"
                   title={selectedDocument.name}
@@ -4037,7 +4109,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableZones, onUpdateZo
       {showPropertySelectionModal && !isPromotora && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
           <div className="bg-white rounded-[3rem] p-8 md:p-12 shadow-[0_20px_60px_-15px_rgba(0,0,0,0.05)] w-full max-w-4xl animate-fade-in-up border border-white/50 backdrop-blur-sm relative overflow-hidden">
-            
+
             {/* Decorative Elements */}
             <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-50 rounded-full blur-3xl -mr-20 -mt-20 opacity-60 pointer-events-none"></div>
             <div className="absolute bottom-0 left-0 w-64 h-64 bg-purple-50 rounded-full blur-3xl -ml-20 -mb-20 opacity-60 pointer-events-none"></div>
@@ -4081,7 +4153,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableZones, onUpdateZo
                 <p className="text-gray-500 leading-relaxed text-sm mb-4">
                   Crea una propiedad nueva completando el formulario paso a paso.
                 </p>
-                
+
                 <div className="flex items-center gap-2 text-indigo-600 font-bold text-sm opacity-0 group-hover:opacity-100 transform translate-y-2 group-hover:translate-y-0 transition-all duration-300">
                   Comenzar ahora <ArrowRight size={16} />
                 </div>
@@ -4149,7 +4221,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableZones, onUpdateZo
               // Crear
               await saveProperty({ ...propertyData, companyId });
             }
-            
+
             // Recargar propiedades
             const props = await getPropertiesByCompany(companyId);
             setProperties(props);
@@ -4270,7 +4342,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableZones, onUpdateZo
               // Crear
               await saveProject({ ...projectData, companyId });
             }
-            
+
             // Recargar proyectos
             const projs = await getProjectsByCompany(companyId);
             setProjects(projs);
@@ -4282,7 +4354,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableZones, onUpdateZo
 
       {/* Modal de Zonas más buscadas */}
       {showZonesModal && createPortal(
-        <div 
+        <div
           className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
           style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, zIndex: 9999 }}
           onClick={(e) => {
@@ -4291,7 +4363,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableZones, onUpdateZo
             }
           }}
         >
-          <div 
+          <div
             className="bg-white rounded-[2rem] w-full max-w-2xl max-h-[80vh] overflow-y-auto shadow-2xl relative"
             onClick={(e) => e.stopPropagation()}
             style={{ zIndex: 10000 }}
@@ -4324,7 +4396,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableZones, onUpdateZo
                   </div>
                 ) : (
                   sortedZones.map(([zone, count], index) => (
-                    <div 
+                    <div
                       key={index}
                       className="flex items-center gap-4 p-4 bg-gray-50 rounded-xl border border-gray-100 hover:border-orange-200 transition-colors"
                     >
