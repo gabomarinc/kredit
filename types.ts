@@ -129,3 +129,42 @@ export interface Project {
   createdAt?: string;
   updatedAt?: string;
 }
+
+// ============================================
+// SISTEMA DE EMPRESAS Y USUARIOS
+// ============================================
+
+export interface CompanyData {
+  name: string;
+  email: string;
+  password: string;
+  companyName?: string;
+  logoUrl?: string; // base64
+  zones?: string[];
+  role?: RoleType;
+  googleDriveAccessToken?: string;
+  googleDriveRefreshToken?: string;
+  googleDriveFolderId?: string;
+}
+
+export interface Company {
+  id: string;
+  name: string;
+  email: string;
+  companyName: string;
+  logoUrl?: string;
+  zones: string[];
+  plan?: PlanType;
+  role?: RoleType;
+  googleDriveAccessToken?: string;
+  googleDriveRefreshToken?: string;
+  googleDriveFolderId?: string;
+  apcDocumentDriveId?: string;
+  requestedDocuments?: {
+    idFile: boolean;
+    fichaFile: boolean;
+    talonarioFile: boolean;
+    signedAcpFile: boolean;
+  };
+  createdAt?: string;
+}

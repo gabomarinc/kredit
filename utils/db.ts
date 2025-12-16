@@ -1,6 +1,6 @@
 /// <reference types="vite/client" />
 import { Pool } from '@neondatabase/serverless';
-import { CalculationResult, Prospect, PersonalData, FinancialData, UserPreferences, Project, ProjectModel } from '../types';
+import { CalculationResult, Prospect, PersonalData, FinancialData, UserPreferences, Project, ProjectModel, Company, CompanyData } from '../types';
 import { MOCK_PROSPECTS } from '../constants';
 import pako from 'pako';
 import { uploadProspectFilesToDrive, refreshAccessToken, downloadFileFromDriveAsBase64 } from './googleDrive';
@@ -94,66 +94,35 @@ const ensureTablesExist = async (client: any) => {
     `);
 
     // Agregar columnas de archivos si no existen (para tablas ya creadas)
+    // Agregar columnas de archivos si no existen (para tablas ya creadas)
     try {
-      await client.query(`
-        DO $$
-        BEGIN
-          IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'prospects' AND column_name = 'company_id') THEN
-            ALTER TABLE prospects ADD COLUMN company_id UUID REFERENCES companies(id) ON DELETE SET NULL;
-          END IF;
-          IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'prospects' AND column_name = 'updated_at') THEN
-            ALTER TABLE prospects ADD COLUMN updated_at TIMESTAMP DEFAULT NOW();
-          END IF;
-          -- Columnas para Google Drive (nuevo sistema)
-          IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'prospects' AND column_name = 'id_file_drive_id') THEN
-            ALTER TABLE prospects ADD COLUMN id_file_drive_id TEXT;
-          END IF;
-          IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'prospects' AND column_name = 'ficha_file_drive_id') THEN
-            ALTER TABLE prospects ADD COLUMN ficha_file_drive_id TEXT;
-          END IF;
-          IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'prospects' AND column_name = 'talonario_file_drive_id') THEN
-            ALTER TABLE prospects ADD COLUMN talonario_file_drive_id TEXT;
-          END IF;
-          IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'prospects' AND column_name = 'signed_acp_file_drive_id') THEN
-            ALTER TABLE prospects ADD COLUMN signed_acp_file_drive_id TEXT;
-          END IF;
-        END $$;
-    `);
+      await client.query(`ALTER TABLE prospects ADD COLUMN IF NOT EXISTS company_id UUID REFERENCES companies(id) ON DELETE SET NULL`);
+      await client.query(`ALTER TABLE prospects ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP DEFAULT NOW()`);
+
+      // Columnas para Google Drive (nuevo sistema)
+      await client.query(`ALTER TABLE prospects ADD COLUMN IF NOT EXISTS id_file_drive_id TEXT`);
+      await client.query(`ALTER TABLE prospects ADD COLUMN IF NOT EXISTS ficha_file_drive_id TEXT`);
+      await client.query(`ALTER TABLE prospects ADD COLUMN IF NOT EXISTS talonario_file_drive_id TEXT`);
+      await client.query(`ALTER TABLE prospects ADD COLUMN IF NOT EXISTS signed_acp_file_drive_id TEXT`);
     } catch (e) {
-      console.warn('Nota: No se pudieron agregar las columnas de archivos (puede que ya existan):', e);
+      console.warn('Nota: Error actualizando columnas de prospects:', e);
     }
 
     // Agregar columna de plan, role y Google Drive a companies si no existe
+    // Agregar columna de plan, role y Google Drive a companies si no existe
     try {
-      await client.query(`
-        DO $$
-        BEGIN
-          IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'companies' AND column_name = 'plan') THEN
-            ALTER TABLE companies ADD COLUMN plan TEXT DEFAULT 'Freshie' CHECK (plan IN ('Freshie', 'Wolf of Wallstreet'));
-          END IF;
-          IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'companies' AND column_name = 'role') THEN
-            ALTER TABLE companies ADD COLUMN role TEXT DEFAULT 'Broker' CHECK (role IN ('Promotora', 'Broker'));
-          END IF;
-          IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'companies' AND column_name = 'google_drive_access_token') THEN
-            ALTER TABLE companies ADD COLUMN google_drive_access_token TEXT;
-          END IF;
-          IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'companies' AND column_name = 'google_drive_refresh_token') THEN
-            ALTER TABLE companies ADD COLUMN google_drive_refresh_token TEXT;
-          END IF;
-          IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'companies' AND column_name = 'google_drive_folder_id') THEN
-            ALTER TABLE companies ADD COLUMN google_drive_folder_id TEXT;
-          END IF;
-          -- Columnas para Configurar Calculadora (Fase 1)
-          IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'companies' AND column_name = 'apc_document_drive_id') THEN
-            ALTER TABLE companies ADD COLUMN apc_document_drive_id TEXT;
-          END IF;
-          IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'companies' AND column_name = 'requested_documents') THEN
-            ALTER TABLE companies ADD COLUMN requested_documents JSONB DEFAULT '{"idFile": true, "fichaFile": true, "talonarioFile": true, "signedAcpFile": true}'::jsonb;
-          END IF;
-        END $$;
-      `);
+      // Postgres 9.6+ soporta IF NOT EXISTS en ADD COLUMN
+      await client.query(`ALTER TABLE companies ADD COLUMN IF NOT EXISTS plan TEXT DEFAULT 'Freshie' CHECK (plan IN ('Freshie', 'Wolf of Wallstreet'))`);
+      await client.query(`ALTER TABLE companies ADD COLUMN IF NOT EXISTS role TEXT DEFAULT 'Broker' CHECK (role IN ('Promotora', 'Broker'))`);
+      await client.query(`ALTER TABLE companies ADD COLUMN IF NOT EXISTS google_drive_access_token TEXT`);
+      await client.query(`ALTER TABLE companies ADD COLUMN IF NOT EXISTS google_drive_refresh_token TEXT`);
+      await client.query(`ALTER TABLE companies ADD COLUMN IF NOT EXISTS google_drive_folder_id TEXT`);
+
+      // Columnas para Configurar Calculadora (Fase 1)
+      await client.query(`ALTER TABLE companies ADD COLUMN IF NOT EXISTS apc_document_drive_id TEXT`);
+      await client.query(`ALTER TABLE companies ADD COLUMN IF NOT EXISTS requested_documents JSONB DEFAULT '{"idFile": true, "fichaFile": true, "talonarioFile": true, "signedAcpFile": true}'::jsonb`);
     } catch (e) {
-      console.warn('Nota: No se pudo agregar las columnas (puede que ya existan):', e);
+      console.warn('Nota: Error al intentar actualizar columnas de companies:', e);
     }
 
     // Tabla de propiedades
@@ -1120,41 +1089,9 @@ export const getProspectDocuments = async (prospectId: string): Promise<{
   }
 };
 
+
 // ========== FUNCIONES PARA EMPRESAS/USUARIOS ==========
-
-export interface CompanyData {
-  name: string;
-  email: string;
-  password: string;
-  companyName: string;
-  logoUrl?: string;
-  zones: string[];
-  role: 'Promotora' | 'Broker';
-  googleDriveAccessToken?: string;
-  googleDriveRefreshToken?: string;
-  googleDriveFolderId?: string;
-}
-
-export interface Company {
-  id: string;
-  name: string;
-  email: string;
-  companyName: string;
-  logoUrl?: string;
-  zones: string[];
-  plan?: 'Freshie' | 'Wolf of Wallstreet'; // Plan de la empresa
-  role?: 'Promotora' | 'Broker';
-  googleDriveAccessToken?: string;
-  googleDriveRefreshToken?: string;
-  googleDriveFolderId?: string;
-  requestedDocuments?: {
-    idFile: boolean;
-    fichaFile: boolean;
-    talonarioFile: boolean;
-    signedAcpFile: boolean;
-  };
-  apcDocumentDriveId?: string;
-}
+// Definitions moved to types.ts
 
 // Función simple para hash de contraseña (en producción usar bcrypt)
 const simpleHash = (password: string): string => {
