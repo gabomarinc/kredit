@@ -2375,10 +2375,10 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableZones, onUpdateZo
             )}
           </div>
         ) : activeTab === 'prospects' ? (
-          <div className="bg-white rounded-[2.5rem] shadow-[0_10px_40px_-10px_rgba(0,0,0,0.05)] border border-gray-100 overflow-hidden min-h-[500px] flex flex-col">
+          <div className="bg-transparent md:bg-white rounded-[2.5rem] shadow-none md:shadow-[0_10px_40px_-10px_rgba(0,0,0,0.05)] border-0 md:border border-gray-100 overflow-hidden min-h-[500px] flex flex-col">
 
             {/* List Header */}
-            <div className="p-8 border-b border-gray-100 flex flex-col md:flex-row justify-between items-center gap-4">
+            <div className="px-0 py-2 md:p-8 border-b-0 md:border-b border-gray-100 flex flex-col md:flex-row justify-between items-center gap-4">
               <div>
                 <h2 className="text-2xl font-bold text-gray-900">Base de Prospectos</h2>
                 <p className="text-gray-500 text-sm">Gestiona y analiza los datos capturados.</p>
@@ -2471,7 +2471,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableZones, onUpdateZo
                     </table>
 
                     {/* Vista de Tarjetas Visible Solo en Móvil */}
-                    <div className="md:hidden space-y-4 p-4">
+                    <div className="md:hidden space-y-4 pt-4">
                       {paginatedProspects.map((prospect) => (
                         <div
                           key={prospect.id}
