@@ -50,7 +50,7 @@ const ensureTablesExist = async (client: any) => {
         CONSTRAINT company_zones_unique UNIQUE(company_id, zone_name)
       )
     `);
-    
+
     // Asegurar que la restricción UNIQUE existe (por si la tabla ya existía sin ella)
     try {
       await client.query(`
@@ -96,7 +96,7 @@ const ensureTablesExist = async (client: any) => {
         updated_at TIMESTAMP DEFAULT NOW()
       )
     `);
-    
+
     // Agregar columnas de archivos si no existen (para tablas ya creadas)
     try {
       await client.query(`
@@ -135,7 +135,7 @@ const ensureTablesExist = async (client: any) => {
           END IF;
         END $$;
     `);
-  } catch (e) {
+    } catch (e) {
       console.warn('Nota: No se pudieron agregar las columnas de archivos (puede que ya existan):', e);
     }
 
@@ -292,7 +292,7 @@ const fileToBase64 = (file: File | null): Promise<string | null> => {
       resolve(null);
       return;
     }
-    
+
     const reader = new FileReader();
     reader.onloadend = () => {
       const result = reader.result as string;
@@ -321,14 +321,14 @@ const compressJSON = (data: any): string => {
 // Función helper para descomprimir JSON
 const decompressJSON = (data: any): any => {
   if (!data) return {};
-  
+
   try {
     // Si es un string, intentar parsearlo primero
     let parsed: any = data;
     if (typeof data === 'string') {
       parsed = JSON.parse(data);
     }
-    
+
     // Si es un objeto con propiedad 'compressed', extraer el valor comprimido
     if (parsed && typeof parsed === 'object' && 'compressed' in parsed) {
       const compressedBase64 = parsed.compressed;
@@ -339,7 +339,7 @@ const decompressJSON = (data: any): any => {
       const jsonString = String.fromCharCode(...decompressed);
       return JSON.parse(jsonString);
     }
-    
+
     // Si es un string base64 directo (formato antiguo sin wrapper)
     if (typeof parsed === 'string') {
       try {
@@ -353,7 +353,7 @@ const decompressJSON = (data: any): any => {
         return JSON.parse(parsed);
       }
     }
-    
+
     // Si ya es un objeto JSON (formato muy antiguo sin compresión)
     return parsed;
   } catch (error) {
@@ -371,22 +371,22 @@ export const saveProspectToDB = async (
 ) => {
   if (!pool) {
     console.error('❌ Pool de base de datos no inicializado. Verifica VITE_DATABASE_URL en Vercel.');
-    console.log('Datos que se intentaron guardar:', { 
-      name: personal.fullName, 
+    console.log('Datos que se intentaron guardar:', {
+      name: personal.fullName,
       email: personal.email,
-      income: financial.familyIncome 
+      income: financial.familyIncome
     });
     return 'temp-id-' + Date.now();
   }
-  
+
   try {
     console.log('🔄 Intentando conectar a la base de datos...');
     const client = await pool.connect();
     console.log('✅ Conexión establecida');
-    
+
     // Aseguramos que las tablas existan (Auto-migración simple)
     await ensureTablesExist(client);
-    
+
     // Convertir archivos a Base64
     console.log('🔄 Convirtiendo archivos a Base64...');
     const [idFileBase64, fichaFileBase64, talonarioFileBase64, signedAcpFileBase64] = await Promise.all([
@@ -395,14 +395,14 @@ export const saveProspectToDB = async (
       fileToBase64(personal.talonarioFile),
       fileToBase64(personal.signedAcpFile)
     ]);
-    
+
     console.log('✅ Archivos convertidos:', {
       hasIdFile: !!idFileBase64,
       hasFichaFile: !!fichaFileBase64,
       hasTalonarioFile: !!talonarioFileBase64,
       hasSignedAcpFile: !!signedAcpFileBase64
     });
-    
+
     // Insertamos en la tabla prospects
     const query = `
       INSERT INTO prospects (
@@ -480,8 +480,8 @@ export const saveProspectInitial = async (
     await ensureTablesExist(client);
 
     // Asegurar que zones sea un array
-    const zonesArray = Array.isArray(preferences.zone) 
-      ? preferences.zone 
+    const zonesArray = Array.isArray(preferences.zone)
+      ? preferences.zone
       : (preferences.zone ? [preferences.zone] : []);
 
     // Preparar valores
@@ -563,7 +563,7 @@ export const updateProspectToDB = async (
       hasSignedAcpFile: !!personal.signedAcpFile,
       hasResult: !!result
     });
-    
+
     const client = await pool.connect();
     await ensureTablesExist(client);
 
@@ -632,7 +632,7 @@ export const updateProspectToDB = async (
         accessToken: accessToken ? `${accessToken.substring(0, 20)}...` : 'null',
         folderId: folderId || 'null'
       });
-      
+
       // Intentar subir archivos (con renovación automática de token si expira)
       let retryWithNewToken = false;
       try {
@@ -662,7 +662,7 @@ export const updateProspectToDB = async (
           message: error?.message,
           hasRefreshToken: !!refreshToken
         });
-        
+
         // Si es error 401 (token expirado) y tenemos refresh token, intentar renovar
         if (refreshToken && (error?.status === 401 || error?.message?.includes('401') || error?.message?.includes('expired') || error?.message?.includes('Token expired'))) {
           console.log('🔄 Token expirado detectado, intentando renovar...');
@@ -705,7 +705,7 @@ export const updateProspectToDB = async (
         } else {
           console.warn('⚠️ Token expirado pero no hay refresh token o el error no es 401');
         }
-        
+
         // Si no se pudo renovar, continuar sin los archivos
         if (!retryWithNewToken) {
           console.error('❌ NO SE PUDIERON SUBIR ARCHIVOS A DRIVE. Continuando sin archivos.');
@@ -716,7 +716,7 @@ export const updateProspectToDB = async (
           // No lanzar error, pero sí reportar claramente que no se subieron
         }
       }
-      
+
       // Verificar si realmente se subieron archivos
       const filesUploaded = !!(driveFileIds.idFileUrl || driveFileIds.fichaFileUrl || driveFileIds.talonarioFileUrl || driveFileIds.signedAcpFileUrl);
       if (hasFilesToUpload && !filesUploaded) {
@@ -763,12 +763,12 @@ export const updateProspectToDB = async (
     try {
       const updateResult = await client.query(query, values);
       client.release();
-      
+
       if (updateResult.rowCount === 0) {
         console.error('⚠️ UPDATE ejecutado pero ninguna fila fue afectada. Prospecto puede no existir:', prospectId);
         return false;
       }
-      
+
       console.log('✅ Prospecto actualizado exitosamente. Filas afectadas:', updateResult.rowCount);
       return true;
     } catch (updateError: any) {
@@ -809,14 +809,14 @@ export const getProspectsFromDB = async (companyId?: string | null): Promise<Pro
     console.error('❌ Pool de base de datos no inicializado. Retornando array vacío.');
     return [];
   }
-  
+
   try {
     console.log('🔄 Consultando base de datos...', { companyId });
     const client = await pool.connect();
-    
+
     // Aseguramos que las tablas existan antes de consultar
     await ensureTablesExist(client);
-    
+
     // Obtenemos los prospectos filtrados por company_id (si se proporciona)
     // IMPORTANTE: Solo mostrar prospectos de la empresa actual
     let query = `
@@ -826,9 +826,9 @@ export const getProspectsFromDB = async (companyId?: string | null): Promise<Pro
         calculation_result, status, created_at, updated_at
       FROM prospects 
     `;
-    
+
     const queryParams: any[] = [];
-    
+
     if (companyId) {
       query += ` WHERE company_id = $1`;
       queryParams.push(companyId);
@@ -836,11 +836,11 @@ export const getProspectsFromDB = async (companyId?: string | null): Promise<Pro
       // Si no hay companyId, solo retornar prospectos sin company_id (por seguridad)
       query += ` WHERE company_id IS NULL`;
     }
-    
+
     query += ` ORDER BY created_at DESC LIMIT 50`;
-    
+
     const res = await client.query(query, queryParams);
-    
+
     client.release();
 
     console.log(`📊 Registros encontrados en DB: ${res.rows.length}`);
@@ -848,8 +848,8 @@ export const getProspectsFromDB = async (companyId?: string | null): Promise<Pro
     // Si la tabla está vacía, retornar array vacío en lugar de mockups
     // Solo usar mockups si hay un error de conexión
     if (res.rows.length === 0) {
-        console.log('ℹ️ La tabla prospects está vacía. No hay datos guardados aún.');
-        return [];
+      console.log('ℹ️ La tabla prospects está vacía. No hay datos guardados aún.');
+      return [];
     }
 
     // Mapeamos los resultados de la DB (snake_case) a nuestro tipo TypeScript (camelCase)
@@ -867,9 +867,9 @@ export const getProspectsFromDB = async (companyId?: string | null): Promise<Pro
       bedrooms: row.bedrooms || null,
       bathrooms: row.bathrooms || null,
       // Ensure zone is treated safely - puede ser array o string
-      zone: Array.isArray(row.interested_zones) && row.interested_zones.length > 0 
-            ? row.interested_zones 
-            : (typeof row.interested_zones === 'string' ? [row.interested_zones.replace(/[{}"\\]/g, '')] : []),
+      zone: Array.isArray(row.interested_zones) && row.interested_zones.length > 0
+        ? row.interested_zones
+        : (typeof row.interested_zones === 'string' ? [row.interested_zones.replace(/[{}"\\]/g, '')] : []),
       // Ensure result is an object
       result: decompressJSON(row.calculation_result) || {
         maxPropertyPrice: 0,
@@ -969,7 +969,7 @@ export const getProspectDocuments = async (prospectId: string): Promise<{
       if (!fileId && fallbackBase64) {
         return fallbackBase64;
       }
-      
+
       // Si no hay ID de Drive, retornar null
       if (!fileId) {
         return null;
@@ -1004,7 +1004,7 @@ export const getProspectDocuments = async (prospectId: string): Promise<{
                 [newAccessToken, row.company_id]
               );
               updateClient.release();
-              
+
               accessToken = newAccessToken;
               // Reintentar descarga
               const base64 = await downloadFileFromDriveAsBase64(newAccessToken, fileId);
@@ -1120,7 +1120,7 @@ export const saveCompanyToDB = async (data: CompanyData): Promise<string | null>
   try {
     console.log('🔄 Guardando nueva empresa en la base de datos...');
     const client = await pool.connect();
-    
+
     await ensureTablesExist(client);
 
     // Verificar si el email ya existe
@@ -1144,11 +1144,11 @@ export const saveCompanyToDB = async (data: CompanyData): Promise<string | null>
       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
       RETURNING id
     `, [
-      data.name, 
-      data.email, 
-      passwordHash, 
-      data.companyName || data.name, 
-      data.logoUrl || null, 
+      data.name,
+      data.email,
+      passwordHash,
+      data.companyName || data.name,
+      data.logoUrl || null,
       data.role || 'Broker',
       data.googleDriveAccessToken || null,
       data.googleDriveRefreshToken || null,
@@ -1164,16 +1164,16 @@ export const saveCompanyToDB = async (data: CompanyData): Promise<string | null>
     if (data.zones && Array.isArray(data.zones) && data.zones.length > 0) {
       console.log(`🔄 Guardando ${data.zones.length} zonas para company_id: ${companyId}...`);
       console.log('📋 Lista completa de zonas:', JSON.stringify(data.zones));
-      
+
       let zonesSaved = 0;
       let zonesErrors = 0;
-      
+
       for (const zoneName of data.zones) {
         if (!zoneName || typeof zoneName !== 'string') {
           console.warn(`⚠️ Zona inválida omitida:`, zoneName);
           continue;
         }
-        
+
         try {
           console.log(`🔄 Intentando guardar zona: "${zoneName}"`);
           const zoneResult = await client.query(`
@@ -1182,7 +1182,7 @@ export const saveCompanyToDB = async (data: CompanyData): Promise<string | null>
             ON CONFLICT ON CONSTRAINT company_zones_unique DO NOTHING
             RETURNING id
           `, [companyId, zoneName.trim()]);
-          
+
           if (zoneResult.rows.length > 0) {
             zonesSaved++;
             console.log(`✅ Zona guardada exitosamente: "${zoneName}" (ID: ${zoneResult.rows[0].id})`);
@@ -1200,9 +1200,9 @@ export const saveCompanyToDB = async (data: CompanyData): Promise<string | null>
           });
         }
       }
-      
+
       console.log(`📊 Resumen: ${zonesSaved} zonas guardadas, ${zonesErrors} errores`);
-      
+
       // Verificar que realmente se guardaron
       const verifyResult = await client.query(
         'SELECT COUNT(*) as count FROM company_zones WHERE company_id = $1',
@@ -1210,7 +1210,7 @@ export const saveCompanyToDB = async (data: CompanyData): Promise<string | null>
       );
       const actualCount = parseInt(verifyResult.rows[0].count);
       console.log(`🔍 Verificación: ${actualCount} zonas encontradas en DB para company_id ${companyId}`);
-      
+
       if (actualCount === 0 && zonesSaved > 0) {
         console.error('❌ CRÍTICO: Se reportaron zonas guardadas pero no se encuentran en la DB');
       }
@@ -1259,7 +1259,7 @@ export const verifyLogin = async (email: string, password: string): Promise<Comp
   try {
     console.log('🔄 Verificando credenciales...');
     const client = await pool.connect();
-    
+
     await ensureTablesExist(client);
 
     // Buscar empresa por email
@@ -1320,7 +1320,7 @@ export const getCompanyById = async (companyId: string): Promise<Company | null>
 
   try {
     const client = await pool.connect();
-    
+
     const companyResult = await client.query(
       'SELECT * FROM companies WHERE id = $1',
       [companyId]
@@ -1350,10 +1350,10 @@ export const getCompanyById = async (companyId: string): Promise<Company | null>
       talonarioFile: true,
       signedAcpFile: true
     };
-    
+
     if (company.requested_documents) {
       try {
-        requestedDocuments = typeof company.requested_documents === 'string' 
+        requestedDocuments = typeof company.requested_documents === 'string'
           ? JSON.parse(company.requested_documents)
           : company.requested_documents;
       } catch (e) {
@@ -1393,10 +1393,10 @@ export const updateCompanyZones = async (companyId: string, zones: string[]): Pr
   try {
     console.log('🔄 Actualizando zonas de la empresa...', { companyId, zones });
     const client = await pool.connect();
-    
+
     // Eliminar todas las zonas actuales
     await client.query('DELETE FROM company_zones WHERE company_id = $1', [companyId]);
-    
+
     // Insertar las nuevas zonas
     if (zones.length > 0) {
       for (const zoneName of zones) {
@@ -1407,7 +1407,7 @@ export const updateCompanyZones = async (companyId: string, zones: string[]): Pr
         `, [companyId, zoneName]);
       }
     }
-    
+
     client.release();
     console.log(`✅ ${zones.length} zonas actualizadas en la base de datos`);
     return true;
@@ -1428,14 +1428,14 @@ export const updateCompanyLogo = async (companyId: string, logoBase64: string): 
   try {
     console.log('🔄 Actualizando logo de la empresa...', { companyId });
     const client = await pool.connect();
-    
+
     await ensureTablesExist(client);
 
     await client.query(
       'UPDATE companies SET logo_url = $1 WHERE id = $2',
       [logoBase64, companyId]
     );
-    
+
     client.release();
     console.log('✅ Logo actualizado exitosamente en la base de datos');
     return true;
@@ -1461,12 +1461,12 @@ export const updateCompanyName = async (companyId: string, companyName: string):
   try {
     console.log('🔄 Actualizando nombre de la empresa...', { companyId, companyName });
     const client = await pool.connect();
-    
+
     await client.query(
       'UPDATE companies SET company_name = $1 WHERE id = $2',
       [companyName, companyId]
     );
-    
+
     client.release();
     console.log('✅ Nombre de la empresa actualizado en la base de datos');
     return true;
@@ -2268,7 +2268,17 @@ export const getAvailableProjectsForProspect = async (
     // 4. Estén activos
 
     let query = `
-      SELECT DISTINCT p.*, 
+      SELECT 
+        p.id,
+        p.company_id,
+        p.name,
+        p.description,
+        p.zone,
+        p.address,
+        p.images,
+        p.status,
+        p.created_at,
+        p.updated_at,
         COALESCE(
           json_agg(
             json_build_object(
@@ -2344,7 +2354,7 @@ export const getAvailableProjectsForProspect = async (
     }
 
     query += ` 
-      GROUP BY p.id
+      GROUP BY p.id, p.company_id, p.name, p.description, p.zone, p.address, p.images, p.status, p.created_at, p.updated_at
       HAVING COUNT(pm.id) > 0
       ORDER BY p.created_at DESC
       LIMIT 50`;
@@ -2358,13 +2368,13 @@ export const getAvailableProjectsForProspect = async (
         // Filtrar por precio
         if (parseFloat(m.price || 0) > maxPrice) return false;
         if (m.unitsAvailable <= 0) return false;
-        
+
         // Filtrar por bedrooms
         if (bedrooms !== null && bedrooms !== undefined && m.bedrooms !== bedrooms) return false;
-        
+
         // Filtrar por bathrooms
         if (bathrooms !== null && bathrooms !== undefined && m.bathrooms !== bathrooms) return false;
-        
+
         return true;
       }).map((m: any) => ({
         id: m.id,
@@ -2519,8 +2529,8 @@ export const getProjectImages = async (projectId: string): Promise<{ projectImag
 
     client.release();
 
-    const projectImages = projectRes.rows.length > 0 && Array.isArray(projectRes.rows[0].images) 
-      ? projectRes.rows[0].images 
+    const projectImages = projectRes.rows.length > 0 && Array.isArray(projectRes.rows[0].images)
+      ? projectRes.rows[0].images
       : [];
 
     const modelImages = modelsRes.rows.map((row: any) => ({
