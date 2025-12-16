@@ -38,9 +38,27 @@ export const WhatsBlastTab: React.FC<WhatsBlastTabProps> = ({ prospects: sourceP
         return saved ? new Set(JSON.parse(saved)) : new Set();
     });
 
-    // Excel Upload State
-    const [uploadedProspects, setUploadedProspects] = useState<Prospect[]>([]);
-    const [useExcel, setUseExcel] = useState(false);
+    // Excel Upload State (persisted)
+    const [uploadedProspects, setUploadedProspects] = useState<Prospect[]>(() => {
+        const saved = localStorage.getItem('wb_uploaded_prospects');
+        return saved ? JSON.parse(saved) : [];
+    });
+    const [useExcel, setUseExcel] = useState(() => {
+        return localStorage.getItem('wb_use_excel') === 'true';
+    });
+
+    // Persist Upload State
+    useEffect(() => {
+        if (uploadedProspects.length > 0) {
+            localStorage.setItem('wb_uploaded_prospects', JSON.stringify(uploadedProspects));
+        } else {
+            localStorage.removeItem('wb_uploaded_prospects');
+        }
+    }, [uploadedProspects]);
+
+    useEffect(() => {
+        localStorage.setItem('wb_use_excel', String(useExcel));
+    }, [useExcel]);
 
     // Transform Kredit prospects to WhatsBlast format
     const dbProspects = useMemo(() => {
@@ -105,6 +123,17 @@ export const WhatsBlastTab: React.FC<WhatsBlastTabProps> = ({ prospects: sourceP
         addNotification(`Abriendo WhatsApp para ${prospect.nombre}...`, "info");
     };
 
+    // Helper: Find best matching column key
+    const findColumnMatch = (keys: string[], candidates: string[]): string | undefined => {
+        const normalizedKeys = keys.map(k => ({ key: k, norm: k.toLowerCase().trim().normalize("NFD").replace(/[\u0300-\u036f]/g, "") }));
+
+        for (const candidate of candidates) {
+            const match = normalizedKeys.find(nk => nk.norm === candidate || nk.norm.includes(candidate));
+            if (match) return match.key;
+        }
+        return undefined;
+    };
+
     const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (!file) return;
@@ -116,22 +145,50 @@ export const WhatsBlastTab: React.FC<WhatsBlastTabProps> = ({ prospects: sourceP
                 const wb = XLSX.read(bstr, { type: 'binary' });
                 const wsname = wb.SheetNames[0];
                 const ws = wb.Sheets[wsname];
-                const data = XLSX.utils.sheet_to_json(ws);
+                const data: any[] = XLSX.utils.sheet_to_json(ws);
 
-                // Map loose Excel data to Prospect type
-                const mapped = data.map((row: any, idx) => ({
-                    id: `excel-${idx}`,
-                    nombre: row.nombre || row.Nombre || row.Name || 'Sin Nombre',
-                    apellido: row.apellido || row.Apellido || '',
-                    telefono: String(row.telefono || row.Telefono || row.Phone || row.celular || '').replace(/\D/g, ''),
-                    empresa: row.empresa || row.Empresa || '',
-                    estado: 'Nuevo',
-                    ...row // Keep other fields for dynamic variables
-                } as Prospect));
+                if (data.length === 0) {
+                    addNotification("El archivo parece estar vacío", "error");
+                    return;
+                }
+
+                // Smart Mapping
+                const headers = Object.keys(data[0]);
+
+                // 1. Detect Names
+                const nameKey = findColumnMatch(headers, ['nombre', 'name', 'nombres', 'cliente', 'prospecto', 'contacto', 'full']);
+                // 2. Detect Phones
+                const phoneKey = findColumnMatch(headers, ['telefono', 'phone', 'celular', 'tel', 'cel', 'movil', 'mobile', 'whatsapp', 'numero']);
+                // 3. Detect Company
+                const companyKey = findColumnMatch(headers, ['empresa', 'company', 'organizacion']);
+                // 4. Detect Email
+                const emailKey = findColumnMatch(headers, ['email', 'correo', 'mail']);
+
+                console.log('📊 Column Mapping Detected:', { nameKey, phoneKey, companyKey, emailKey });
+
+                if (!nameKey && !phoneKey) {
+                    addNotification("⚠️ No pudimos detectar columnas de Nombre o Teléfono automáticamente.", "info");
+                }
+
+                const mapped = data.map((row: any, idx) => {
+                    // Fallback: If no name key, try to take the first string column that looks like a name
+                    const nameVal = nameKey ? row[nameKey] : (row['Nombre'] || row['Name'] || Object.values(row).find(v => typeof v === 'string' && (v as string).length > 2) || 'Sin Nombre');
+
+                    return {
+                        id: `excel-${idx}`,
+                        nombre: String(nameVal).split(' ')[0], // First name guess
+                        apellido: String(nameVal).split(' ').slice(1).join(' '),
+                        telefono: phoneKey ? String(row[phoneKey]).replace(/\D/g, '') : '',
+                        email: emailKey ? row[emailKey] : '',
+                        empresa: companyKey ? row[companyKey] : '',
+                        estado: 'Nuevo',
+                        ...row // Keep all original data for custom variables
+                    } as Prospect;
+                });
 
                 setUploadedProspects(mapped);
                 setUseExcel(true);
-                addNotification(`✅ ${mapped.length} contactos cargados desde Excel`);
+                addNotification(`✅ ${mapped.length} contactos cargados con éxito`);
             } catch (err) {
                 console.error(err);
                 addNotification("Error al leer el archivo Excel", "error");
