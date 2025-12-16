@@ -227,7 +227,7 @@ const PropertyModal: React.FC<PropertyModalProps> = ({ property, zones, onClose,
               className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-indigo-500 outline-none"
             />
             {images.length > 0 && (
-              <div className="grid grid-cols-4 gap-4 mt-4">
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-4">
                 {images.map((img, idx) => (
                   <div key={idx} className="relative group">
                     <img src={img} alt={`Imagen ${idx + 1}`} className="w-full h-32 object-cover rounded-lg" />
@@ -655,7 +655,7 @@ const ProjectModal: React.FC<ProjectModalProps> = ({ project, zones, onClose, on
                   />
                 </label>
                 {projectImages.length > 0 && (
-                  <div className="grid grid-cols-4 gap-3 mt-4">
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mt-4">
                     {projectImages.map((img, idx) => (
                       <div key={idx} className="relative group">
                         <img src={img} alt={`Proyecto ${idx + 1}`} className="w-full h-24 object-cover rounded-xl" />
@@ -891,7 +891,7 @@ const ProjectModal: React.FC<ProjectModalProps> = ({ project, zones, onClose, on
                     />
                   </label>
                   {currentModel.images.length > 0 && (
-                    <div className="grid grid-cols-4 gap-3 mt-4">
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mt-4">
                       {currentModel.images.map((img, idx) => (
                         <div key={idx} className="relative group">
                           <img src={img} alt={`Modelo ${idx + 1}`} className="w-full h-24 object-cover rounded-xl" />
@@ -978,7 +978,7 @@ const ProjectModal: React.FC<ProjectModalProps> = ({ project, zones, onClose, on
                   {projectImages.length > 0 && (
                     <div className="mt-2">
                       <p className="font-semibold mb-2">Imágenes ({projectImages.length})</p>
-                      <div className="grid grid-cols-4 gap-2">
+                      <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
                         {projectImages.map((img, idx) => (
                           <img key={idx} src={img} alt={`Proyecto ${idx + 1}`} className="w-full h-20 object-cover rounded-lg" />
                         ))}
@@ -2302,38 +2302,38 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableZones, onUpdateZo
 
         {/* Content Area */}
         {activeTab === 'dashboard' ? (
-          <div className="grid md:grid-cols-2 lg:grid-cols-2 gap-8">
+          <div className="grid md:grid-cols-2 lg:grid-cols-2 gap-4 md:gap-8">
             {/* Card 1: Total Forms */}
-            <div className="bg-white rounded-[2.5rem] p-8 shadow-[0_10px_40px_-10px_rgba(0,0,0,0.05)] border border-gray-100 flex flex-col items-center justify-center text-center group hover:shadow-lg transition-all duration-500">
-              <div className="w-16 h-16 rounded-3xl bg-indigo-50 text-indigo-600 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-500">
-                <FileText size={32} strokeWidth={1.5} />
+            <div className="bg-white rounded-[2.5rem] p-6 md:p-8 shadow-[0_10px_40px_-10px_rgba(0,0,0,0.05)] border border-gray-100 flex flex-col items-center justify-center text-center group hover:shadow-lg transition-all duration-500">
+              <div className="w-12 h-12 md:w-16 md:h-16 rounded-3xl bg-indigo-50 text-indigo-600 flex items-center justify-center mb-4 md:mb-6 group-hover:scale-110 transition-transform duration-500">
+                <FileText size={24} className="md:w-8 md:h-8" strokeWidth={1.5} />
               </div>
-              <h3 className="text-gray-400 font-semibold uppercase tracking-wider text-xs mb-2">Formularios Completados</h3>
-              <p className="text-5xl font-bold text-gray-900 tracking-tight">
+              <h3 className="text-gray-400 font-semibold uppercase tracking-wider text-[10px] md:text-xs mb-2">Formularios Completados</h3>
+              <p className="text-3xl md:text-5xl font-bold text-gray-900 tracking-tight">
                 {isLoading ? <Loader2 className="animate-spin" /> : totalForms}
               </p>
               <span className="mt-4 px-3 py-1 bg-green-50 text-green-600 text-[10px] font-bold rounded-full">Actualizado hoy</span>
             </div>
 
             {/* Card 2: Average Salary */}
-            <div className="bg-white rounded-[2.5rem] p-8 shadow-[0_10px_40px_-10px_rgba(0,0,0,0.05)] border border-gray-100 flex flex-col items-center justify-center text-center group hover:shadow-lg transition-all duration-500">
-              <div className="w-16 h-16 rounded-3xl bg-emerald-50 text-emerald-600 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-500">
-                <DollarSign size={32} strokeWidth={1.5} />
+            <div className="bg-white rounded-[2.5rem] p-6 md:p-8 shadow-[0_10px_40px_-10px_rgba(0,0,0,0.05)] border border-gray-100 flex flex-col items-center justify-center text-center group hover:shadow-lg transition-all duration-500">
+              <div className="w-12 h-12 md:w-16 md:h-16 rounded-3xl bg-emerald-50 text-emerald-600 flex items-center justify-center mb-4 md:mb-6 group-hover:scale-110 transition-transform duration-500">
+                <DollarSign size={24} className="md:w-8 md:h-8" strokeWidth={1.5} />
               </div>
-              <h3 className="text-gray-400 font-semibold uppercase tracking-wider text-xs mb-2">Promedio Salarial</h3>
-              <p className="text-5xl font-bold text-gray-900 tracking-tight">
+              <h3 className="text-gray-400 font-semibold uppercase tracking-wider text-[10px] md:text-xs mb-2">Promedio Salarial</h3>
+              <p className="text-3xl md:text-5xl font-bold text-gray-900 tracking-tight">
                 {isLoading ? <Loader2 className="animate-spin" /> : formatCurrency(avgSalary)}
               </p>
               <span className="mt-4 text-gray-400 text-[10px] font-medium">Basado en {totalForms} registros</span>
             </div>
 
             {/* Card 3: Avg Purchasing Capacity */}
-            <div className="bg-white rounded-[2.5rem] p-8 shadow-[0_10px_40px_-10px_rgba(0,0,0,0.05)] border border-gray-100 flex flex-col items-center justify-center text-center group hover:shadow-lg transition-all duration-500">
-              <div className="w-16 h-16 rounded-3xl bg-blue-50 text-blue-600 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-500">
-                <Briefcase size={32} strokeWidth={1.5} />
+            <div className="bg-white rounded-[2.5rem] p-6 md:p-8 shadow-[0_10px_40px_-10px_rgba(0,0,0,0.05)] border border-gray-100 flex flex-col items-center justify-center text-center group hover:shadow-lg transition-all duration-500">
+              <div className="w-12 h-12 md:w-16 md:h-16 rounded-3xl bg-blue-50 text-blue-600 flex items-center justify-center mb-4 md:mb-6 group-hover:scale-110 transition-transform duration-500">
+                <Briefcase size={24} className="md:w-8 md:h-8" strokeWidth={1.5} />
               </div>
-              <h3 className="text-gray-400 font-semibold uppercase tracking-wider text-xs mb-2">Capacidad de Compra Prom.</h3>
-              <p className="text-5xl font-bold text-gray-900 tracking-tight">
+              <h3 className="text-gray-400 font-semibold uppercase tracking-wider text-[10px] md:text-xs mb-2">Capacidad de Compra Prom.</h3>
+              <p className="text-3xl md:text-5xl font-bold text-gray-900 tracking-tight">
                 {isLoading ? <Loader2 className="animate-spin" /> : formatCurrency(avgCapacity)}
               </p>
               <span className="mt-4 text-gray-400 text-[10px] font-medium">Potencial de cierre</span>
@@ -2341,12 +2341,12 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableZones, onUpdateZo
 
             {/* Card 4: Top Zones (solo para Broker) */}
             {!isPromotora && (
-              <div className="bg-white rounded-[2.5rem] p-8 shadow-[0_10px_40px_-10px_rgba(0,0,0,0.05)] border border-gray-100 flex flex-col items-center justify-center text-center group hover:shadow-lg transition-all duration-500 cursor-pointer" onClick={() => sortedZones.length > 0 && setShowZonesModal(true)}>
-                <div className="w-16 h-16 rounded-3xl bg-orange-50 text-orange-600 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-500">
-                  <MapPin size={32} strokeWidth={1.5} />
+              <div className="bg-white rounded-[2.5rem] p-6 md:p-8 shadow-[0_10px_40px_-10px_rgba(0,0,0,0.05)] border border-gray-100 flex flex-col items-center justify-center text-center group hover:shadow-lg transition-all duration-500 cursor-pointer" onClick={() => sortedZones.length > 0 && setShowZonesModal(true)}>
+                <div className="w-12 h-12 md:w-16 md:h-16 rounded-3xl bg-orange-50 text-orange-600 flex items-center justify-center mb-4 md:mb-6 group-hover:scale-110 transition-transform duration-500">
+                  <MapPin size={24} className="md:w-8 md:h-8" strokeWidth={1.5} />
                 </div>
-                <h3 className="text-gray-400 font-semibold uppercase tracking-wider text-xs mb-2">Zonas Más Buscadas</h3>
-                <p className="text-2xl font-bold text-gray-900 tracking-tight px-4 leading-tight">
+                <h3 className="text-gray-400 font-semibold uppercase tracking-wider text-[10px] md:text-xs mb-2">Zonas Más Buscadas</h3>
+                <p className="text-xl md:text-2xl font-bold text-gray-900 tracking-tight px-4 leading-tight">
                   {isLoading ? (
                     <Loader2 className="animate-spin mx-auto" />
                   ) : sortedZones.length === 0 ? (
@@ -2418,7 +2418,8 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableZones, onUpdateZo
               ) : (
                 <>
                   <div className="overflow-x-auto -mx-4 sm:mx-0">
-                    <table className="w-full text-left border-collapse min-w-[600px]">
+                    {/* Tabla Visible en Desktop/Tablet */}
+                    <table className="w-full text-left border-collapse min-w-[600px] hidden md:table">
                       <thead>
                         <tr className="bg-gray-50/50 text-gray-400 text-xs uppercase tracking-wider">
                           <th className="px-4 sm:px-8 py-4 sm:py-6 font-semibold rounded-tl-[2rem]">Prospecto</th>
@@ -2468,6 +2469,73 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableZones, onUpdateZo
                         ))}
                       </tbody>
                     </table>
+
+                    {/* Vista de Tarjetas Visible Solo en Móvil */}
+                    <div className="md:hidden space-y-4 p-4">
+                      {paginatedProspects.map((prospect) => (
+                        <div
+                          key={prospect.id}
+                          className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 active:bg-gray-50 active:scale-[0.98] transition-all"
+                        >
+                          <div className="flex justify-between items-start mb-4">
+                            <div
+                              className="flex-1 cursor-pointer"
+                              onClick={() => setSelectedProspect(prospect)}
+                            >
+                              <h3 className="font-bold text-gray-900 text-base mb-1">{prospect.name}</h3>
+                              <p className="text-xs text-gray-500">{prospect.email}</p>
+                            </div>
+                            <span className="text-[10px] font-medium text-gray-400 bg-gray-50 px-2 py-1 rounded-full">
+                              {prospect.dateDisplay || new Date(prospect.date).toLocaleDateString('es-PA')}
+                            </span>
+                          </div>
+
+                          <div className="grid grid-cols-2 gap-4 mb-4">
+                            <div>
+                              <p className="text-[10px] uppercase text-gray-400 font-bold mb-1">Capacidad Max</p>
+                              <p className="text-lg font-bold text-indigo-600">
+                                {formatCurrency(prospect.result?.maxPropertyPrice || 0)}
+                              </p>
+                            </div>
+                            <div>
+                              <p className="text-[10px] uppercase text-gray-400 font-bold mb-1">Ingreso</p>
+                              <p className="text-sm font-semibold text-gray-700">
+                                {formatCurrency(prospect.income)}
+                              </p>
+                            </div>
+                          </div>
+
+                          <div className="flex items-center justify-between pt-3 border-t border-gray-50">
+                            <div className="flex items-center gap-1.5 text-xs text-gray-500 truncate max-w-[50%]">
+                              <MapPin size={12} className="text-gray-400" />
+                              <span className="truncate">
+                                {Array.isArray(prospect.zone) ? prospect.zone[0] : (typeof prospect.zone === 'string' ? prospect.zone : 'Sin zona')}
+                              </span>
+                            </div>
+
+                            {prospect.phone ? (
+                              <a
+                                href={`tel:${prospect.phone}`}
+                                className="flex items-center gap-2 bg-green-50 text-green-700 px-3 py-1.5 rounded-lg text-xs font-bold hover:bg-green-100 transition-colors"
+                                onClick={(e) => e.stopPropagation()}
+                              >
+                                <Users size={12} />
+                                Llamar
+                              </a>
+                            ) : (
+                              <span className="text-xs text-gray-400">Sin teléfono</span>
+                            )}
+                          </div>
+
+                          <button
+                            className="w-full mt-3 text-center text-xs font-semibold text-indigo-600 py-2 border border-indigo-100 rounded-lg hover:bg-indigo-50"
+                            onClick={() => setSelectedProspect(prospect)}
+                          >
+                            Ver Detalles
+                          </button>
+                        </div>
+                      ))}
+                    </div>
                   </div>
 
                   {/* Pagination */}

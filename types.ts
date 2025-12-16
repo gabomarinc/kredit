@@ -45,13 +45,12 @@ export interface Prospect {
   bedrooms?: number | null;
   bathrooms?: number | null;
   zone: string | string[]; // Puede ser string o array
-
   result: CalculationResult;
-  // URLs de archivos en Google Drive (opcionalmente retornados por getProspectDocuments)
-  idFileDriveUrl?: string | null;
-  fichaFileDriveUrl?: string | null;
-  talonarioFileDriveUrl?: string | null;
-  signedAcpFileDriveUrl?: string | null;
+  // Archivos en Base64 (pueden ser imágenes o PDFs)
+  idFileBase64?: string | null;
+  fichaFileBase64?: string | null;
+  talonarioFileBase64?: string | null;
+  signedAcpFileBase64?: string | null;
 }
 
 // ============================================
