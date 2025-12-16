@@ -84,10 +84,7 @@ const ensureTablesExist = async (client: any) => {
         interested_zones TEXT[],
         calculation_result JSONB,
         status TEXT DEFAULT 'Nuevo',
-        id_file_base64 TEXT,
-        ficha_file_base64 TEXT,
-        talonario_file_base64 TEXT,
-        signed_acp_file_base64 TEXT,
+
         id_file_drive_id TEXT,
         ficha_file_drive_id TEXT,
         talonario_file_drive_id TEXT,
@@ -102,18 +99,7 @@ const ensureTablesExist = async (client: any) => {
       await client.query(`
         DO $$
         BEGIN
-          IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'prospects' AND column_name = 'id_file_base64') THEN
-            ALTER TABLE prospects ADD COLUMN id_file_base64 TEXT;
-          END IF;
-          IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'prospects' AND column_name = 'ficha_file_base64') THEN
-            ALTER TABLE prospects ADD COLUMN ficha_file_base64 TEXT;
-          END IF;
-          IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'prospects' AND column_name = 'talonario_file_base64') THEN
-            ALTER TABLE prospects ADD COLUMN talonario_file_base64 TEXT;
-          END IF;
-          IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'prospects' AND column_name = 'signed_acp_file_base64') THEN
-            ALTER TABLE prospects ADD COLUMN signed_acp_file_base64 TEXT;
-          END IF;
+
           IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'prospects' AND column_name = 'company_id') THEN
             ALTER TABLE prospects ADD COLUMN company_id UUID REFERENCES companies(id) ON DELETE SET NULL;
           END IF;
