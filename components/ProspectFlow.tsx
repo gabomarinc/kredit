@@ -463,17 +463,25 @@ export const ProspectFlow: React.FC<ProspectFlowProps> = ({ availableZones, comp
                 if (company && company.plan === 'Wolf of Wallstreet') {
                   setCompanyPlan('Wolf of Wallstreet');
                   setCompanyRole(company.role || 'Broker');
+                  console.log('🔍 [BACKUP] Plan detectado:', company.plan, 'Role:', company.role);
                   setIsLoadingProperties(true);
                   
                   if (company.role === 'Promotora') {
                     // Cargar proyectos para Promotora
+                    console.log('🔍 [BACKUP] Cargando proyectos para Promotora con filtros:', {
+                      companyId,
+                      maxPrice: result.maxPropertyPrice,
+                      zones: Array.isArray(preferences.zone) ? preferences.zone : [preferences.zone],
+                      bedrooms: preferences.bedrooms,
+                      bathrooms: preferences.bathrooms
+                    });
                     const projects = await getAvailableProjectsForProspect(
                       companyId,
                       result.maxPropertyPrice,
                       Array.isArray(preferences.zone) ? preferences.zone : [preferences.zone]
                     );
+                    console.log('✅ [BACKUP] Proyectos cargados:', projects.length, projects);
                     setAvailableProjects(projects);
-                    console.log('✅ Proyectos cargados:', projects.length);
                   } else {
                     // Cargar propiedades para Broker
                     const props = await getAvailablePropertiesForProspect(
@@ -617,10 +625,19 @@ export const ProspectFlow: React.FC<ProspectFlowProps> = ({ availableZones, comp
             if (company && company.plan === 'Wolf of Wallstreet') {
               setCompanyPlan('Wolf of Wallstreet');
               setCompanyRole(company.role || 'Broker');
+              console.log('🔍 [PRINCIPAL] Plan detectado:', company.plan, 'Role:', company.role);
               setIsLoadingProperties(true);
               
               if (company.role === 'Promotora') {
                 // Cargar proyectos para Promotora con filtros adicionales
+                console.log('🔍 [PRINCIPAL] Cargando proyectos para Promotora con filtros:', {
+                  companyId,
+                  maxPrice: result.maxPropertyPrice,
+                  zones: Array.isArray(preferences.zone) ? preferences.zone : [preferences.zone],
+                  bedrooms: preferences.bedrooms,
+                  bathrooms: preferences.bathrooms,
+                  propertyType: preferences.propertyType
+                });
                 const projects = await getAvailableProjectsForProspect(
                   companyId,
                   result.maxPropertyPrice,
@@ -629,8 +646,20 @@ export const ProspectFlow: React.FC<ProspectFlowProps> = ({ availableZones, comp
                   preferences.bathrooms,
                   preferences.propertyType === 'Apartamento' ? 'Apartamento' : preferences.propertyType === 'Casa' ? 'Casa' : null
                 );
+                console.log('✅ [PRINCIPAL] Proyectos cargados:', projects.length, projects);
+                console.log('📊 [PRINCIPAL] Detalles de proyectos:', projects.map(p => ({
+                  nombre: p.name,
+                  zona: p.zone,
+                  modelos: p.models.length,
+                  modelosDetalle: p.models.map(m => ({
+                    nombre: m.name,
+                    precio: m.price,
+                    habitaciones: m.bedrooms,
+                    baños: m.bathrooms,
+                    disponibles: m.unitsAvailable
+                  }))
+                })));
                 setAvailableProjects(projects);
-                console.log('✅ Proyectos cargados:', projects.length, 'con filtros:', { bedrooms: preferences.bedrooms, bathrooms: preferences.bathrooms });
               } else {
                 // Cargar propiedades para Broker
                 const props = await getAvailablePropertiesForProspect(
