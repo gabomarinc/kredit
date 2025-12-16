@@ -9,8 +9,9 @@ import { Prospect, Property, PropertyInterest, PlanType, Project, ProjectModel }
 import { NotificationModal, NotificationType } from './ui/NotificationModal';
 import { formatCurrency } from '../utils/calculator';
 import * as XLSX from 'xlsx';
+import { WhatsBlastTab } from './whatsblast/WhatsBlastTab';
 
-type Tab = 'dashboard' | 'prospects' | 'properties' | 'settings' | 'calculator-config';
+type Tab = 'dashboard' | 'prospects' | 'properties' | 'settings' | 'calculator-config' | 'campaigns';
 
 interface DashboardProps {
   availableZones: string[];
@@ -2197,6 +2198,15 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableZones, onUpdateZo
             >
               <Building size={14} className="sm:w-4 sm:h-4" /> <span>{isPromotora ? 'Proyectos' : 'Propiedades'}</span>
             </button>
+            <button
+              onClick={() => setActiveTab('campaigns')}
+              className={`px-3 sm:px-6 py-2 sm:py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition-all flex items-center gap-1 sm:gap-2 shrink-0 ${activeTab === 'campaigns'
+                ? 'bg-indigo-50 text-indigo-600 shadow-sm'
+                : 'text-gray-400 hover:text-gray-600 hover:bg-gray-50'
+                }`}
+            >
+              <MessageCircle size={14} className="sm:w-4 sm:h-4" /> <span>Campañas</span>
+            </button>
             <div
               className="relative settings-submenu-container"
               onMouseEnter={() => {
@@ -2301,7 +2311,9 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableZones, onUpdateZo
         </div>
 
         {/* Content Area */}
-        {activeTab === 'dashboard' ? (
+        {activeTab === 'campaigns' ? (
+          <WhatsBlastTab prospects={prospects} />
+        ) : activeTab === 'dashboard' ? (
           <div className="grid md:grid-cols-2 lg:grid-cols-2 gap-4 md:gap-8">
             {/* Card 1: Total Forms */}
             <div className="bg-white rounded-[2.5rem] p-6 md:p-8 shadow-[0_10px_40px_-10px_rgba(0,0,0,0.05)] border border-gray-100 flex flex-col items-center justify-center text-center group hover:shadow-lg transition-all duration-500">
@@ -4445,6 +4457,14 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableZones, onUpdateZo
           >
             <Building size={20} strokeWidth={activeTab === 'properties' ? 2.5 : 2} />
             <span className="text-[10px] font-bold mt-1">{isPromotora ? 'Proy' : 'Prop'}</span>
+          </button>
+
+          <button
+            onClick={() => setActiveTab('campaigns')}
+            className={`flex flex-col items-center justify-center w-full p-2 rounded-xl transition-all ${activeTab === 'campaigns' ? 'bg-indigo-50 text-indigo-600' : 'text-gray-400'}`}
+          >
+            <MessageCircle size={20} strokeWidth={activeTab === 'campaigns' ? 2.5 : 2} />
+            <span className="text-[10px] font-bold mt-1">Campañas</span>
           </button>
 
           <button
