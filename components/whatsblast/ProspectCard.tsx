@@ -77,7 +77,7 @@ export const ProspectCard: React.FC<ProspectCardProps> = ({
                 )}
             </div>
 
-            <div className="mt-6 pt-4 border-t border-secondary-50">
+            <div className="mt-6 pt-4">
                 <Button
                     variant={isDone ? "ghost" : "outline"}
                     onClick={() => onSend(prospect)}
