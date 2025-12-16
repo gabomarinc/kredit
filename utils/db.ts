@@ -233,6 +233,41 @@ const ensureTablesExist = async (client: any) => {
       console.warn('Nota: No se pudieron crear índices (pueden que ya existan):', e);
     }
 
+    // Tabla de campañas de WhatsBlast
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS whatsblast_campaigns (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        company_id UUID REFERENCES companies(id) ON DELETE CASCADE NOT NULL,
+        name TEXT NOT NULL,
+        status TEXT DEFAULT 'active' CHECK (status IN ('active', 'archived')),
+        created_at TIMESTAMP DEFAULT NOW(),
+        updated_at TIMESTAMP DEFAULT NOW()
+      )
+    `);
+
+    // Tabla de prospectos de campañas (WhatsBlast)
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS whatsblast_prospects (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        campaign_id UUID REFERENCES whatsblast_campaigns(id) ON DELETE CASCADE NOT NULL,
+        name TEXT,
+        phone TEXT,
+        email TEXT,
+        data JSONB, -- Datos completos del Excel
+        status TEXT DEFAULT 'pending' CHECK (status IN ('pending', 'sent', 'failed')),
+        sent_at TIMESTAMP,
+        created_at TIMESTAMP DEFAULT NOW()
+      )
+    `);
+
+    // Índices WhatsBlast
+    try {
+      await client.query(`CREATE INDEX IF NOT EXISTS idx_whatsblast_campaigns_company ON whatsblast_campaigns(company_id)`);
+      await client.query(`CREATE INDEX IF NOT EXISTS idx_whatsblast_prospects_campaign ON whatsblast_prospects(campaign_id)`);
+    } catch (e) {
+      console.warn('Nota: Indices de WhatsBlast posiblemente ya existen', e);
+    }
+
   } catch (e) {
     console.warn("Nota: Verificación de tablas omitida o fallida (puede que ya existan o falten permisos DDL).", e);
   }
@@ -2681,3 +2716,137 @@ export const deleteProject = async (projectId: string): Promise<boolean> => {
     return false;
   }
 };
+
+// ========== WHATSBLAST FUNCTIONS ==========
+
+export interface WhatsBlastCampaign {
+  id: string;
+  name: string;
+  createdAt: string;
+  total: number;
+  sent: number;
+  pending: number;
+}
+
+export const saveWhatsBlastCampaign = async (companyId: string, name: string, prospects: any[]): Promise<string | null> => {
+  if (!pool) return null;
+  try {
+    const client = await pool.connect();
+    await ensureTablesExist(client);
+
+    // 1. Create Campaign
+    const campRes = await client.query(`
+            INSERT INTO whatsblast_campaigns (company_id, name)
+            VALUES ($1, $2)
+            RETURNING id
+        `, [companyId, name]);
+
+    const campaignId = campRes.rows[0].id;
+
+    // 2. Insert Prospects Batch
+    // Note: For large batches we should potentially chunk this, but for <1000 rows a single loop/transaction is fine or batch insert.
+    // We'll do loop for simplicity and safety for now or construct a large INSERT.
+    // Given existing code style, let's loop but use single transaction.
+
+    await client.query('BEGIN');
+
+    for (const p of prospects) {
+      const dataJson = JSON.stringify(p);
+      await client.query(`
+                INSERT INTO whatsblast_prospects (campaign_id, name, phone, email, data, status)
+                VALUES ($1, $2, $3, $4, $5, 'pending')
+             `, [
+        campaignId,
+        p.nombreCompleto || p.nombre || '',
+        p.telefono || '',
+        p.email || '',
+        dataJson
+      ]);
+    }
+
+    await client.query('COMMIT');
+    client.release();
+    return campaignId;
+
+  } catch (e) {
+    console.error("Error saving campaign:", e);
+    return null;
+  }
+}
+
+export const getWhatsBlastCampaigns = async (companyId: string): Promise<WhatsBlastCampaign[]> => {
+  if (!pool) return [];
+  try {
+    const client = await pool.connect();
+    await ensureTablesExist(client);
+
+    const res = await client.query(`
+            SELECT 
+                c.id, c.name, c.created_at,
+                COUNT(p.id) as total,
+                COUNT(CASE WHEN p.status = 'sent' THEN 1 END) as sent,
+                COUNT(CASE WHEN p.status = 'pending' THEN 1 END) as pending
+            FROM whatsblast_campaigns c
+            LEFT JOIN whatsblast_prospects p ON p.campaign_id = c.id
+            WHERE c.company_id = $1 AND c.status = 'active'
+            GROUP BY c.id
+            ORDER BY c.created_at DESC
+        `, [companyId]);
+
+    client.release();
+
+    return res.rows.map((row: any) => ({
+      id: row.id,
+      name: row.name,
+      createdAt: row.created_at,
+      total: parseInt(row.total),
+      sent: parseInt(row.sent),
+      pending: parseInt(row.pending)
+    }));
+
+  } catch (e) {
+    console.error("Error getting campaigns:", e);
+    return [];
+  }
+}
+
+export const getCampaignProspects = async (campaignId: string): Promise<any[]> => {
+  if (!pool) return [];
+  try {
+    const client = await pool.connect();
+    const res = await client.query(`
+            SELECT * FROM whatsblast_prospects WHERE campaign_id = $1 ORDER BY created_at ASC
+        `, [campaignId]);
+    client.release();
+
+    return res.rows.map((row: any) => {
+      const data = row.data || {};
+      return {
+        ...data,
+        id: row.id, // Override ID with DB UUID
+        status: row.status, // Override status
+        dbStatus: row.status // Keep separate key if needed
+      };
+    });
+  } catch (e) {
+    console.error("Error fetching campaign prospects:", e);
+    return [];
+  }
+}
+
+export const updateWhatsBlastProspectStatus = async (prospectId: string, status: 'sent' | 'pending' | 'failed'): Promise<boolean> => {
+  if (!pool) return false;
+  try {
+    const client = await pool.connect();
+    await client.query(`
+            UPDATE whatsblast_prospects 
+            SET status = $1, sent_at = ${status === 'sent' ? 'NOW()' : 'NULL'}
+            WHERE id = $2
+        `, [status, prospectId]);
+    client.release();
+    return true;
+  } catch (e) {
+    console.error("Error updating prospect status:", e);
+    return false;
+  }
+}
