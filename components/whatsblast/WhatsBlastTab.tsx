@@ -49,7 +49,10 @@ export const WhatsBlastTab: React.FC<WhatsBlastTabProps> = ({ prospects: sourceP
     // State for Data Source & Campaigns
     const [companyId] = useState(() => localStorage.getItem('companyId'));
     const [campaigns, setCampaigns] = useState<WhatsBlastCampaign[]>([]);
-    const [activeSource, setActiveSource] = useState<string>('kredit'); // 'kredit' or campaign UUID
+    const [activeSource, setActiveSource] = useState<string>(() => {
+        // Initialize from localStorage, fallback to 'kredit'
+        return localStorage.getItem('wb_active_source') || 'kredit';
+    });
     const [isLoadingData, setIsLoadingData] = useState(false);
     const [displayedProspects, setDisplayedProspects] = useState<Prospect[]>([]);
     const [isUploading, setIsUploading] = useState(false);
@@ -65,7 +68,23 @@ export const WhatsBlastTab: React.FC<WhatsBlastTabProps> = ({ prospects: sourceP
         if (!companyId) return;
         const data = await getWhatsBlastCampaigns(companyId);
         setCampaigns(data);
+        
+        // Validate that saved activeSource still exists
+        const savedSource = localStorage.getItem('wb_active_source');
+        if (savedSource && savedSource !== 'kredit') {
+            const campaignExists = data.some(c => c.id === savedSource);
+            if (!campaignExists) {
+                // Campaign was deleted, reset to 'kredit'
+                setActiveSource('kredit');
+                localStorage.setItem('wb_active_source', 'kredit');
+            }
+        }
     };
+
+    // Persist activeSource to localStorage when it changes
+    useEffect(() => {
+        localStorage.setItem('wb_active_source', activeSource);
+    }, [activeSource]);
 
     // Transform Kredit prospects to WhatsBlast format (Memoized)
     const dbProspects = useMemo(() => {
