@@ -233,9 +233,9 @@ const ensureTablesExist = async (client: any) => {
       console.warn('Nota: No se pudieron crear índices (pueden que ya existan):', e);
     }
 
-    // Tabla de campañas de WhatsBlast
+    // Tabla de campañas/uploads
     await client.query(`
-      CREATE TABLE IF NOT EXISTS whatsblast_campaigns (
+      CREATE TABLE IF NOT EXISTS uploads (
         id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
         company_id UUID REFERENCES companies(id) ON DELETE CASCADE NOT NULL,
         name TEXT NOT NULL,
@@ -245,11 +245,11 @@ const ensureTablesExist = async (client: any) => {
       )
     `);
 
-    // Tabla de prospectos de campañas (WhatsBlast)
+    // Tabla de prospectos de campañas/uploads
     await client.query(`
-      CREATE TABLE IF NOT EXISTS whatsblast_prospects (
+      CREATE TABLE IF NOT EXISTS uploads_prospects (
         id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-        campaign_id UUID REFERENCES whatsblast_campaigns(id) ON DELETE CASCADE NOT NULL,
+        campaign_id UUID REFERENCES uploads(id) ON DELETE CASCADE NOT NULL,
         name TEXT,
         phone TEXT,
         email TEXT,
@@ -260,12 +260,13 @@ const ensureTablesExist = async (client: any) => {
       )
     `);
 
-    // Índices WhatsBlast
+    // Índices para uploads
     try {
-      await client.query(`CREATE INDEX IF NOT EXISTS idx_whatsblast_campaigns_company ON whatsblast_campaigns(company_id)`);
-      await client.query(`CREATE INDEX IF NOT EXISTS idx_whatsblast_prospects_campaign ON whatsblast_prospects(campaign_id)`);
+      await client.query(`CREATE INDEX IF NOT EXISTS idx_uploads_company ON uploads(company_id)`);
+      await client.query(`CREATE INDEX IF NOT EXISTS idx_uploads_prospects_campaign ON uploads_prospects(campaign_id)`);
+      await client.query(`CREATE INDEX IF NOT EXISTS idx_uploads_prospects_status ON uploads_prospects(status)`);
     } catch (e) {
-      console.warn('Nota: Indices de WhatsBlast posiblemente ya existen', e);
+      console.warn('Nota: Indices de uploads posiblemente ya existen', e);
     }
 
   } catch (e) {
@@ -2736,7 +2737,7 @@ export const saveWhatsBlastCampaign = async (companyId: string, name: string, pr
 
     // 1. Create Campaign
     const campRes = await client.query(`
-            INSERT INTO whatsblast_campaigns (company_id, name)
+            INSERT INTO uploads (company_id, name)
             VALUES ($1, $2)
             RETURNING id
         `, [companyId, name]);
@@ -2753,7 +2754,7 @@ export const saveWhatsBlastCampaign = async (companyId: string, name: string, pr
     for (const p of prospects) {
       const dataJson = JSON.stringify(p);
       await client.query(`
-                INSERT INTO whatsblast_prospects (campaign_id, name, phone, email, data, status)
+                INSERT INTO uploads_prospects (campaign_id, name, phone, email, data, status)
                 VALUES ($1, $2, $3, $4, $5, 'pending')
              `, [
         campaignId,
@@ -2786,8 +2787,8 @@ export const getWhatsBlastCampaigns = async (companyId: string): Promise<WhatsBl
                 COUNT(p.id) as total,
                 COUNT(CASE WHEN p.status = 'sent' THEN 1 END) as sent,
                 COUNT(CASE WHEN p.status = 'pending' THEN 1 END) as pending
-            FROM whatsblast_campaigns c
-            LEFT JOIN whatsblast_prospects p ON p.campaign_id = c.id
+            FROM uploads c
+            LEFT JOIN uploads_prospects p ON p.campaign_id = c.id
             WHERE c.company_id = $1 AND c.status = 'active'
             GROUP BY c.id
             ORDER BY c.created_at DESC
@@ -2815,7 +2816,7 @@ export const getCampaignProspects = async (campaignId: string): Promise<any[]> =
   try {
     const client = await pool.connect();
     const res = await client.query(`
-            SELECT * FROM whatsblast_prospects WHERE campaign_id = $1 ORDER BY created_at ASC
+            SELECT * FROM uploads_prospects WHERE campaign_id = $1 ORDER BY created_at ASC
         `, [campaignId]);
     client.release();
 
@@ -2839,7 +2840,7 @@ export const updateWhatsBlastProspectStatus = async (prospectId: string, status:
   try {
     const client = await pool.connect();
     await client.query(`
-            UPDATE whatsblast_prospects 
+            UPDATE uploads_prospects 
             SET status = $1, sent_at = ${status === 'sent' ? 'NOW()' : 'NULL'}
             WHERE id = $2
         `, [status, prospectId]);
