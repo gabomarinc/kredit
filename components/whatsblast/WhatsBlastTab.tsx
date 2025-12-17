@@ -419,6 +419,7 @@ export const WhatsBlastTab: React.FC<WhatsBlastTabProps> = ({ prospects: sourceP
     const totalPages = Math.ceil(filteredProspects.length / ITEMS_PER_PAGE);
 
     return (
+        <>
         <div className="min-h-screen bg-white pb-20 font-sans text-secondary-800 animate-fade-in rounded-[3rem] shadow-2xl shadow-indigo-100/50 border border-white/50">
             {/* Note: Header is handled by Dashboard.tsx, we just render the content */}
 
@@ -662,5 +663,6 @@ export const WhatsBlastTab: React.FC<WhatsBlastTabProps> = ({ prospects: sourceP
                 </div>
             )}
         </div>
+        </>
     );
 };
