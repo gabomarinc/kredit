@@ -114,7 +114,7 @@ const PropertyModal: React.FC<PropertyModalProps> = ({ property, zones, onClose,
               type="text"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-indigo-500 outline-none"
+              className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-primary-500 outline-none"
               placeholder="Ej: PH Santa Maria Court"
             />
           </div>
@@ -126,7 +126,7 @@ const PropertyModal: React.FC<PropertyModalProps> = ({ property, zones, onClose,
               <select
                 value={type}
                 onChange={(e) => setType(e.target.value as 'Venta' | 'Alquiler')}
-                className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-indigo-500 outline-none"
+                className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-primary-500 outline-none"
               >
                 <option value="Venta">Venta</option>
                 <option value="Alquiler">Alquiler</option>
@@ -138,7 +138,7 @@ const PropertyModal: React.FC<PropertyModalProps> = ({ property, zones, onClose,
                 type="number"
                 value={price}
                 onChange={(e) => setPrice(e.target.value)}
-                className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-indigo-500 outline-none"
+                className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-primary-500 outline-none"
                 placeholder="0.00"
               />
             </div>
@@ -151,7 +151,7 @@ const PropertyModal: React.FC<PropertyModalProps> = ({ property, zones, onClose,
               <select
                 value={zone}
                 onChange={(e) => setZone(e.target.value)}
-                className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-indigo-500 outline-none"
+                className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-primary-500 outline-none"
               >
                 {zones.map(z => (
                   <option key={z} value={z}>{z}</option>
@@ -164,7 +164,7 @@ const PropertyModal: React.FC<PropertyModalProps> = ({ property, zones, onClose,
                 type="text"
                 value={address}
                 onChange={(e) => setAddress(e.target.value)}
-                className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-indigo-500 outline-none"
+                className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-primary-500 outline-none"
                 placeholder="Dirección completa"
               />
             </div>
@@ -178,7 +178,7 @@ const PropertyModal: React.FC<PropertyModalProps> = ({ property, zones, onClose,
                 type="number"
                 value={bedrooms}
                 onChange={(e) => setBedrooms(e.target.value)}
-                className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-indigo-500 outline-none"
+                className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-primary-500 outline-none"
                 placeholder="3"
               />
             </div>
@@ -189,7 +189,7 @@ const PropertyModal: React.FC<PropertyModalProps> = ({ property, zones, onClose,
                 step="0.5"
                 value={bathrooms}
                 onChange={(e) => setBathrooms(e.target.value)}
-                className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-indigo-500 outline-none"
+                className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-primary-500 outline-none"
                 placeholder="2.5"
               />
             </div>
@@ -199,7 +199,7 @@ const PropertyModal: React.FC<PropertyModalProps> = ({ property, zones, onClose,
                 type="number"
                 value={areaM2}
                 onChange={(e) => setAreaM2(e.target.value)}
-                className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-indigo-500 outline-none"
+                className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-primary-500 outline-none"
                 placeholder="120"
               />
             </div>
@@ -212,7 +212,7 @@ const PropertyModal: React.FC<PropertyModalProps> = ({ property, zones, onClose,
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               rows={4}
-              className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-indigo-500 outline-none"
+              className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-primary-500 outline-none"
               placeholder="Describe la propiedad..."
             />
           </div>
@@ -225,7 +225,7 @@ const PropertyModal: React.FC<PropertyModalProps> = ({ property, zones, onClose,
               accept="image/*"
               multiple
               onChange={handleImageUpload}
-              className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-indigo-500 outline-none"
+              className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-primary-500 outline-none"
             />
             {images.length > 0 && (
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-4">
@@ -251,7 +251,7 @@ const PropertyModal: React.FC<PropertyModalProps> = ({ property, zones, onClose,
               <select
                 value={status}
                 onChange={(e) => setStatus(e.target.value as Property['status'])}
-                className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-indigo-500 outline-none"
+                className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-primary-500 outline-none"
               >
                 <option value="Activa">Activa</option>
                 <option value="Inactiva">Inactiva</option>
@@ -268,7 +268,7 @@ const PropertyModal: React.FC<PropertyModalProps> = ({ property, zones, onClose,
                 type="checkbox"
                 checked={highDemand}
                 onChange={(e) => setHighDemand(e.target.checked)}
-                className="w-5 h-5 rounded border-gray-300 text-indigo-600"
+                className="w-5 h-5 rounded border-gray-300 text-primary-600"
               />
               <span className="text-sm font-medium text-gray-700">Alta Demanda</span>
             </label>
@@ -288,7 +288,7 @@ const PropertyModal: React.FC<PropertyModalProps> = ({ property, zones, onClose,
                 type="checkbox"
                 checked={priceAdjusted}
                 onChange={(e) => setPriceAdjusted(e.target.checked)}
-                className="w-5 h-5 rounded border-gray-300 text-indigo-600"
+                className="w-5 h-5 rounded border-gray-300 text-primary-600"
               />
               <span className="text-sm font-medium text-gray-700">Precio Ajustado</span>
             </label>
@@ -316,7 +316,7 @@ const PropertyModal: React.FC<PropertyModalProps> = ({ property, zones, onClose,
             <button
               onClick={handleSave}
               disabled={!title || !price || !zone || isSaving}
-              className="flex-1 px-6 py-3 rounded-xl bg-indigo-600 text-white font-semibold hover:bg-indigo-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+              className="flex-1 px-6 py-3 rounded-xl text-white font-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2" style={{ background: 'linear-gradient(135deg, #29BEA5 0%, #1fa890 100%)' }} onMouseEnter={(e) => e.currentTarget.style.background = 'linear-gradient(135deg, #1fa890 0%, #1a8674 100%)'} onMouseLeave={(e) => e.currentTarget.style.background = 'linear-gradient(135deg, #29BEA5 0%, #1fa890 100%)'}
             >
               {isSaving ? (
                 <>
@@ -527,7 +527,7 @@ const ProjectModal: React.FC<ProjectModalProps> = ({ project, zones, onClose, on
               {Array.from({ length: totalSteps }).map((_, idx) => (
                 <div
                   key={idx}
-                  className={`h-2 rounded-full transition-all ${idx + 1 <= step ? 'bg-indigo-600 w-8' : 'bg-gray-200 w-2'
+                  className={`h-2 rounded-full transition-all ${idx + 1 <= step ? 'bg-primary-600 w-8' : 'bg-gray-200 w-2'
                     }`}
                 />
               ))}
@@ -549,14 +549,14 @@ const ProjectModal: React.FC<ProjectModalProps> = ({ project, zones, onClose, on
 
               <div>
                 <label className="block text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
-                  <Building size={16} className="text-indigo-500" />
+                  <Building size={16} className="text-primary-500" />
                   Nombre del Proyecto *
                 </label>
                 <input
                   type="text"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
-                  className="w-full px-5 py-4 rounded-xl border border-gray-200 focus:border-indigo-500 outline-none bg-white transition-all focus:shadow-sm"
+                  className="w-full px-5 py-4 rounded-xl border border-gray-200 focus:border-primary-500 outline-none bg-white transition-all focus:shadow-sm"
                   placeholder="Ej: Edificio Residencial Los Pinos"
                 />
               </div>
@@ -566,7 +566,7 @@ const ProjectModal: React.FC<ProjectModalProps> = ({ project, zones, onClose, on
                 <textarea
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
-                  className="w-full px-5 py-4 rounded-xl border border-gray-200 focus:border-indigo-500 outline-none resize-none"
+                  className="w-full px-5 py-4 rounded-xl border border-gray-200 focus:border-primary-500 outline-none resize-none"
                   rows={4}
                   placeholder="Describe el proyecto..."
                 />
@@ -574,7 +574,7 @@ const ProjectModal: React.FC<ProjectModalProps> = ({ project, zones, onClose, on
 
               <div>
                 <label className="block text-sm font-semibold text-gray-700 mb-4 flex items-center gap-2">
-                  <MapPin size={16} className="text-indigo-500" />
+                  <MapPin size={16} className="text-primary-500" />
                   Zona *
                 </label>
                 <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
@@ -583,8 +583,8 @@ const ProjectModal: React.FC<ProjectModalProps> = ({ project, zones, onClose, on
                       key={z}
                       onClick={() => setZone(z)}
                       className={`px-4 py-3 rounded-2xl text-sm font-medium transition-all duration-200 border flex items-center justify-center ${zone === z
-                        ? 'bg-indigo-600 text-white border-indigo-600 shadow-md transform scale-[1.02]'
-                        : 'bg-white text-gray-500 border-gray-100 hover:border-indigo-200 hover:bg-indigo-50/50 hover:text-indigo-600'
+                        ? 'text-white border-primary-600 shadow-md transform scale-[1.02]'
+                        : 'bg-white text-gray-500 border-gray-100 hover:border-primary-200 hover:bg-primary-50/50 hover:text-primary-600'
                         }`}
                     >
                       {zone === z && <Check size={14} className="mr-2" />}
@@ -600,7 +600,7 @@ const ProjectModal: React.FC<ProjectModalProps> = ({ project, zones, onClose, on
                   type="text"
                   value={address}
                   onChange={(e) => setAddress(e.target.value)}
-                  className="w-full px-5 py-4 rounded-xl border border-gray-200 focus:border-indigo-500 outline-none bg-white transition-all focus:shadow-sm"
+                  className="w-full px-5 py-4 rounded-xl border border-gray-200 focus:border-primary-500 outline-none bg-white transition-all focus:shadow-sm"
                   placeholder="Dirección completa"
                 />
               </div>
@@ -641,10 +641,10 @@ const ProjectModal: React.FC<ProjectModalProps> = ({ project, zones, onClose, on
 
               <div>
                 <label className="block text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
-                  <ImageIcon size={16} className="text-indigo-500" />
+                  <ImageIcon size={16} className="text-primary-500" />
                   Imágenes del Proyecto
                 </label>
-                <label className="block w-full px-5 py-4 rounded-xl border-2 border-dashed border-gray-200 hover:border-indigo-400 hover:bg-indigo-50/30 transition-all cursor-pointer text-center">
+                <label className="block w-full px-5 py-4 rounded-xl border-2 border-dashed border-gray-200 hover:border-primary-400 hover:bg-primary-50/30 transition-all cursor-pointer text-center">
                   <Upload size={24} className="mx-auto mb-2 text-gray-400" />
                   <span className="text-sm text-gray-600">Haz clic para subir imágenes</span>
                   <input
@@ -685,14 +685,14 @@ const ProjectModal: React.FC<ProjectModalProps> = ({ project, zones, onClose, on
               {/* Formulario de Modelo Actual */}
               <div className="bg-gray-50/50 p-8 rounded-2xl border border-gray-100 space-y-6" data-model-form>
                 {editingModelIndex !== null && (
-                  <div className="bg-indigo-50 border border-indigo-200 rounded-xl p-4 mb-4 flex items-center justify-between">
+                  <div className="bg-primary-50 border border-primary-200 rounded-xl p-4 mb-4 flex items-center justify-between">
                     <div className="flex items-center gap-2">
-                      <Settings size={18} className="text-indigo-600" />
-                      <span className="text-sm font-semibold text-indigo-900">Editando modelo: {models[editingModelIndex]?.name}</span>
+                      <Settings size={18} className="text-primary-600" />
+                      <span className="text-sm font-semibold text-primary-900">Editando modelo: {models[editingModelIndex]?.name}</span>
                     </div>
                     <button
                       onClick={cancelEdit}
-                      className="text-xs text-indigo-600 hover:text-indigo-800 font-semibold"
+                      className="text-xs text-primary-600 hover:text-primary-800 font-semibold"
                     >
                       Cancelar
                     </button>
@@ -700,28 +700,28 @@ const ProjectModal: React.FC<ProjectModalProps> = ({ project, zones, onClose, on
                 )}
                 <div>
                   <label className="block text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
-                    <Building size={16} className="text-indigo-500" />
+                    <Building size={16} className="text-primary-500" />
                     Nombre del Modelo *
                   </label>
                   <input
                     type="text"
                     value={currentModel.name}
                     onChange={(e) => setCurrentModel({ ...currentModel, name: e.target.value })}
-                    className="w-full px-5 py-4 rounded-xl border border-gray-200 focus:border-indigo-500 outline-none bg-white transition-all focus:shadow-sm"
+                    className="w-full px-5 py-4 rounded-xl border border-gray-200 focus:border-primary-500 outline-none bg-white transition-all focus:shadow-sm"
                     placeholder="Ej: Modelo A - 2BR"
                   />
                 </div>
 
                 <div>
                   <label className="block text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
-                    <DollarSign size={16} className="text-indigo-500" />
+                    <DollarSign size={16} className="text-primary-500" />
                     Precio *
                   </label>
                   <input
                     type="number"
                     value={currentModel.price || ''}
                     onChange={(e) => setCurrentModel({ ...currentModel, price: parseFloat(e.target.value) || 0 })}
-                    className="w-full px-5 py-4 rounded-xl border border-gray-200 focus:border-indigo-500 outline-none bg-white transition-all focus:shadow-sm"
+                    className="w-full px-5 py-4 rounded-xl border border-gray-200 focus:border-primary-500 outline-none bg-white transition-all focus:shadow-sm"
                     placeholder="0.00"
                   />
                 </div>
@@ -736,7 +736,7 @@ const ProjectModal: React.FC<ProjectModalProps> = ({ project, zones, onClose, on
                       type="number"
                       value={currentModel.areaM2 || ''}
                       onChange={(e) => setCurrentModel({ ...currentModel, areaM2: parseFloat(e.target.value) || null })}
-                      className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-indigo-500 outline-none bg-white"
+                      className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-primary-500 outline-none bg-white"
                       placeholder="0"
                     />
                   </div>
@@ -749,7 +749,7 @@ const ProjectModal: React.FC<ProjectModalProps> = ({ project, zones, onClose, on
                       type="number"
                       value={currentModel.bedrooms || ''}
                       onChange={(e) => setCurrentModel({ ...currentModel, bedrooms: parseInt(e.target.value) || null })}
-                      className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-indigo-500 outline-none bg-white"
+                      className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-primary-500 outline-none bg-white"
                       placeholder="0"
                     />
                   </div>
@@ -763,7 +763,7 @@ const ProjectModal: React.FC<ProjectModalProps> = ({ project, zones, onClose, on
                       step="0.5"
                       value={currentModel.bathrooms || ''}
                       onChange={(e) => setCurrentModel({ ...currentModel, bathrooms: parseFloat(e.target.value) || null })}
-                      className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-indigo-500 outline-none bg-white"
+                      className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-primary-500 outline-none bg-white"
                       placeholder="0"
                     />
                   </div>
@@ -776,7 +776,7 @@ const ProjectModal: React.FC<ProjectModalProps> = ({ project, zones, onClose, on
                       type="number"
                       value={currentModel.unitsTotal || ''}
                       onChange={(e) => setCurrentModel({ ...currentModel, unitsTotal: parseInt(e.target.value) || 0, unitsAvailable: parseInt(e.target.value) || 0 })}
-                      className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-indigo-500 outline-none bg-white"
+                      className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-primary-500 outline-none bg-white"
                       placeholder="0"
                     />
                   </div>
@@ -784,7 +784,7 @@ const ProjectModal: React.FC<ProjectModalProps> = ({ project, zones, onClose, on
 
                 <div>
                   <label className="block text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
-                    <Shield size={16} className="text-indigo-500" />
+                    <Shield size={16} className="text-primary-500" />
                     Amenidades
                   </label>
 
@@ -806,7 +806,7 @@ const ProjectModal: React.FC<ProjectModalProps> = ({ project, zones, onClose, on
                               }
                             }}
                             className={`px-4 py-2 rounded-xl text-sm font-semibold transition-all ${isAdded
-                              ? 'bg-indigo-600 text-white hover:bg-indigo-700'
+                              ? 'bg-primary-600 text-white hover:bg-primary-700'
                               : 'bg-gray-100 text-gray-700 hover:bg-gray-200 border border-gray-200'
                               }`}
                           >
@@ -836,14 +836,14 @@ const ProjectModal: React.FC<ProjectModalProps> = ({ project, zones, onClose, on
                         value={newAmenity}
                         onChange={(e) => setNewAmenity(e.target.value)}
                         onKeyPress={(e) => e.key === 'Enter' && addAmenity()}
-                        className="flex-1 px-5 py-3 rounded-xl border border-gray-200 focus:border-indigo-500 outline-none bg-white"
+                        className="flex-1 px-5 py-3 rounded-xl border border-gray-200 focus:border-primary-500 outline-none bg-white"
                         placeholder="Ej: Salón de eventos, Cancha de tenis..."
                       />
                       <button
                         type="button"
                         onClick={() => addAmenity()}
                         disabled={!newAmenity.trim()}
-                        className="px-6 py-3 bg-indigo-600 text-white rounded-xl font-semibold hover:bg-indigo-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="px-6 py-3 bg-primary-600 text-white rounded-xl font-semibold hover:bg-primary-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                       >
                         <Plus size={18} />
                       </button>
@@ -858,13 +858,13 @@ const ProjectModal: React.FC<ProjectModalProps> = ({ project, zones, onClose, on
                         {currentModel.amenities.map((amenity, idx) => (
                           <span
                             key={idx}
-                            className="px-4 py-2 bg-indigo-100 text-indigo-700 rounded-full text-sm font-medium flex items-center gap-2"
+                            className="px-4 py-2 bg-indigo-100 text-primary-700 rounded-full text-sm font-medium flex items-center gap-2"
                           >
                             {amenity}
                             <button
                               type="button"
                               onClick={() => removeAmenity(amenity)}
-                              className="text-indigo-500 hover:text-indigo-700 transition-colors"
+                              className="text-primary-500 hover:text-primary-700 transition-colors"
                             >
                               <X size={14} />
                             </button>
@@ -877,10 +877,10 @@ const ProjectModal: React.FC<ProjectModalProps> = ({ project, zones, onClose, on
 
                 <div>
                   <label className="block text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
-                    <ImageIcon size={16} className="text-indigo-500" />
+                    <ImageIcon size={16} className="text-primary-500" />
                     Imágenes del Modelo
                   </label>
-                  <label className="block w-full px-5 py-4 rounded-xl border-2 border-dashed border-gray-200 hover:border-indigo-400 hover:bg-indigo-50/30 transition-all cursor-pointer text-center">
+                  <label className="block w-full px-5 py-4 rounded-xl border-2 border-dashed border-gray-200 hover:border-primary-400 hover:bg-primary-50/30 transition-all cursor-pointer text-center">
                     <Upload size={24} className="mx-auto mb-2 text-gray-400" />
                     <span className="text-sm text-gray-600">Haz clic para subir imágenes</span>
                     <input
@@ -911,7 +911,7 @@ const ProjectModal: React.FC<ProjectModalProps> = ({ project, zones, onClose, on
                 <button
                   onClick={addModel}
                   disabled={!currentModel.name || currentModel.unitsTotal === 0 || currentModel.price === 0}
-                  className="w-full px-6 py-4 bg-indigo-600 text-white rounded-xl font-bold text-lg hover:bg-indigo-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-indigo-200"
+                  className="w-full px-6 py-4 bg-primary-600 text-white rounded-xl font-bold text-lg hover:bg-primary-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-primary-200"
                 >
                   {editingModelIndex !== null ? (
                     <>
@@ -945,7 +945,7 @@ const ProjectModal: React.FC<ProjectModalProps> = ({ project, zones, onClose, on
                       <div className="flex items-center gap-2">
                         <button
                           onClick={() => editModel(idx)}
-                          className="px-3 py-1 bg-indigo-100 text-indigo-600 rounded-lg hover:bg-indigo-200 font-semibold text-sm"
+                          className="px-3 py-1 bg-indigo-100 text-primary-600 rounded-lg hover:bg-primary-200 font-semibold text-sm"
                         >
                           Editar
                         </button>
@@ -1030,7 +1030,7 @@ const ProjectModal: React.FC<ProjectModalProps> = ({ project, zones, onClose, on
                 }}
                 disabled={(step === 1 && !name) || (step === 2 && models.length === 0)}
                 className={`flex-1 sm:flex-none flex items-center justify-center gap-3 px-8 py-4 rounded-full font-bold text-lg transition-all duration-300 shadow-xl order-1 sm:order-2 w-full sm:w-auto ${(step === 1 && name) || (step === 2 && models.length > 0)
-                  ? 'bg-indigo-600 text-white hover:bg-indigo-700 shadow-indigo-200'
+                  ? 'bg-primary-600 text-white hover:bg-primary-700 shadow-primary-200'
                   : 'bg-gray-100 text-gray-400 cursor-not-allowed shadow-none'
                   }`}
               >
@@ -1041,7 +1041,7 @@ const ProjectModal: React.FC<ProjectModalProps> = ({ project, zones, onClose, on
                 onClick={handleSave}
                 disabled={!name || !zone || models.length === 0 || isSaving}
                 className={`flex-1 sm:flex-none flex items-center justify-center gap-3 px-8 py-4 rounded-full font-bold text-lg transition-all duration-300 shadow-xl order-1 sm:order-2 w-full sm:w-auto ${name && zone && models.length > 0 && !isSaving
-                  ? 'bg-indigo-600 text-white hover:bg-indigo-700 shadow-indigo-200'
+                  ? 'bg-primary-600 text-white hover:bg-primary-700 shadow-primary-200'
                   : 'bg-gray-100 text-gray-400 cursor-not-allowed shadow-none'
                   }`}
               >
@@ -2174,7 +2174,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableZones, onUpdateZo
             <button
               onClick={() => setActiveTab('dashboard')}
               className={`px-3 sm:px-6 py-2 sm:py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition-all flex items-center gap-1 sm:gap-2 shrink-0 ${activeTab === 'dashboard'
-                ? 'bg-indigo-50 text-indigo-600 shadow-sm'
+                ? 'bg-primary-50 text-primary-600 shadow-sm'
                 : 'text-gray-400 hover:text-gray-600 hover:bg-gray-50'
                 }`}
             >
@@ -2183,7 +2183,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableZones, onUpdateZo
             <button
               onClick={() => setActiveTab('prospects')}
               className={`px-3 sm:px-6 py-2 sm:py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition-all flex items-center gap-1 sm:gap-2 shrink-0 ${activeTab === 'prospects'
-                ? 'bg-indigo-50 text-indigo-600 shadow-sm'
+                ? 'bg-primary-50 text-primary-600 shadow-sm'
                 : 'text-gray-400 hover:text-gray-600 hover:bg-gray-50'
                 }`}
             >
@@ -2192,7 +2192,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableZones, onUpdateZo
             <button
               onClick={() => setActiveTab('properties')}
               className={`px-3 sm:px-6 py-2 sm:py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition-all flex items-center gap-1 sm:gap-2 shrink-0 ${activeTab === 'properties'
-                ? 'bg-indigo-50 text-indigo-600 shadow-sm'
+                ? 'bg-primary-50 text-primary-600 shadow-sm'
                 : 'text-gray-400 hover:text-gray-600 hover:bg-gray-50'
                 }`}
             >
@@ -2201,7 +2201,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableZones, onUpdateZo
             <button
               onClick={() => setActiveTab('campaigns')}
               className={`px-3 sm:px-6 py-2 sm:py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition-all flex items-center gap-1 sm:gap-2 shrink-0 relative ${activeTab === 'campaigns'
-                ? 'bg-indigo-50 text-indigo-600 shadow-sm'
+                ? 'bg-primary-50 text-primary-600 shadow-sm'
                 : 'text-gray-400 hover:text-gray-600 hover:bg-gray-50'
                 }`}
             >
@@ -2233,7 +2233,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableZones, onUpdateZo
                   }
                 }}
                 className={`px-3 sm:px-6 py-2 sm:py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition-all flex items-center gap-1 sm:gap-2 shrink-0 ${(activeTab === 'settings' || activeTab === 'calculator-config')
-                  ? 'bg-indigo-50 text-indigo-600 shadow-sm'
+                  ? 'bg-primary-50 text-primary-600 shadow-sm'
                   : 'text-gray-400 hover:text-gray-600 hover:bg-gray-50'
                   }`}
               >
@@ -2261,17 +2261,17 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableZones, onUpdateZo
                       setActiveTab('calculator-config');
                       setShowSettingsSubmenu(false);
                     }}
-                    className={`w-full px-5 py-4 text-left hover:bg-indigo-50/50 transition-colors flex items-start gap-4 border-b border-gray-50 last:border-b-0 ${activeTab === 'calculator-config' ? 'bg-indigo-50' : ''
+                    className={`w-full px-5 py-4 text-left hover:bg-primary-50/50 transition-colors flex items-start gap-4 border-b border-gray-50 last:border-b-0 ${activeTab === 'calculator-config' ? 'bg-primary-50' : ''
                       }`}
                   >
                     <div className={`w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0 transition-colors ${activeTab === 'calculator-config'
-                      ? 'bg-indigo-100 text-indigo-600'
-                      : 'bg-gray-100 text-gray-600 group-hover:bg-indigo-50'
+                      ? 'bg-indigo-100 text-primary-600'
+                      : 'bg-gray-100 text-gray-600 group-hover:bg-primary-50'
                       }`}>
                       <Calculator size={22} strokeWidth={1.5} />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <div className={`font-bold text-sm mb-1.5 ${activeTab === 'calculator-config' ? 'text-indigo-600' : 'text-gray-900'
+                      <div className={`font-bold text-sm mb-1.5 ${activeTab === 'calculator-config' ? 'text-primary-600' : 'text-gray-900'
                         }`}>
                         Configurar Calculadora
                       </div>
@@ -2286,17 +2286,17 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableZones, onUpdateZo
                       setActiveTab('settings');
                       setShowSettingsSubmenu(false);
                     }}
-                    className={`w-full px-5 py-4 text-left hover:bg-indigo-50/50 transition-colors flex items-start gap-4 ${activeTab === 'settings' ? 'bg-indigo-50' : ''
+                    className={`w-full px-5 py-4 text-left hover:bg-primary-50/50 transition-colors flex items-start gap-4 ${activeTab === 'settings' ? 'bg-primary-50' : ''
                       }`}
                   >
                     <div className={`w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0 transition-colors ${activeTab === 'settings'
-                      ? 'bg-indigo-100 text-indigo-600'
-                      : 'bg-gray-100 text-gray-600 group-hover:bg-indigo-50'
+                      ? 'bg-indigo-100 text-primary-600'
+                      : 'bg-gray-100 text-gray-600 group-hover:bg-primary-50'
                       }`}>
                       <Shield size={22} strokeWidth={1.5} />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <div className={`font-bold text-sm mb-1.5 ${activeTab === 'settings' ? 'text-indigo-600' : 'text-gray-900'
+                      <div className={`font-bold text-sm mb-1.5 ${activeTab === 'settings' ? 'text-primary-600' : 'text-gray-900'
                         }`}>
                         Configuración General
                       </div>
@@ -2318,7 +2318,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableZones, onUpdateZo
           <div className="grid md:grid-cols-2 lg:grid-cols-2 gap-4 md:gap-8">
             {/* Card 1: Total Forms */}
             <div className="bg-white rounded-[2.5rem] p-6 md:p-8 shadow-[0_10px_40px_-10px_rgba(0,0,0,0.05)] border border-gray-100 flex flex-col items-center justify-center text-center group hover:shadow-lg transition-all duration-500">
-              <div className="w-12 h-12 md:w-16 md:h-16 rounded-3xl bg-indigo-50 text-indigo-600 flex items-center justify-center mb-4 md:mb-6 group-hover:scale-110 transition-transform duration-500">
+              <div className="w-12 h-12 md:w-16 md:h-16 rounded-3xl bg-primary-50 text-primary-600 flex items-center justify-center mb-4 md:mb-6 group-hover:scale-110 transition-transform duration-500">
                 <FileText size={24} className="md:w-8 md:h-8" strokeWidth={1.5} />
               </div>
               <h3 className="text-gray-400 font-semibold uppercase tracking-wider text-[10px] md:text-xs mb-2">Formularios Completados</h3>
@@ -2401,7 +2401,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableZones, onUpdateZo
                 <button
                   onClick={handleRefreshProspects}
                   disabled={isRefreshing}
-                  className="bg-indigo-600 hover:bg-indigo-700 disabled:bg-indigo-400 text-white px-5 py-3 rounded-xl font-semibold text-sm flex items-center gap-2 transition-all shadow-lg shadow-indigo-200 disabled:cursor-not-allowed"
+                  className="bg-primary-600 hover:bg-primary-700 disabled:bg-indigo-400 text-white px-5 py-3 rounded-xl font-semibold text-sm flex items-center gap-2 transition-all shadow-lg shadow-primary-200 disabled:cursor-not-allowed"
                 >
                   <RefreshCw size={16} className={isRefreshing ? 'animate-spin' : ''} />
                   {isRefreshing ? 'Actualizando...' : 'Actualizar'}
@@ -2420,7 +2420,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableZones, onUpdateZo
               {isLoading ? (
                 <div className="flex justify-center items-center h-full text-gray-400">
                   <div className="flex flex-col items-center gap-2">
-                    <Loader2 size={32} className="animate-spin text-indigo-500" />
+                    <Loader2 size={32} className="animate-spin text-primary-500" />
                     <p className="text-sm font-medium">Cargando base de datos...</p>
                   </div>
                 </div>
@@ -2448,7 +2448,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableZones, onUpdateZo
                           <tr
                             key={prospect.id}
                             onClick={() => setSelectedProspect(prospect)}
-                            className="hover:bg-indigo-50/30 transition-colors group cursor-pointer"
+                            className="hover:bg-primary-50/30 transition-colors group cursor-pointer"
                           >
                             <td className="px-4 sm:px-8 py-4 sm:py-5">
                               <div className="flex flex-col">
@@ -2463,7 +2463,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableZones, onUpdateZo
                               <span className="font-medium text-gray-700 text-sm">{formatCurrency(prospect.income)}</span>
                             </td>
                             <td className="px-3 sm:px-6 py-4 sm:py-5">
-                              <span className="font-bold text-indigo-600 bg-indigo-50 px-2 sm:px-3 py-1 rounded-lg text-xs whitespace-nowrap">
+                              <span className="font-bold text-primary-600 bg-primary-50 px-2 sm:px-3 py-1 rounded-lg text-xs whitespace-nowrap">
                                 {formatCurrency(prospect.result?.maxPropertyPrice || 0)}
                               </span>
                             </td>
@@ -2488,7 +2488,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableZones, onUpdateZo
                       {paginatedProspects.map((prospect) => (
                         <div
                           key={prospect.id}
-                          className="bg-white rounded-[2.5rem] border border-indigo-100 shadow-md p-5 mx-5 active:bg-gray-50 active:scale-[0.98] transition-all relative overflow-hidden"
+                          className="bg-white rounded-[2.5rem] border border-primary-100 shadow-md p-5 mx-5 active:bg-gray-50 active:scale-[0.98] transition-all relative overflow-hidden"
                         >
                           <div className="flex justify-between items-start mb-4">
                             <div
@@ -2506,7 +2506,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableZones, onUpdateZo
                           <div className="grid grid-cols-2 gap-4 mb-4">
                             <div>
                               <p className="text-[10px] uppercase text-gray-400 font-bold mb-1">Capacidad Max</p>
-                              <p className="text-lg font-bold text-indigo-600">
+                              <p className="text-lg font-bold text-primary-600">
                                 {formatCurrency(prospect.result?.maxPropertyPrice || 0)}
                               </p>
                             </div>
@@ -2541,7 +2541,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableZones, onUpdateZo
                           </div>
 
                           <button
-                            className="w-full mt-3 text-center text-xs font-semibold text-indigo-600 py-2 border border-indigo-100 rounded-lg hover:bg-indigo-50"
+                            className="w-full mt-3 text-center text-xs font-semibold text-primary-600 py-2 border border-primary-100 rounded-lg hover:bg-primary-50"
                             onClick={() => setSelectedProspect(prospect)}
                           >
                             Ver Detalles
@@ -2594,7 +2594,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableZones, onUpdateZo
                       setShowPropertySelectionModal(true);
                     }
                   }}
-                  className="bg-indigo-600 text-white px-6 py-3 rounded-xl font-semibold hover:bg-indigo-700 transition-colors flex items-center gap-2 shadow-lg shadow-indigo-200"
+                  className="bg-primary-600 text-white px-6 py-3 rounded-xl font-semibold hover:bg-primary-700 transition-colors flex items-center gap-2 shadow-lg shadow-primary-200"
                 >
                   <Plus size={18} /> Agregar {isPromotora ? 'Proyecto' : 'Propiedad'}
                 </button>
@@ -2610,7 +2610,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableZones, onUpdateZo
             {/* Properties List */}
             {isLoadingProperties ? (
               <div className="text-center py-12">
-                <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div>
+                <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600"></div>
                 <p className="text-gray-500 mt-4">Cargando {isPromotora ? 'proyectos' : 'propiedades'}...</p>
               </div>
             ) : (isPromotora ? projects.length === 0 : properties.length === 0) ? (
@@ -2627,7 +2627,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableZones, onUpdateZo
                         setShowPropertySelectionModal(true);
                       }
                     }}
-                    className="bg-indigo-600 text-white px-6 py-3 rounded-xl font-semibold hover:bg-indigo-700 transition-colors"
+                    className="bg-primary-600 text-white px-6 py-3 rounded-xl font-semibold hover:bg-primary-700 transition-colors"
                   >
                     Agregar Primer {isPromotora ? 'Proyecto' : 'Propiedad'}
                   </button>
@@ -2668,7 +2668,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableZones, onUpdateZo
                       )}
                       <div className="pt-3 border-t border-gray-100 mb-3">
                         <div className="text-xs text-gray-400 uppercase font-semibold mb-1">Modelos</div>
-                        <div className="text-lg font-bold text-indigo-600">{project.models?.length || 0} {project.models?.length === 1 ? 'modelo' : 'modelos'}</div>
+                        <div className="text-lg font-bold text-primary-600">{project.models?.length || 0} {project.models?.length === 1 ? 'modelo' : 'modelos'}</div>
                       </div>
                       <div className="flex gap-2">
                         <button
@@ -2677,7 +2677,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableZones, onUpdateZo
                             setSelectedProjectForEdit(project);
                             setShowProjectModal(true);
                           }}
-                          className="flex-1 px-4 py-2 bg-indigo-50 text-indigo-600 rounded-xl font-semibold hover:bg-indigo-100 transition-colors text-sm"
+                          className="flex-1 px-4 py-2 bg-primary-50 text-primary-600 rounded-xl font-semibold hover:bg-primary-100 transition-colors text-sm"
                         >
                           Editar
                         </button>
@@ -2733,7 +2733,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableZones, onUpdateZo
                         />
                       ) : (
                         <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-indigo-50 to-purple-50">
-                          <Building size={48} className="text-indigo-300" />
+                          <Building size={48} className="text-primary-300" />
                         </div>
                       )}
                       <div className={`absolute top-3 left-3 px-3 py-1 rounded-lg text-xs font-bold text-white ${property.type === 'Venta' ? 'bg-purple-600' : 'bg-green-600'
@@ -2788,7 +2788,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableZones, onUpdateZo
                               setSelectedPropertyForEdit(property);
                               setShowPropertyModal(true);
                             }}
-                            className="p-2 text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors"
+                            className="p-2 text-gray-400 hover:text-primary-600 hover:bg-primary-50 rounded-lg transition-colors"
                             title="Editar"
                           >
                             <Settings size={18} />
@@ -2820,7 +2820,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableZones, onUpdateZo
 
             {/* Integración Web */}
             <div className="bg-white rounded-[2.5rem] shadow-[0_10px_40px_-10px_rgba(0,0,0,0.05)] border border-gray-100 overflow-hidden relative">
-              <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-50 rounded-full blur-2xl -mr-16 -mt-16 pointer-events-none"></div>
+              <div className="absolute top-0 right-0 w-32 h-32 bg-primary-50 rounded-full blur-2xl -mr-16 -mt-16 pointer-events-none"></div>
 
               <div className="p-8 border-b border-gray-50">
                 <div className="w-12 h-12 rounded-2xl bg-gray-900 text-white flex items-center justify-center mb-4 shadow-lg shadow-gray-200">
@@ -2848,7 +2848,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableZones, onUpdateZo
 
                 <button
                   onClick={openPreview}
-                  className="w-full py-3 rounded-xl border border-gray-200 bg-white text-gray-700 font-semibold text-sm hover:border-indigo-300 hover:text-indigo-600 transition-colors flex items-center justify-center gap-2"
+                  className="w-full py-3 rounded-xl border border-gray-200 bg-white text-gray-700 font-semibold text-sm hover:border-primary-300 hover:text-primary-600 transition-colors flex items-center justify-center gap-2"
                 >
                   <ExternalLink size={16} /> Previsualizar Formulario
                 </button>
@@ -2858,7 +2858,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableZones, onUpdateZo
             {/* Documentación Solicitada */}
             <div className="bg-white rounded-[2.5rem] shadow-[0_10px_40px_-10px_rgba(0,0,0,0.05)] border border-gray-100 overflow-hidden">
               <div className="p-8 border-b border-gray-50">
-                <div className="w-12 h-12 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center mb-4">
+                <div className="w-12 h-12 rounded-2xl bg-primary-50 text-primary-600 flex items-center justify-center mb-4">
                   <FileCheck size={24} strokeWidth={1.5} />
                 </div>
                 <h3 className="text-xl font-bold text-gray-900">Documentación Solicitada</h3>
@@ -2867,12 +2867,12 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableZones, onUpdateZo
 
               <div className="p-8 space-y-4">
                 <div className="space-y-3">
-                  <label className="flex items-center gap-3 p-4 rounded-xl border border-gray-200 hover:border-indigo-300 hover:bg-indigo-50/30 transition-colors cursor-pointer">
+                  <label className="flex items-center gap-3 p-4 rounded-xl border border-gray-200 hover:border-primary-300 hover:bg-primary-50/30 transition-colors cursor-pointer">
                     <input
                       type="checkbox"
                       checked={requestedDocuments.idFile}
                       onChange={(e) => setRequestedDocuments({ ...requestedDocuments, idFile: e.target.checked })}
-                      className="w-5 h-5 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
+                      className="w-5 h-5 rounded border-gray-300 text-primary-600 focus:ring-indigo-500"
                     />
                     <div className="flex-1">
                       <span className="font-semibold text-gray-900">Foto de Cédula / ID</span>
@@ -2880,12 +2880,12 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableZones, onUpdateZo
                     </div>
                   </label>
 
-                  <label className="flex items-center gap-3 p-4 rounded-xl border border-gray-200 hover:border-indigo-300 hover:bg-indigo-50/30 transition-colors cursor-pointer">
+                  <label className="flex items-center gap-3 p-4 rounded-xl border border-gray-200 hover:border-primary-300 hover:bg-primary-50/30 transition-colors cursor-pointer">
                     <input
                       type="checkbox"
                       checked={requestedDocuments.fichaFile}
                       onChange={(e) => setRequestedDocuments({ ...requestedDocuments, fichaFile: e.target.checked })}
-                      className="w-5 h-5 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
+                      className="w-5 h-5 rounded border-gray-300 text-primary-600 focus:ring-indigo-500"
                     />
                     <div className="flex-1">
                       <span className="font-semibold text-gray-900">Ficha de Seguro Social</span>
@@ -2893,12 +2893,12 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableZones, onUpdateZo
                     </div>
                   </label>
 
-                  <label className="flex items-center gap-3 p-4 rounded-xl border border-gray-200 hover:border-indigo-300 hover:bg-indigo-50/30 transition-colors cursor-pointer">
+                  <label className="flex items-center gap-3 p-4 rounded-xl border border-gray-200 hover:border-primary-300 hover:bg-primary-50/30 transition-colors cursor-pointer">
                     <input
                       type="checkbox"
                       checked={requestedDocuments.talonarioFile}
                       onChange={(e) => setRequestedDocuments({ ...requestedDocuments, talonarioFile: e.target.checked })}
-                      className="w-5 h-5 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
+                      className="w-5 h-5 rounded border-gray-300 text-primary-600 focus:ring-indigo-500"
                     />
                     <div className="flex-1">
                       <span className="font-semibold text-gray-900">Talonario de Pago</span>
@@ -2906,12 +2906,12 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableZones, onUpdateZo
                     </div>
                   </label>
 
-                  <label className="flex items-center gap-3 p-4 rounded-xl border border-gray-200 hover:border-indigo-300 hover:bg-indigo-50/30 transition-colors cursor-pointer">
+                  <label className="flex items-center gap-3 p-4 rounded-xl border border-gray-200 hover:border-primary-300 hover:bg-primary-50/30 transition-colors cursor-pointer">
                     <input
                       type="checkbox"
                       checked={requestedDocuments.signedAcpFile}
                       onChange={(e) => setRequestedDocuments({ ...requestedDocuments, signedAcpFile: e.target.checked })}
-                      className="w-5 h-5 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
+                      className="w-5 h-5 rounded border-gray-300 text-primary-600 focus:ring-indigo-500"
                     />
                     <div className="flex-1">
                       <span className="font-semibold text-gray-900">Autorización APC Firmada</span>
@@ -2924,7 +2924,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableZones, onUpdateZo
                   <button
                     onClick={handleSaveRequestedDocuments}
                     disabled={isSavingDocuments}
-                    className="w-full py-3 rounded-xl bg-indigo-600 text-white font-semibold hover:bg-indigo-700 disabled:opacity-60 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
+                    className="w-full py-3 rounded-xl bg-primary-600 text-white font-semibold hover:bg-primary-700 disabled:opacity-60 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
                   >
                     {isSavingDocuments ? (
                       <>
@@ -2981,7 +2981,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableZones, onUpdateZo
                   >
                     {apcDocumentFile ? (
                       <>
-                        <FileCheck size={32} className="text-indigo-600 mb-2" />
+                        <FileCheck size={32} className="text-primary-600 mb-2" />
                         <p className="text-sm font-semibold text-gray-900">{apcDocumentFile.name}</p>
                         <p className="text-xs text-gray-500 mt-1">{(apcDocumentFile.size / 1024 / 1024).toFixed(2)} MB</p>
                       </>
@@ -2999,7 +2999,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableZones, onUpdateZo
                   <button
                     onClick={handleUploadApcDocument}
                     disabled={isUploadingApcDocument || !isGoogleDriveConnected}
-                    className="w-full py-3 rounded-xl bg-indigo-600 text-white font-semibold hover:bg-indigo-700 disabled:opacity-60 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
+                    className="w-full py-3 rounded-xl bg-primary-600 text-white font-semibold hover:bg-primary-700 disabled:opacity-60 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
                   >
                     {isUploadingApcDocument ? (
                       <>
@@ -3026,7 +3026,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableZones, onUpdateZo
             {/* Zonas de Preferencia */}
             <div className="bg-white rounded-[2.5rem] shadow-[0_10px_40px_-10px_rgba(0,0,0,0.05)] border border-gray-100 overflow-hidden">
               <div className="p-8 border-b border-gray-50">
-                <div className="w-12 h-12 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center mb-4">
+                <div className="w-12 h-12 rounded-2xl bg-primary-50 text-primary-600 flex items-center justify-center mb-4">
                   <MapPin size={24} strokeWidth={1.5} />
                 </div>
                 <h3 className="text-xl font-bold text-gray-900">Zonas de Preferencia</h3>
@@ -3055,7 +3055,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableZones, onUpdateZo
                     onChange={(e) => setNewZone(e.target.value)}
                     onKeyPress={(e) => e.key === 'Enter' && handleAddZone()}
                     placeholder="Nueva Zona..."
-                    className="flex-1 px-4 py-2.5 rounded-xl border border-gray-200 text-sm focus:border-indigo-500 outline-none bg-white"
+                    className="flex-1 px-4 py-2.5 rounded-xl border border-gray-200 text-sm focus:border-primary-500 outline-none bg-white"
                   />
                   <button
                     onClick={handleAddZone}
@@ -3100,8 +3100,8 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableZones, onUpdateZo
                       }
                     }}
                     className={`p-6 rounded-2xl border-2 transition-all text-left ${companyData?.plan === 'Freshie'
-                      ? 'border-indigo-500 bg-indigo-50/30 shadow-lg'
-                      : 'border-gray-200 hover:border-indigo-200 hover:bg-indigo-50/20'
+                      ? 'border-primary-500 bg-primary-50/30 shadow-lg'
+                      : 'border-gray-200 hover:border-primary-200 hover:bg-primary-50/20'
                       }`}
                   >
                     <div className="font-bold text-xl text-gray-900 mb-2">Plan Freshie</div>
@@ -3125,7 +3125,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableZones, onUpdateZo
                       <div className="text-sm text-gray-500">/ mes</div>
                     </div>
                     {companyData?.plan === 'Freshie' && (
-                      <div className="mt-4 text-xs font-semibold text-indigo-600 bg-indigo-100 px-3 py-1 rounded-full inline-block">
+                      <div className="mt-4 text-xs font-semibold text-primary-600 bg-indigo-100 px-3 py-1 rounded-full inline-block">
                         Plan Actual
                       </div>
                     )}
@@ -3191,7 +3191,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableZones, onUpdateZo
             {/* Integración con Google Drive */}
             <div className="bg-white rounded-[2.5rem] shadow-[0_10px_40px_-10px_rgba(0,0,0,0.05)] border border-gray-100 overflow-hidden">
               <div className="p-8 border-b border-gray-50 flex items-center gap-4">
-                <div className="w-12 h-12 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center">
+                <div className="w-12 h-12 rounded-2xl bg-primary-50 text-primary-600 flex items-center justify-center">
                   <Cloud size={24} strokeWidth={1.5} />
                 </div>
                 <div>
@@ -3201,9 +3201,9 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableZones, onUpdateZo
               </div>
 
               <div className="p-8 space-y-6">
-                <div className="bg-indigo-50/60 border border-indigo-100 rounded-2xl p-4 text-sm text-indigo-900">
+                <div className="bg-primary-50/60 border border-primary-100 rounded-2xl p-4 text-sm text-primary-900">
                   <p className="font-semibold mb-2">¿Qué hace esta integración?</p>
-                  <ul className="list-disc list-inside space-y-1 text-indigo-800">
+                  <ul className="list-disc list-inside space-y-1 text-primary-800">
                     <li>Guarda automáticamente los documentos de tus prospectos en carpetas por cliente.</li>
                     <li>Te permite acceder a todos los archivos directamente desde Google Drive.</li>
                     <li>Actúa como backup en la nube para tu documentación.</li>
@@ -3235,7 +3235,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableZones, onUpdateZo
                           });
                         }
                       }}
-                      className="text-xs font-semibold text-indigo-600 hover:text-indigo-800 border border-indigo-200 rounded-full px-4 py-2 bg-white hover:bg-indigo-50 transition-colors"
+                      className="text-xs font-semibold text-primary-600 hover:text-primary-800 border border-primary-200 rounded-full px-4 py-2 bg-white hover:bg-primary-50 transition-colors"
                     >
                       Reconectar
                     </button>
@@ -3255,7 +3255,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableZones, onUpdateZo
                         });
                       }
                     }}
-                    className="w-full py-4 px-6 bg-white border-2 border-gray-300 rounded-xl font-semibold text-gray-700 hover:border-indigo-500 hover:bg-indigo-50 transition-all flex items-center justify-center gap-3 shadow-sm"
+                    className="w-full py-4 px-6 bg-white border-2 border-gray-300 rounded-xl font-semibold text-gray-700 hover:border-primary-500 hover:bg-primary-50 transition-all flex items-center justify-center gap-3 shadow-sm"
                   >
                     <svg className="w-5 h-5" viewBox="0 0 24 24">
                       <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
@@ -3320,7 +3320,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableZones, onUpdateZo
                         />
                         {isUpdatingLogo ? (
                           <div className="absolute inset-0 bg-white/90 flex items-center justify-center rounded-3xl">
-                            <Loader2 className="animate-spin text-indigo-600" size={24} />
+                            <Loader2 className="animate-spin text-primary-600" size={24} />
                           </div>
                         ) : (
                           <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center rounded-3xl">
@@ -3329,9 +3329,9 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableZones, onUpdateZo
                         )}
                       </div>
                     ) : (
-                      <div className="w-32 h-32 rounded-3xl border-2 border-dashed border-gray-200 flex flex-col items-center justify-center text-gray-400 hover:border-indigo-300 hover:bg-indigo-50/30 transition-all mx-auto md:mx-0">
+                      <div className="w-32 h-32 rounded-3xl border-2 border-dashed border-gray-200 flex flex-col items-center justify-center text-gray-400 hover:border-primary-300 hover:bg-primary-50/30 transition-all mx-auto md:mx-0">
                         {isUpdatingLogo ? (
-                          <Loader2 className="animate-spin text-indigo-600" size={32} />
+                          <Loader2 className="animate-spin text-primary-600" size={32} />
                         ) : (
                           <>
                             <ImageIcon size={32} strokeWidth={1} />
@@ -3431,7 +3431,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableZones, onUpdateZo
                       type="text"
                       value={companyName}
                       onChange={(e) => onUpdateCompanyName(e.target.value)}
-                      className="w-full px-5 py-3 rounded-xl border border-gray-200 focus:border-indigo-500 outline-none bg-gray-50 focus:bg-white transition-colors text-gray-900 font-medium"
+                      className="w-full px-5 py-3 rounded-xl border border-gray-200 focus:border-primary-500 outline-none bg-gray-50 focus:bg-white transition-colors text-gray-900 font-medium"
                     />
                   </div>
                   <div className="flex justify-end">
@@ -3510,7 +3510,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableZones, onUpdateZo
                     type="text"
                     value={adminName}
                     onChange={(e) => setAdminName(e.target.value)}
-                    className="w-full px-5 py-3 rounded-xl border border-gray-200 focus:border-indigo-500 outline-none bg-gray-50 focus:bg-white transition-colors text-gray-900 font-medium"
+                    className="w-full px-5 py-3 rounded-xl border border-gray-200 focus:border-primary-500 outline-none bg-gray-50 focus:bg-white transition-colors text-gray-900 font-medium"
                     placeholder="Nombre del administrador"
                   />
                 </div>
@@ -3520,7 +3520,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableZones, onUpdateZo
                     type="email"
                     value={adminEmail}
                     onChange={(e) => setAdminEmail(e.target.value)}
-                    className="w-full px-5 py-3 rounded-xl border border-gray-200 focus:border-indigo-500 outline-none bg-gray-50 focus:bg-white transition-colors text-gray-900 font-medium"
+                    className="w-full px-5 py-3 rounded-xl border border-gray-200 focus:border-primary-500 outline-none bg-gray-50 focus:bg-white transition-colors text-gray-900 font-medium"
                     placeholder="email@ejemplo.com"
                   />
                 </div>
@@ -3551,7 +3551,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableZones, onUpdateZo
             </button>
 
             <div className="mb-6">
-              <div className="w-12 h-12 bg-indigo-50 text-indigo-600 rounded-2xl flex items-center justify-center mb-4">
+              <div className="w-12 h-12 bg-primary-50 text-primary-600 rounded-2xl flex items-center justify-center mb-4">
                 <Filter size={24} />
               </div>
               <h3 className="text-2xl font-bold text-gray-900">Exportar Datos</h3>
@@ -3566,7 +3566,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableZones, onUpdateZo
                   <button
                     onClick={() => setExportFormat('excel')}
                     className={`p-4 rounded-xl border-2 transition-all font-semibold text-sm ${exportFormat === 'excel'
-                      ? 'border-indigo-500 bg-indigo-50 text-indigo-700'
+                      ? 'border-primary-500 bg-primary-50 text-primary-700'
                       : 'border-gray-200 bg-gray-50 text-gray-600 hover:border-gray-300'
                       }`}
                   >
@@ -3575,7 +3575,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableZones, onUpdateZo
                   <button
                     onClick={() => setExportFormat('csv')}
                     className={`p-4 rounded-xl border-2 transition-all font-semibold text-sm ${exportFormat === 'csv'
-                      ? 'border-indigo-500 bg-indigo-50 text-indigo-700'
+                      ? 'border-primary-500 bg-primary-50 text-primary-700'
                       : 'border-gray-200 bg-gray-50 text-gray-600 hover:border-gray-300'
                       }`}
                   >
@@ -3589,14 +3589,14 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableZones, onUpdateZo
                 <label
                   onClick={() => setExportFilterType('all')}
                   className={`flex items-center gap-3 p-3 sm:p-4 border rounded-xl cursor-pointer transition-colors ${exportFilterType === 'all'
-                    ? 'border-indigo-500 bg-indigo-50/30'
+                    ? 'border-primary-500 bg-primary-50/30'
                     : 'border-gray-200 hover:bg-gray-50'
                     }`}
                 >
-                  <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 ${exportFilterType === 'all' ? 'border-indigo-600' : 'border-gray-300'
+                  <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 ${exportFilterType === 'all' ? 'border-primary-600' : 'border-gray-300'
                     }`}>
                     {exportFilterType === 'all' && (
-                      <div className="w-2.5 h-2.5 bg-indigo-600 rounded-full"></div>
+                      <div className="w-2.5 h-2.5 bg-primary-600 rounded-full"></div>
                     )}
                   </div>
                   <span className={`font-semibold text-xs sm:text-sm ${exportFilterType === 'all' ? 'text-gray-900' : 'text-gray-600'
@@ -3606,14 +3606,14 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableZones, onUpdateZo
                 <label
                   onClick={() => setExportFilterType('dateRange')}
                   className={`flex items-center gap-3 p-3 sm:p-4 border rounded-xl cursor-pointer transition-colors ${exportFilterType === 'dateRange'
-                    ? 'border-indigo-500 bg-indigo-50/30'
+                    ? 'border-primary-500 bg-primary-50/30'
                     : 'border-gray-200 hover:bg-gray-50'
                     }`}
                 >
-                  <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 ${exportFilterType === 'dateRange' ? 'border-indigo-600' : 'border-gray-300'
+                  <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 ${exportFilterType === 'dateRange' ? 'border-primary-600' : 'border-gray-300'
                     }`}>
                     {exportFilterType === 'dateRange' && (
-                      <div className="w-2.5 h-2.5 bg-indigo-600 rounded-full"></div>
+                      <div className="w-2.5 h-2.5 bg-primary-600 rounded-full"></div>
                     )}
                   </div>
                   <span className={`font-medium text-xs sm:text-sm ${exportFilterType === 'dateRange' ? 'text-gray-900' : 'text-gray-600'
@@ -3632,7 +3632,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableZones, onUpdateZo
                         type="date"
                         value={dateRangeStart}
                         onChange={(e) => setDateRangeStart(e.target.value)}
-                        className="w-full pl-10 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm outline-none focus:border-indigo-500 text-gray-700 font-medium"
+                        className="w-full pl-10 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm outline-none focus:border-primary-500 text-gray-700 font-medium"
                       />
                     </div>
                   </div>
@@ -3644,7 +3644,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableZones, onUpdateZo
                         type="date"
                         value={dateRangeEnd}
                         onChange={(e) => setDateRangeEnd(e.target.value)}
-                        className="w-full pl-10 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm outline-none focus:border-indigo-500 text-gray-700 font-medium"
+                        className="w-full pl-10 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm outline-none focus:border-primary-500 text-gray-700 font-medium"
                       />
                     </div>
                   </div>
@@ -3659,7 +3659,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableZones, onUpdateZo
                   <select
                     value={exportSalaryRange}
                     onChange={(e) => setExportSalaryRange(e.target.value)}
-                    className="w-full pl-12 pr-10 py-3.5 bg-gray-50 border border-gray-200 rounded-xl text-sm outline-none focus:border-indigo-500 appearance-none cursor-pointer hover:bg-white transition-colors text-gray-700 font-medium"
+                    className="w-full pl-12 pr-10 py-3.5 bg-gray-50 border border-gray-200 rounded-xl text-sm outline-none focus:border-primary-500 appearance-none cursor-pointer hover:bg-white transition-colors text-gray-700 font-medium"
                   >
                     <option value="">Cualquier Salario</option>
                     <option value="0-3000">Menos de $3,000</option>
@@ -3718,7 +3718,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableZones, onUpdateZo
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
                 <div className="bg-gray-50 p-4 rounded-2xl border border-gray-100">
                   <div className="flex items-center gap-2 mb-2">
-                    <DollarSign size={18} className="text-indigo-600" />
+                    <DollarSign size={18} className="text-primary-600" />
                     <span className="text-xs text-gray-500 font-semibold uppercase">Ingresos</span>
                   </div>
                   <p className="text-lg font-bold text-gray-900">
@@ -3727,7 +3727,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableZones, onUpdateZo
                 </div>
                 <div className="bg-gray-50 p-4 rounded-2xl border border-gray-100">
                   <div className="flex items-center gap-2 mb-2">
-                    <Target size={18} className="text-indigo-600" />
+                    <Target size={18} className="text-primary-600" />
                     <span className="text-xs text-gray-500 font-semibold uppercase">Busca</span>
                   </div>
                   <p className="text-lg font-bold text-gray-900">
@@ -3736,7 +3736,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableZones, onUpdateZo
                 </div>
                 <div className="bg-gray-50 p-4 rounded-2xl border border-gray-100">
                   <div className="flex items-center gap-2 mb-2">
-                    <Briefcase size={18} className="text-indigo-600" />
+                    <Briefcase size={18} className="text-primary-600" />
                     <span className="text-xs text-gray-500 font-semibold uppercase">Presupuesto</span>
                   </div>
                   <p className="text-lg font-bold text-gray-900">
@@ -3745,7 +3745,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableZones, onUpdateZo
                 </div>
                 <div className="bg-gray-50 p-4 rounded-2xl border border-gray-100">
                   <div className="flex items-center gap-2 mb-2">
-                    <MessageCircle size={18} className="text-indigo-600" />
+                    <MessageCircle size={18} className="text-primary-600" />
                     <span className="text-xs text-gray-500 font-semibold uppercase">Teléfono</span>
                   </div>
                   <p className="text-lg font-bold text-gray-900">
@@ -3755,7 +3755,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableZones, onUpdateZo
               </div>
 
               {/* Zone of Interest */}
-              <div className="bg-indigo-50/50 p-6 rounded-2xl border border-indigo-100 mb-8">
+              <div className="bg-primary-50/50 p-6 rounded-2xl border border-primary-100 mb-8">
                 <h3 className="text-sm font-bold text-gray-700 mb-3">INTERESADO EN</h3>
                 <div className="flex items-center justify-between">
                   <div className="flex-1">
@@ -3795,13 +3795,13 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableZones, onUpdateZo
               {/* Documents Section - MUY IMPORTANTE */}
               <div className="mb-8">
                 <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
-                  <FileTextIcon size={20} className="text-indigo-600" />
+                  <FileTextIcon size={20} className="text-primary-600" />
                   Documentación
                 </h3>
                 {loadingProspectDocuments ? (
                   <div className="flex justify-center items-center py-8">
                     <div className="flex flex-col items-center gap-2">
-                      <Loader2 size={32} className="animate-spin text-indigo-500" />
+                      <Loader2 size={32} className="animate-spin text-primary-500" />
                       <p className="text-sm text-gray-500">Cargando documentos...</p>
                     </div>
                   </div>
@@ -3827,7 +3827,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableZones, onUpdateZo
                             />
                           ) : (
                             <div className="p-4 bg-white rounded-lg border border-gray-200 hover:bg-gray-50 transition-colors">
-                              <FileTextIcon size={32} className="text-indigo-600 mx-auto mb-2" />
+                              <FileTextIcon size={32} className="text-primary-600 mx-auto mb-2" />
                               <p className="text-xs text-center text-gray-600">Click para ver PDF</p>
                             </div>
                           )}
@@ -3855,7 +3855,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableZones, onUpdateZo
                             />
                           ) : (
                             <div className="p-4 bg-white rounded-lg border border-gray-200 hover:bg-gray-50 transition-colors">
-                              <FileTextIcon size={32} className="text-indigo-600 mx-auto mb-2" />
+                              <FileTextIcon size={32} className="text-primary-600 mx-auto mb-2" />
                               <p className="text-xs text-center text-gray-600">Click para ver PDF</p>
                             </div>
                           )}
@@ -3883,7 +3883,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableZones, onUpdateZo
                             />
                           ) : (
                             <div className="p-4 bg-white rounded-lg border border-gray-200 hover:bg-gray-50 transition-colors">
-                              <FileTextIcon size={32} className="text-indigo-600 mx-auto mb-2" />
+                              <FileTextIcon size={32} className="text-primary-600 mx-auto mb-2" />
                               <p className="text-xs text-center text-gray-600">Click para ver PDF</p>
                             </div>
                           )}
@@ -3911,7 +3911,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableZones, onUpdateZo
                             />
                           ) : (
                             <div className="p-4 bg-white rounded-lg border border-gray-200 hover:bg-gray-50 transition-colors">
-                              <FileTextIcon size={32} className="text-indigo-600 mx-auto mb-2" />
+                              <FileTextIcon size={32} className="text-primary-600 mx-auto mb-2" />
                               <p className="text-xs text-center text-gray-600">Click para ver PDF</p>
                             </div>
                           )}
@@ -3954,7 +3954,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableZones, onUpdateZo
                             />
                           ) : (
                             <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-indigo-50 to-purple-50">
-                              <Building size={32} className="text-indigo-300" />
+                              <Building size={32} className="text-primary-300" />
                             </div>
                           )}
                           <div className={`absolute top-3 left-3 px-3 py-1 rounded-lg text-xs font-bold text-white ${property.type === 'Venta' ? 'bg-purple-600' : 'bg-green-600'
@@ -3993,7 +3993,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableZones, onUpdateZo
 
                           <div className="pt-3 border-t border-gray-100">
                             <div className="text-xs text-gray-400 uppercase font-semibold mb-1">Precio</div>
-                            <div className="text-lg font-bold text-indigo-600">{formatCurrency(property.price)}</div>
+                            <div className="text-lg font-bold text-primary-600">{formatCurrency(property.price)}</div>
                           </div>
                         </div>
                       </div>
@@ -4005,7 +4005,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableZones, onUpdateZo
               {/* Loading state for properties */}
               {!isPromotora && isLoadingProspectProperties && (
                 <div className="mb-8 text-center py-8">
-                  <div className="inline-block animate-spin rounded-full h-6 w-6 border-b-2 border-indigo-600"></div>
+                  <div className="inline-block animate-spin rounded-full h-6 w-6 border-b-2 border-primary-600"></div>
                   <p className="text-gray-500 mt-3 text-sm">Cargando propiedades de interés...</p>
                 </div>
               )}
@@ -4039,10 +4039,10 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableZones, onUpdateZo
                             />
                           ) : (
                             <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-indigo-50 to-purple-50">
-                              <Building size={32} className="text-indigo-300" />
+                              <Building size={32} className="text-primary-300" />
                             </div>
                           )}
-                          <div className="absolute top-3 left-3 px-3 py-1 rounded-lg text-xs font-bold text-white bg-indigo-600">
+                          <div className="absolute top-3 left-3 px-3 py-1 rounded-lg text-xs font-bold text-white bg-primary-600">
                             {formatCurrency(model.price)}
                           </div>
                         </div>
@@ -4092,7 +4092,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableZones, onUpdateZo
               {/* Loading state for models */}
               {isLoadingProspectModels && (
                 <div className="mb-8 text-center py-8">
-                  <div className="inline-block animate-spin rounded-full h-6 w-6 border-b-2 border-indigo-600"></div>
+                  <div className="inline-block animate-spin rounded-full h-6 w-6 border-b-2 border-primary-600"></div>
                   <p className="text-gray-500 mt-3 text-sm">Cargando modelos de interés...</p>
                 </div>
               )}
@@ -4192,7 +4192,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableZones, onUpdateZo
           <div className="bg-white rounded-[3rem] p-8 md:p-12 shadow-[0_20px_60px_-15px_rgba(0,0,0,0.05)] w-full max-w-4xl animate-fade-in-up border border-white/50 backdrop-blur-sm relative overflow-hidden">
 
             {/* Decorative Elements */}
-            <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-50 rounded-full blur-3xl -mr-20 -mt-20 opacity-60 pointer-events-none"></div>
+            <div className="absolute top-0 right-0 w-64 h-64 bg-primary-50 rounded-full blur-3xl -mr-20 -mt-20 opacity-60 pointer-events-none"></div>
             <div className="absolute bottom-0 left-0 w-64 h-64 bg-purple-50 rounded-full blur-3xl -ml-20 -mb-20 opacity-60 pointer-events-none"></div>
 
             {/* Close Button */}
@@ -4205,7 +4205,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableZones, onUpdateZo
 
             <div className="relative z-10 flex flex-col items-center text-center mb-12">
               {/* Logo */}
-              <div className="w-20 h-20 bg-gradient-to-br from-indigo-500 to-indigo-600 rounded-3xl flex items-center justify-center mb-6 shadow-xl shadow-indigo-200 transform rotate-3 hover:rotate-6 transition-transform duration-500">
+              <div className="w-20 h-20 bg-gradient-to-br from-indigo-500 to-indigo-600 rounded-3xl flex items-center justify-center mb-6 shadow-xl shadow-primary-200 transform rotate-3 hover:rotate-6 transition-transform duration-500">
                 <span className="text-3xl font-bold text-white tracking-tighter">ê</span>
               </div>
 
@@ -4225,9 +4225,9 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableZones, onUpdateZo
                     setShowPropertyModal(true);
                   }, 300);
                 }}
-                className="group text-left p-8 rounded-[2.5rem] border-2 border-gray-100 bg-white hover:border-indigo-200 hover:bg-indigo-50/30 hover:shadow-xl transition-all duration-300 relative overflow-hidden"
+                className="group text-left p-8 rounded-[2.5rem] border-2 border-gray-100 bg-white hover:border-primary-200 hover:bg-primary-50/30 hover:shadow-xl transition-all duration-300 relative overflow-hidden"
               >
-                <div className="w-16 h-16 rounded-2xl bg-white border border-gray-100 text-gray-900 flex items-center justify-center mb-6 shadow-sm group-hover:scale-110 group-hover:bg-indigo-600 group-hover:text-white transition-all duration-300">
+                <div className="w-16 h-16 rounded-2xl bg-white border border-gray-100 text-gray-900 flex items-center justify-center mb-6 shadow-sm group-hover:scale-110 group-hover:bg-primary-600 group-hover:text-white transition-all duration-300">
                   <Plus size={28} strokeWidth={1.5} />
                 </div>
                 <h3 className="text-2xl font-bold text-gray-900 mb-2">Agregar Propiedad Manual</h3>
@@ -4235,7 +4235,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableZones, onUpdateZo
                   Crea una propiedad nueva completando el formulario paso a paso.
                 </p>
 
-                <div className="flex items-center gap-2 text-indigo-600 font-bold text-sm opacity-0 group-hover:opacity-100 transform translate-y-2 group-hover:translate-y-0 transition-all duration-300">
+                <div className="flex items-center gap-2 text-primary-600 font-bold text-sm opacity-0 group-hover:opacity-100 transform translate-y-2 group-hover:translate-y-0 transition-all duration-300">
                   Comenzar ahora <ArrowRight size={16} />
                 </div>
 
@@ -4317,7 +4317,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableZones, onUpdateZo
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
           <div className="bg-white rounded-[3rem] p-8 md:p-12 shadow-[0_20px_60px_-15px_rgba(0,0,0,0.05)] w-full max-w-4xl animate-fade-in-up border border-white/50 backdrop-blur-sm relative overflow-hidden">
             {/* Decorative Elements */}
-            <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-50 rounded-full blur-3xl -mr-20 -mt-20 opacity-60 pointer-events-none"></div>
+            <div className="absolute top-0 right-0 w-64 h-64 bg-primary-50 rounded-full blur-3xl -mr-20 -mt-20 opacity-60 pointer-events-none"></div>
             <div className="absolute bottom-0 left-0 w-64 h-64 bg-purple-50 rounded-full blur-3xl -ml-20 -mb-20 opacity-60 pointer-events-none"></div>
 
             {/* Close Button */}
@@ -4330,7 +4330,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableZones, onUpdateZo
 
             <div className="relative z-10 flex flex-col items-center text-center mb-12">
               {/* Logo */}
-              <div className="w-20 h-20 bg-gradient-to-br from-indigo-500 to-indigo-600 rounded-3xl flex items-center justify-center mb-6 shadow-xl shadow-indigo-200 transform rotate-3 hover:rotate-6 transition-transform duration-500">
+              <div className="w-20 h-20 bg-gradient-to-br from-indigo-500 to-indigo-600 rounded-3xl flex items-center justify-center mb-6 shadow-xl shadow-primary-200 transform rotate-3 hover:rotate-6 transition-transform duration-500">
                 <span className="text-3xl font-bold text-white tracking-tighter">ê</span>
               </div>
 
@@ -4350,9 +4350,9 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableZones, onUpdateZo
                     setShowProjectModal(true);
                   }, 300);
                 }}
-                className="group text-left p-8 rounded-[2.5rem] border-2 border-gray-100 bg-white hover:border-indigo-200 hover:bg-indigo-50/30 hover:shadow-xl transition-all duration-300 relative overflow-hidden"
+                className="group text-left p-8 rounded-[2.5rem] border-2 border-gray-100 bg-white hover:border-primary-200 hover:bg-primary-50/30 hover:shadow-xl transition-all duration-300 relative overflow-hidden"
               >
-                <div className="w-16 h-16 rounded-2xl bg-white border border-gray-100 text-gray-900 flex items-center justify-center mb-6 shadow-sm group-hover:scale-110 group-hover:bg-indigo-600 group-hover:text-white transition-all duration-300">
+                <div className="w-16 h-16 rounded-2xl bg-white border border-gray-100 text-gray-900 flex items-center justify-center mb-6 shadow-sm group-hover:scale-110 group-hover:bg-primary-600 group-hover:text-white transition-all duration-300">
                   <Plus size={28} strokeWidth={1.5} />
                 </div>
                 <h3 className="text-2xl font-bold text-gray-900 mb-2">Agregar Proyecto Manual</h3>
@@ -4360,7 +4360,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableZones, onUpdateZo
                   Crea un proyecto nuevo completando el formulario paso a paso.
                 </p>
 
-                <div className="flex items-center gap-2 text-indigo-600 font-bold text-sm opacity-0 group-hover:opacity-100 transform translate-y-2 group-hover:translate-y-0 transition-all duration-300">
+                <div className="flex items-center gap-2 text-primary-600 font-bold text-sm opacity-0 group-hover:opacity-100 transform translate-y-2 group-hover:translate-y-0 transition-all duration-300">
                   Comenzar ahora <ArrowRight size={16} />
                 </div>
 
@@ -4438,7 +4438,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableZones, onUpdateZo
         <div className="bg-white/90 backdrop-blur-xl border border-white/50 shadow-2xl rounded-2xl p-2 flex justify-between items-center">
           <button
             onClick={() => setActiveTab('dashboard')}
-            className={`flex flex-col items-center justify-center w-full p-2 rounded-xl transition-all ${activeTab === 'dashboard' ? 'bg-indigo-50 text-indigo-600' : 'text-gray-400'}`}
+            className={`flex flex-col items-center justify-center w-full p-2 rounded-xl transition-all ${activeTab === 'dashboard' ? 'bg-primary-50 text-primary-600' : 'text-gray-400'}`}
           >
             <LayoutDashboard size={20} strokeWidth={activeTab === 'dashboard' ? 2.5 : 2} />
             <span className="text-[10px] font-bold mt-1">Dash</span>
@@ -4446,7 +4446,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableZones, onUpdateZo
 
           <button
             onClick={() => setActiveTab('prospects')}
-            className={`flex flex-col items-center justify-center w-full p-2 rounded-xl transition-all ${activeTab === 'prospects' ? 'bg-indigo-50 text-indigo-600' : 'text-gray-400'}`}
+            className={`flex flex-col items-center justify-center w-full p-2 rounded-xl transition-all ${activeTab === 'prospects' ? 'bg-primary-50 text-primary-600' : 'text-gray-400'}`}
           >
             <Users size={20} strokeWidth={activeTab === 'prospects' ? 2.5 : 2} />
             <span className="text-[10px] font-bold mt-1">Prospectos</span>
@@ -4454,7 +4454,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableZones, onUpdateZo
 
           <button
             onClick={() => setActiveTab('properties')}
-            className={`flex flex-col items-center justify-center w-full p-2 rounded-xl transition-all ${activeTab === 'properties' ? 'bg-indigo-50 text-indigo-600' : 'text-gray-400'}`}
+            className={`flex flex-col items-center justify-center w-full p-2 rounded-xl transition-all ${activeTab === 'properties' ? 'bg-primary-50 text-primary-600' : 'text-gray-400'}`}
           >
             <Building size={20} strokeWidth={activeTab === 'properties' ? 2.5 : 2} />
             <span className="text-[10px] font-bold mt-1">{isPromotora ? 'Proy' : 'Prop'}</span>
@@ -4462,7 +4462,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableZones, onUpdateZo
 
           <button
             onClick={() => setActiveTab('campaigns')}
-            className={`flex flex-col items-center justify-center w-full p-2 rounded-xl transition-all relative ${activeTab === 'campaigns' ? 'bg-indigo-50 text-indigo-600' : 'text-gray-400'}`}
+            className={`flex flex-col items-center justify-center w-full p-2 rounded-xl transition-all relative ${activeTab === 'campaigns' ? 'bg-primary-50 text-primary-600' : 'text-gray-400'}`}
           >
             <MessageCircle size={20} strokeWidth={activeTab === 'campaigns' ? 2.5 : 2} />
             <span className="text-[10px] font-bold mt-1 relative">Campañas</span>
@@ -4471,7 +4471,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableZones, onUpdateZo
 
           <button
             onClick={() => setActiveTab('settings')}
-            className={`flex flex-col items-center justify-center w-full p-2 rounded-xl transition-all ${(activeTab === 'settings' || activeTab === 'calculator-config') ? 'bg-indigo-50 text-indigo-600' : 'text-gray-400'}`}
+            className={`flex flex-col items-center justify-center w-full p-2 rounded-xl transition-all ${(activeTab === 'settings' || activeTab === 'calculator-config') ? 'bg-primary-50 text-primary-600' : 'text-gray-400'}`}
           >
             <Settings size={20} strokeWidth={(activeTab === 'settings' || activeTab === 'calculator-config') ? 2.5 : 2} />
             <span className="text-[10px] font-bold mt-1">Ajustes</span>

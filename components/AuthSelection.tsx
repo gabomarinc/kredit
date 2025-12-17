@@ -13,12 +13,12 @@ export const AuthSelection: React.FC<AuthSelectionProps> = ({ onLogin, onRegiste
       <div className="bg-white rounded-[3rem] p-8 md:p-12 shadow-[0_20px_60px_-15px_rgba(0,0,0,0.05)] w-full max-w-4xl animate-fade-in-up border border-white/50 backdrop-blur-sm relative overflow-hidden">
         
         {/* Decorative Elements */}
-        <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-50 rounded-full blur-3xl -mr-20 -mt-20 opacity-60 pointer-events-none"></div>
-        <div className="absolute bottom-0 left-0 w-64 h-64 bg-blue-50 rounded-full blur-3xl -ml-20 -mb-20 opacity-60 pointer-events-none"></div>
+        <div className="absolute top-0 right-0 w-64 h-64 rounded-full blur-3xl -mr-20 -mt-20 opacity-60 pointer-events-none" style={{ background: 'linear-gradient(135deg, rgba(240, 253, 251, 0.8) 0%, rgba(230, 250, 247, 0.6) 100%)' }}></div>
+        <div className="absolute bottom-0 left-0 w-64 h-64 rounded-full blur-3xl -ml-20 -mb-20 opacity-60 pointer-events-none" style={{ background: 'linear-gradient(135deg, rgba(41, 190, 165, 0.15) 0%, rgba(240, 253, 251, 0.5) 100%)' }}></div>
 
         <div className="relative z-10 flex flex-col items-center text-center mb-12">
           {/* Logo */}
-          <div className="w-20 h-20 bg-gradient-to-br from-indigo-500 to-indigo-600 rounded-3xl flex items-center justify-center mb-6 shadow-xl shadow-indigo-200 transform rotate-3 hover:rotate-6 transition-transform duration-500">
+          <div className="w-20 h-20 rounded-3xl flex items-center justify-center mb-6 shadow-xl transform rotate-3 hover:rotate-6 transition-transform duration-500" style={{ background: 'linear-gradient(135deg, #29BEA5 0%, #1fa890 100%)', boxShadow: '0 20px 25px -5px rgba(41, 190, 165, 0.2), 0 10px 10px -5px rgba(41, 190, 165, 0.1)' }}>
             <span className="text-3xl font-bold text-white tracking-tighter">ê</span>
           </div>
 

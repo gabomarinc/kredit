@@ -49,16 +49,22 @@
               lavender: '#E0E7FF',
             },
             primary: {
-              50: '#e9fbf8',
-              100: '#cbf5ed',
-              200: '#9eece0',
-              300: '#69dbc6',
-              400: '#3ac2a8',
-              500: '#27bea5',
+              50: '#f0fdfb',
+              100: '#ccfbf1',
+              200: '#99f6e4',
+              300: '#5eead4',
+              400: '#2dd4bf',
+              500: '#29BEA5',
               600: '#1fa890',
               700: '#1a8674',
               800: '#176b5d',
               900: '#16584e',
+            },
+            accent: {
+              light: '#f0fdfb',
+              soft: '#e6faf7',
+              medium: '#29BEA5',
+              dark: '#1fa890',
             },
             secondary: {
               50: '#f4f6f7',
@@ -85,9 +91,15 @@
               900: '#131c26',
             },
             success: {
-              50: '#f0fdf4',
-              500: '#27bea5',
+              50: '#f0fdfb',
+              500: '#29BEA5',
               600: '#1fa890',
+            },
+            gradient: {
+              primary: 'linear-gradient(135deg, #29BEA5 0%, #1fa890 100%)',
+              primaryLight: 'linear-gradient(135deg, #f0fdfb 0%, #e6faf7 100%)',
+              primaryToWhite: 'linear-gradient(135deg, #29BEA5 0%, #ffffff 100%)',
+              whiteToPrimary: 'linear-gradient(135deg, #ffffff 0%, #29BEA5 100%)',
             }
           },
           animation: {
@@ -111,11 +123,11 @@
 
   <style>
     body {
-      background: radial-gradient(circle at 0% 0%, #F3E8FF 0%, transparent 50%), 
-                  radial-gradient(circle at 100% 0%, #E0E7FF 0%, transparent 50%), 
+      background: radial-gradient(circle at 0% 0%, rgba(240, 253, 251, 0.6) 0%, transparent 50%), 
+                  radial-gradient(circle at 100% 0%, rgba(230, 250, 247, 0.5) 0%, transparent 50%), 
                   radial-gradient(circle at 100% 100%, #FDFBF7 0%, transparent 50%), 
-                  radial-gradient(circle at 0% 100%, #E3F1F6 0%, transparent 50%);
-      background-color: #F8FAFC;
+                  radial-gradient(circle at 0% 100%, rgba(41, 190, 165, 0.08) 0%, transparent 50%);
+      background-color: #FAFDFC;
       background-attachment: fixed;
       color: #2C3E50;
       min-height: 100vh;
