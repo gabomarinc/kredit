@@ -2206,7 +2206,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableZones, onUpdateZo
                 }`}
             >
               <MessageCircle size={14} className="sm:w-4 sm:h-4" /> <span className="relative">Campañas</span>
-              <span className="absolute -top-2 right-0 text-white text-[7px] font-black px-1 py-0.5 rounded-full shadow-sm border border-white/50" style={{ background: 'linear-gradient(135deg, #29BEA5 0%, #1fa890 100%)' }}>NUEVO</span>
+              <span className="absolute -top-[0.575rem] right-0 text-white text-[7px] font-black px-1 py-0.5 rounded-full shadow-sm border border-white/50" style={{ background: 'linear-gradient(135deg, #29BEA5 0%, #1fa890 100%)' }}>NUEVO</span>
             </button>
             <div
               className="relative settings-submenu-container"
