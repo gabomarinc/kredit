@@ -16,9 +16,8 @@
   <meta name="twitter:description" content="Calcula la capacidad de compra de propiedades y gestiona tus prospectos inmobiliarios." />
   <title>Krêdit - Plataforma de Gestión Inmobiliaria</title>
   <script src="https://cdn.tailwindcss.com"></script>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="preconnect" href="https://api.fontshare.com">
+  <link href="https://api.fontshare.com/v2/css?f[]=satoshi@900,400&display=swap" rel="stylesheet">
 
   <!-- Polyfills for Node.js built-ins required by Postgres driver -->
   <script type="module">
@@ -32,7 +31,11 @@
       theme: {
         extend: {
           fontFamily: {
-            sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+            sans: ['Satoshi', 'sans-serif'],
+          },
+          fontWeight: {
+            regular: '400',
+            black: '900',
           },
           colors: {
             pastel: {
@@ -116,6 +119,12 @@
       background-attachment: fixed;
       color: #2C3E50;
       min-height: 100vh;
+      font-family: 'Satoshi', sans-serif;
+      font-weight: 400;
+    }
+    h1, h2, h3, h4, h5, h6, .font-bold, .font-semibold, .font-black {
+      font-family: 'Satoshi', sans-serif;
+      font-weight: 900;
     }
     button, a, input, select, .card-hover {
       transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
