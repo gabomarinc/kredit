@@ -625,7 +625,7 @@ export const WhatsBlastTab: React.FC<WhatsBlastTabProps> = ({ prospects: sourceP
         {/* Delete Confirmation Modal */}
         {showDeleteConfirm && campaignToDelete && (
             <>
-                <div 
+                <div
                     className="fixed inset-0 z-[200] bg-black/20 backdrop-blur-sm transition-opacity"
                     onClick={handleDeleteCancel}
                 ></div>
