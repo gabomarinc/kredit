@@ -250,8 +250,9 @@ export const Register: React.FC<RegisterProps> = ({ onRegisterComplete, onGoToLo
           {[1, 2, 3, 4].map((s) => (
             <div
               key={s}
-              className={`h-1.5 rounded-full transition-all duration-500 ${s <= step ? 'bg-indigo-500' : 'bg-gray-200'
+              className={`h-1.5 rounded-full transition-all duration-500 ${s <= step ? 'bg-primary-500' : 'bg-gray-200'
                 } ${s === step ? 'w-8' : 'w-4'}`}
+              style={s <= step ? { background: 'linear-gradient(135deg, #29BEA5 0%, #1fa890 100%)' } : {}}
             />
           ))}
         </div>
@@ -344,8 +345,8 @@ export const Register: React.FC<RegisterProps> = ({ onRegisterComplete, onGoToLo
             </button>
 
             <div className="mt-6 text-center">
-              <button onClick={onGoToLogin} className="text-sm text-indigo-600 font-medium hover:text-indigo-800">
-                ¿Ya tienes cuenta? Inicia sesión
+              <button onClick={onGoToLogin} className="text-sm text-primary-600 font-medium hover:text-primary-800">
+                ¿Ya tienes cuenta? <span className="font-bold">Inicia sesión</span>
               </button>
             </div>
           </div>
