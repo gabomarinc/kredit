@@ -2206,7 +2206,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableZones, onUpdateZo
                 }`}
             >
               <MessageCircle size={14} className="sm:w-4 sm:h-4" /> <span>Campañas</span>
-              <span className="absolute -top-1 -right-1 bg-gradient-to-r from-red-500 to-pink-500 text-white text-[8px] font-black px-1.5 py-0.5 rounded-full shadow-sm border border-white/50">NUEVO</span>
+              <span className="absolute -top-0.5 -right-0.5 text-white text-[7px] font-black px-1 py-0.5 rounded-full shadow-sm border border-white/50" style={{ background: 'linear-gradient(135deg, #29BEA5 0%, #1fa890 100%)' }}>NUEVO</span>
             </button>
             <div
               className="relative settings-submenu-container"
@@ -4466,7 +4466,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableZones, onUpdateZo
           >
             <MessageCircle size={20} strokeWidth={activeTab === 'campaigns' ? 2.5 : 2} />
             <span className="text-[10px] font-bold mt-1">Campañas</span>
-            <span className="absolute top-0 right-1 bg-gradient-to-r from-red-500 to-pink-500 text-white text-[7px] font-black px-1 py-0.5 rounded-full shadow-sm border border-white/50">NUEVO</span>
+            <span className="absolute top-0 right-1 text-white text-[6px] font-black px-1 py-0.5 rounded-full shadow-sm border border-white/50" style={{ background: 'linear-gradient(135deg, #29BEA5 0%, #1fa890 100%)' }}>NUEVO</span>
           </button>
 
           <button
