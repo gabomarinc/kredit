@@ -32,9 +32,9 @@ export const AuthSelection: React.FC<AuthSelectionProps> = ({ onLogin, onRegiste
             {/* Login Card */}
             <button
               onClick={onLogin}
-              className="group text-left p-8 rounded-[2.5rem] border-2 border-gray-100 bg-white hover:border-indigo-200 hover:bg-indigo-50/30 hover:shadow-xl transition-all duration-300 relative overflow-hidden"
+              className="group text-left p-8 rounded-[2.5rem] border-2 border-gray-100 bg-white hover:border-primary-200 hover:bg-primary-50/30 hover:shadow-xl transition-all duration-300 relative overflow-hidden"
             >
-              <div className="w-16 h-16 rounded-2xl bg-white border border-gray-100 text-gray-900 flex items-center justify-center mb-6 shadow-sm group-hover:scale-110 group-hover:bg-indigo-600 group-hover:text-white transition-all duration-300">
+              <div className="w-16 h-16 rounded-2xl bg-white border border-gray-100 text-gray-900 flex items-center justify-center mb-6 shadow-sm group-hover:scale-110 group-hover:text-white transition-all duration-300" onMouseEnter={(e) => { e.currentTarget.style.background = 'linear-gradient(135deg, #29BEA5 0%, #1fa890 100%)'; }} onMouseLeave={(e) => { e.currentTarget.style.background = 'white'; }}>
                 <LogIn size={28} strokeWidth={1.5} />
               </div>
               <h3 className="text-2xl font-bold text-gray-900 mb-2">Iniciar Sesión</h3>
@@ -42,12 +42,12 @@ export const AuthSelection: React.FC<AuthSelectionProps> = ({ onLogin, onRegiste
                 Ya tengo una cuenta y quiero acceder a mi dashboard.
               </p>
               
-              <div className="flex items-center gap-2 text-indigo-600 font-bold text-sm opacity-0 group-hover:opacity-100 transform translate-y-2 group-hover:translate-y-0 transition-all duration-300">
+              <div className="flex items-center gap-2 text-primary-600 font-bold text-sm opacity-0 group-hover:opacity-100 transform translate-y-2 group-hover:translate-y-0 transition-all duration-300">
                 Ingresar ahora <ArrowRight size={16} />
               </div>
 
               {/* Decoración sutil en hover */}
-              <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-100 rounded-full blur-3xl -mr-16 -mt-16 opacity-0 group-hover:opacity-20 transition-opacity"></div>
+              <div className="absolute top-0 right-0 w-32 h-32 bg-primary-100 rounded-full blur-3xl -mr-16 -mt-16 opacity-0 group-hover:opacity-20 transition-opacity"></div>
             </button>
 
             {/* Register Card */}
@@ -73,7 +73,7 @@ export const AuthSelection: React.FC<AuthSelectionProps> = ({ onLogin, onRegiste
         </div>
 
         <div className="mt-12 text-center relative z-10">
-           <p className="text-xs text-gray-400 font-medium">Krêdit Platform • v1.0</p>
+           <p className="text-xs text-gray-400 font-medium">Kônsul Krêdit • v1.0</p>
         </div>
       </div>
     </div>
