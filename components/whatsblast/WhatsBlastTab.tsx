@@ -661,5 +661,6 @@ export const WhatsBlastTab: React.FC<WhatsBlastTabProps> = ({ prospects: sourceP
                     </div>
                 </div>
             )}
+        </div>
     );
 };
