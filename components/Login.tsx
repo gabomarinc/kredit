@@ -17,6 +17,9 @@ export const Login: React.FC<LoginProps> = ({ onLogin, onGoToRegister }) => {
     message: ''
   });
   const [isLoading, setIsLoading] = useState(false);
+  const [showForgotPassword, setShowForgotPassword] = useState(false);
+  const [forgotPasswordEmail, setForgotPasswordEmail] = useState('');
+  const [isSendingReset, setIsSendingReset] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -101,7 +104,13 @@ export const Login: React.FC<LoginProps> = ({ onLogin, onGoToRegister }) => {
           </div>
 
           <div className="flex justify-end">
-            <a href="#" className="text-xs font-semibold text-primary-500 hover:text-primary-700">¿Olvidaste tu contraseña?</a>
+            <button 
+              type="button"
+              onClick={() => setShowForgotPassword(true)}
+              className="text-xs font-semibold text-primary-500 hover:text-primary-700 transition-colors"
+            >
+              ¿Olvidaste tu contraseña?
+            </button>
           </div>
 
           <button
@@ -131,6 +140,117 @@ export const Login: React.FC<LoginProps> = ({ onLogin, onGoToRegister }) => {
           </p>
         </div>
       </div>
+
+      {/* Forgot Password Modal */}
+      {showForgotPassword && (
+        <div className="fixed inset-0 z-[200] flex items-center justify-center p-4">
+          <div
+            className="absolute inset-0 bg-black/20 backdrop-blur-sm transition-opacity"
+            onClick={() => setShowForgotPassword(false)}
+          ></div>
+          <div className="bg-white rounded-[2rem] p-6 sm:p-8 max-w-md w-full shadow-2xl relative z-10 animate-fade-in-up">
+            <h3 className="text-xl font-bold text-gray-900 mb-2">Restablecer Contraseña</h3>
+            <p className="text-gray-600 text-sm mb-6">
+              Ingresa tu correo electrónico y te enviaremos un enlace para restablecer tu contraseña.
+            </p>
+            
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">Correo Electrónico</label>
+                <input
+                  type="email"
+                  value={forgotPasswordEmail}
+                  onChange={(e) => setForgotPasswordEmail(e.target.value)}
+                  placeholder="tu@email.com"
+                  className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-primary-500 outline-none focus:bg-primary-50/10 transition-all text-gray-700 font-medium"
+                  disabled={isSendingReset}
+                />
+              </div>
+              
+              <div className="flex gap-3">
+                <button
+                  onClick={() => {
+                    setShowForgotPassword(false);
+                    setForgotPasswordEmail('');
+                  }}
+                  disabled={isSendingReset}
+                  className="flex-1 px-6 py-3 rounded-xl border border-gray-200 text-gray-700 font-semibold hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  Cancelar
+                </button>
+                <button
+                  onClick={async () => {
+                    if (!forgotPasswordEmail) {
+                      setNotification({
+                        isOpen: true,
+                        type: 'error',
+                        message: 'Por favor ingresa tu correo electrónico',
+                        title: 'Email requerido'
+                      });
+                      return;
+                    }
+
+                    setIsSendingReset(true);
+                    try {
+                      const response = await fetch('/api/password-reset/request', {
+                        method: 'POST',
+                        headers: {
+                          'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({ email: forgotPasswordEmail }),
+                      });
+
+                      const data = await response.json();
+
+                      if (data.success) {
+                        setNotification({
+                          isOpen: true,
+                          type: 'success',
+                          message: data.message || 'Si el email existe, recibirás un enlace para resetear tu contraseña.',
+                          title: 'Email enviado'
+                        });
+                        setShowForgotPassword(false);
+                        setForgotPasswordEmail('');
+                      } else {
+                        setNotification({
+                          isOpen: true,
+                          type: 'error',
+                          message: data.error || 'Error al enviar el email',
+                          title: 'Error'
+                        });
+                      }
+                    } catch (error) {
+                      console.error('Error:', error);
+                      setNotification({
+                        isOpen: true,
+                        type: 'error',
+                        message: 'Error al enviar el email. Por favor intenta de nuevo.',
+                        title: 'Error de conexión'
+                      });
+                    } finally {
+                      setIsSendingReset(false);
+                    }
+                  }}
+                  disabled={isSendingReset}
+                  className="flex-1 px-6 py-3 rounded-xl font-semibold text-sm transition-colors shadow-lg text-white disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                  style={{ background: 'linear-gradient(135deg, #29BEA5 0%, #1fa890 100%)' }}
+                  onMouseEnter={(e) => !isSendingReset && (e.currentTarget.style.background = 'linear-gradient(135deg, #1fa890 0%, #1a8674 100%)')}
+                  onMouseLeave={(e) => !isSendingReset && (e.currentTarget.style.background = 'linear-gradient(135deg, #29BEA5 0%, #1fa890 100%)')}
+                >
+                  {isSendingReset ? (
+                    <>
+                      <Loader2 size={18} className="animate-spin" />
+                      Enviando...
+                    </>
+                  ) : (
+                    'Enviar Enlace'
+                  )}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Notification Modal */}
       <NotificationModal

@@ -4,11 +4,12 @@ import { ProspectFlow } from './components/ProspectFlow';
 import { Dashboard } from './components/Dashboard';
 import { Login } from './components/Login';
 import { Register } from './components/Register';
+import { ResetPassword } from './components/ResetPassword';
 import { AuthSelection } from './components/AuthSelection';
 import { ZONES_PANAMA } from './constants';
 import { getCompanyById } from './utils/db';
 
-type AuthState = 'selection' | 'login' | 'register' | 'authenticated';
+type AuthState = 'selection' | 'login' | 'register' | 'reset-password' | 'authenticated';
 
 function App() {
   // Check for embed mode query param
@@ -39,9 +40,25 @@ function App() {
   const [zones, setZones] = useState<string[]>(ZONES_PANAMA);
   const [companyName, setCompanyName] = useState('Krêdit');
 
+  // Verificar si hay token de reset en la URL
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const resetToken = params.get('token');
+    if (resetToken) {
+      setAuthState('reset-password');
+    }
+  }, []);
+
   // Verificar sesión guardada al cargar la aplicación
   useEffect(() => {
     const checkSession = async () => {
+      // No verificar sesión si estamos en reset-password
+      const params = new URLSearchParams(window.location.search);
+      if (params.get('token')) {
+        setIsCheckingSession(false);
+        return;
+      }
+
       const savedCompanyId = localStorage.getItem('companyId');
       
       if (savedCompanyId) {
@@ -240,6 +257,26 @@ function App() {
         <Register 
           onRegisterComplete={handleRegisterComplete}
           onGoToLogin={() => setAuthState('login')}
+        />
+      </Layout>
+    );
+  }
+
+  // 4. Reset Password Screen
+  if (authState === 'reset-password') {
+    return (
+      <Layout>
+        <ResetPassword
+          onSuccess={() => {
+            // Limpiar token de la URL
+            window.history.replaceState({}, '', '/');
+            setAuthState('login');
+          }}
+          onCancel={() => {
+            // Limpiar token de la URL
+            window.history.replaceState({}, '', '/');
+            setAuthState('login');
+          }}
         />
       </Layout>
     );

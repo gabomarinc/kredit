@@ -125,6 +125,28 @@ const ensureTablesExist = async (client: any) => {
       console.warn('Nota: Error al intentar actualizar columnas de companies:', e);
     }
 
+    // Tabla de tokens de reset de contraseña
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS password_reset_tokens (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        company_id UUID REFERENCES companies(id) ON DELETE CASCADE NOT NULL,
+        token TEXT UNIQUE NOT NULL,
+        expires_at TIMESTAMP NOT NULL,
+        used BOOLEAN DEFAULT FALSE,
+        created_at TIMESTAMP DEFAULT NOW()
+      )
+    `);
+
+    // Crear índices si no existen
+    try {
+      await client.query(`CREATE INDEX IF NOT EXISTS idx_password_reset_tokens_token ON password_reset_tokens(token)`);
+      await client.query(`CREATE INDEX IF NOT EXISTS idx_password_reset_tokens_company ON password_reset_tokens(company_id)`);
+      await client.query(`CREATE INDEX IF NOT EXISTS idx_password_reset_tokens_expires ON password_reset_tokens(expires_at)`);
+      await client.query(`CREATE INDEX IF NOT EXISTS idx_password_reset_tokens_used ON password_reset_tokens(used)`);
+    } catch (e) {
+      console.warn('Nota: Error creando índices de password_reset_tokens:', e);
+    }
+
     // Tabla de propiedades
     await client.query(`
       CREATE TABLE IF NOT EXISTS properties (
@@ -2881,3 +2903,161 @@ export const deleteWhatsBlastCampaign = async (campaignId: string, companyId: st
     return false;
   }
 }
+
+// ============================================
+// FUNCIONES PARA RESET DE CONTRASEÑA
+// ============================================
+
+// Generar token único para reset de contraseña
+const generateResetToken = (): string => {
+  const randomBytes = new Uint8Array(32);
+  crypto.getRandomValues(randomBytes);
+  return Array.from(randomBytes, byte => byte.toString(16).padStart(2, '0')).join('');
+};
+
+// Crear token de reset de contraseña
+export const createPasswordResetToken = async (email: string): Promise<string | null> => {
+  if (!pool) {
+    console.error('❌ Pool de base de datos no inicializado.');
+    return null;
+  }
+
+  try {
+    const client = await pool.connect();
+    await ensureTablesExist(client);
+
+    // La tabla ya debería existir por ensureTablesExist, pero por si acaso
+    await ensureTablesExist(client);
+
+    // Buscar empresa por email
+    const companyResult = await client.query(
+      'SELECT id FROM companies WHERE email = $1',
+      [email]
+    );
+
+    if (companyResult.rows.length === 0) {
+      console.warn('⚠️ Email no encontrado para reset de contraseña');
+      client.release();
+      return null;
+    }
+
+    const companyId = companyResult.rows[0].id;
+
+    // Invalidar tokens anteriores no usados
+    await client.query(
+      'UPDATE password_reset_tokens SET used = TRUE WHERE company_id = $1 AND used = FALSE',
+      [companyId]
+    );
+
+    // Generar nuevo token
+    const token = generateResetToken();
+    const expiresAt = new Date();
+    expiresAt.setHours(expiresAt.getHours() + 1); // Expira en 1 hora
+
+    // Guardar token
+    await client.query(
+      `INSERT INTO password_reset_tokens (company_id, token, expires_at)
+       VALUES ($1, $2, $3)`,
+      [companyId, token, expiresAt]
+    );
+
+    client.release();
+    console.log('✅ Token de reset creado exitosamente');
+    return token;
+  } catch (error) {
+    console.error('❌ Error creando token de reset:', error);
+    return null;
+  }
+};
+
+// Validar token de reset de contraseña
+export const validatePasswordResetToken = async (token: string): Promise<string | null> => {
+  if (!pool) {
+    console.error('❌ Pool de base de datos no inicializado.');
+    return null;
+  }
+
+  try {
+    const client = await pool.connect();
+    await ensureTablesExist(client);
+
+    // Buscar token válido
+    const tokenResult = await client.query(
+      `SELECT company_id, expires_at, used 
+       FROM password_reset_tokens 
+       WHERE token = $1`,
+      [token]
+    );
+
+    if (tokenResult.rows.length === 0) {
+      console.warn('⚠️ Token no encontrado');
+      client.release();
+      return null;
+    }
+
+    const tokenData = tokenResult.rows[0];
+
+    // Verificar si ya fue usado
+    if (tokenData.used) {
+      console.warn('⚠️ Token ya fue usado');
+      client.release();
+      return null;
+    }
+
+    // Verificar si expiró
+    const expiresAt = new Date(tokenData.expires_at);
+    if (expiresAt < new Date()) {
+      console.warn('⚠️ Token expirado');
+      client.release();
+      return null;
+    }
+
+    client.release();
+    return tokenData.company_id;
+  } catch (error) {
+    console.error('❌ Error validando token:', error);
+    return null;
+  }
+};
+
+// Resetear contraseña usando token
+export const resetPasswordWithToken = async (token: string, newPassword: string): Promise<boolean> => {
+  if (!pool) {
+    console.error('❌ Pool de base de datos no inicializado.');
+    return false;
+  }
+
+  try {
+    const client = await pool.connect();
+    await ensureTablesExist(client);
+
+    // Validar token y obtener company_id
+    const companyId = await validatePasswordResetToken(token);
+    if (!companyId) {
+      client.release();
+      return false;
+    }
+
+    // Hash de nueva contraseña
+    const passwordHash = simpleHash(newPassword);
+
+    // Actualizar contraseña
+    await client.query(
+      'UPDATE companies SET password_hash = $1 WHERE id = $2',
+      [passwordHash, companyId]
+    );
+
+    // Marcar token como usado
+    await client.query(
+      'UPDATE password_reset_tokens SET used = TRUE WHERE token = $1',
+      [token]
+    );
+
+    client.release();
+    console.log('✅ Contraseña actualizada exitosamente');
+    return true;
+  } catch (error) {
+    console.error('❌ Error reseteando contraseña:', error);
+    return false;
+  }
+};
