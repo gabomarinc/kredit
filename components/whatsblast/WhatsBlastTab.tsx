@@ -59,6 +59,7 @@ export const WhatsBlastTab: React.FC<WhatsBlastTabProps> = ({ prospects: sourceP
     const [isUploading, setIsUploading] = useState(false);
     const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
     const [campaignToDelete, setCampaignToDelete] = useState<WhatsBlastCampaign | null>(null);
+    const [isDeleting, setIsDeleting] = useState(false);
 
     // Load Campaigns on Mount
     useEffect(() => {
@@ -181,8 +182,9 @@ export const WhatsBlastTab: React.FC<WhatsBlastTabProps> = ({ prospects: sourceP
     };
 
     const handleDeleteConfirm = async () => {
-        if (!companyId || !campaignToDelete) return;
+        if (!companyId || !campaignToDelete || isDeleting) return;
 
+        setIsDeleting(true);
         try {
             const success = await deleteWhatsBlastCampaign(campaignToDelete.id, companyId);
             
@@ -199,6 +201,7 @@ export const WhatsBlastTab: React.FC<WhatsBlastTabProps> = ({ prospects: sourceP
             console.error("Error deleting campaign:", error);
             addNotification("Error al eliminar la campaña", "error");
         } finally {
+            setIsDeleting(false);
             setShowDeleteConfirm(false);
             setCampaignToDelete(null);
         }
@@ -646,15 +649,24 @@ export const WhatsBlastTab: React.FC<WhatsBlastTabProps> = ({ prospects: sourceP
                             <div className="flex gap-3">
                                 <button
                                     onClick={handleDeleteCancel}
-                                    className="flex-1 px-6 py-2.5 rounded-xl font-semibold text-sm transition-colors shadow-sm border-2 border-gray-200 text-gray-700 hover:bg-gray-50"
+                                    disabled={isDeleting}
+                                    className="flex-1 px-6 py-2.5 rounded-xl font-semibold text-sm transition-colors shadow-sm border-2 border-gray-200 text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
                                 >
                                     Cancelar
                                 </button>
                                 <button
                                     onClick={handleDeleteConfirm}
-                                    className="flex-1 px-6 py-2.5 rounded-xl font-semibold text-sm transition-colors shadow-lg bg-red-600 hover:bg-red-700 text-white"
+                                    disabled={isDeleting}
+                                    className="flex-1 px-6 py-2.5 rounded-xl font-semibold text-sm transition-colors shadow-lg bg-red-600 hover:bg-red-700 text-white disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                                 >
-                                    Eliminar
+                                    {isDeleting ? (
+                                        <>
+                                            <Loader2 size={18} className="animate-spin" />
+                                            Eliminando...
+                                        </>
+                                    ) : (
+                                        'Eliminar'
+                                    )}
                                 </button>
                             </div>
                         </div>
