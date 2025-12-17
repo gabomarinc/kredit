@@ -624,12 +624,12 @@ export const WhatsBlastTab: React.FC<WhatsBlastTabProps> = ({ prospects: sourceP
 
         {/* Delete Confirmation Modal */}
         {showDeleteConfirm && campaignToDelete && (
-            <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 pointer-events-none">
+            <div className="fixed inset-0 z-[200] flex items-center justify-center pointer-events-none">
                 <div 
                     className="absolute inset-0 bg-black/20 backdrop-blur-sm transition-opacity pointer-events-auto"
                     onClick={handleDeleteCancel}
                 ></div>
-                <div className="bg-white border-2 border-red-200 rounded-[2rem] p-6 sm:p-8 max-w-md w-full shadow-2xl relative z-10 pointer-events-auto animate-fade-in-up">
+                <div className="bg-white border-2 border-red-200 rounded-[2rem] p-6 sm:p-8 max-w-md w-full mx-4 shadow-2xl relative z-10 pointer-events-auto animate-fade-in-up">
                     <div className="flex items-start gap-4">
                         <div className="text-red-600 shrink-0">
                             <Trash2 size={32} className="mt-1" />
