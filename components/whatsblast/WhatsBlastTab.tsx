@@ -373,48 +373,46 @@ export const WhatsBlastTab: React.FC<WhatsBlastTabProps> = ({ prospects: sourceP
                 />
 
                 <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6 mb-8 mt-12">
-                    {/* ... (Tab Buttons - kept same) ... */}
-                    <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6 mb-8 mt-12">
-                        {/* Source Selector */}
-                        <div className="relative z-20 group w-full md:w-72">
-                            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-secondary-400">
-                                {activeSource === 'kredit' ? <Database size={18} /> : <FileSpreadsheet size={18} />}
-                            </div>
-                            <select
-                                value={activeSource}
-                                onChange={(e) => setActiveSource(e.target.value)}
-                                className="w-full pl-10 pr-10 py-3 rounded-xl bg-white border border-secondary-200 text-secondary-700 font-bold focus:ring-2 focus:ring-indigo-100 appearance-none cursor-pointer hover:border-indigo-300 transition-all shadow-sm"
-                                disabled={isUploading || isLoadingData}
-                            >
-                                <option value="kredit" className="font-bold">🏦 Base de Datos Kredit</option>
-                                <optgroup label="Campañas Subidas">
-                                    {campaigns.map(c => (
-                                        <option key={c.id} value={c.id}>📊 {c.name} ({c.total})</option>
-                                    ))}
-                                </optgroup>
-                            </select>
-                            <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none text-secondary-400">
-                                <ChevronDown size={16} />
-                            </div>
+                    {/* Source Selector */}
+                    <div className="relative z-20 group w-full md:w-72">
+                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-secondary-400">
+                            {activeSource === 'kredit' ? <Database size={18} /> : <FileSpreadsheet size={18} />}
                         </div>
-
-                        <div className="bg-secondary-50 p-1.5 rounded-2xl flex w-full md:w-auto shadow-inner border border-secondary-100">
-                            <button onClick={() => setActiveTab('list')} className={`flex-1 md:flex-none px-6 py-2.5 rounded-xl text-sm font-black transition-all duration-300 flex items-center justify-center gap-2 ${activeTab === 'list' ? 'bg-white text-primary-600 shadow-sm ring-1 ring-black/5' : 'text-secondary-500 hover:text-secondary-700'}`}>
-                                <span>📋</span> Lista
-                            </button>
-                            <button onClick={() => setActiveTab('template')} className={`flex-1 md:flex-none px-6 py-2.5 rounded-xl text-sm font-black transition-all duration-300 flex items-center justify-center gap-2 ${activeTab === 'template' ? 'bg-white text-primary-600 shadow-sm ring-1 ring-black/5' : 'text-secondary-500 hover:text-secondary-700'}`}>
-                                <span>💬</span> Mensaje
-                            </button>
-                        </div>
-
-                        <div className="flex items-center gap-3">
-                            <label className={`cursor-pointer bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2.5 rounded-xl text-xs font-black uppercase tracking-wider transition-all flex items-center gap-2 shadow-lg shadow-indigo-200 ${isUploading ? 'opacity-70 cursor-wait' : ''}`}>
-                                {isUploading ? <Loader2 size={18} className="animate-spin" /> : <FileSpreadsheet size={18} />}
-                                <span>{isUploading ? 'Subiendo...' : 'Nueva Campaña'}</span>
-                                <input type="file" accept=".xlsx, .xls, .csv" className="hidden" onChange={handleFileUpload} disabled={isUploading} />
-                            </label>
+                        <select
+                            value={activeSource}
+                            onChange={(e) => setActiveSource(e.target.value)}
+                            className="w-full pl-10 pr-10 py-3 rounded-xl bg-white border border-secondary-200 text-secondary-700 font-bold focus:ring-2 focus:ring-indigo-100 appearance-none cursor-pointer hover:border-indigo-300 transition-all shadow-sm"
+                            disabled={isUploading || isLoadingData}
+                        >
+                            <option value="kredit" className="font-bold">🏦 Base de Datos Kredit</option>
+                            <optgroup label="Campañas Subidas">
+                                {campaigns.map(c => (
+                                    <option key={c.id} value={c.id}>📊 {c.name} ({c.total})</option>
+                                ))}
+                            </optgroup>
+                        </select>
+                        <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none text-secondary-400">
+                            <ChevronDown size={16} />
                         </div>
                     </div>
+
+                    <div className="bg-secondary-50 p-1.5 rounded-2xl flex w-full md:w-auto shadow-inner border border-secondary-100">
+                        <button onClick={() => setActiveTab('list')} className={`flex-1 md:flex-none px-6 py-2.5 rounded-xl text-sm font-black transition-all duration-300 flex items-center justify-center gap-2 ${activeTab === 'list' ? 'bg-white text-primary-600 shadow-sm ring-1 ring-black/5' : 'text-secondary-500 hover:text-secondary-700'}`}>
+                            <span>📋</span> Lista
+                        </button>
+                        <button onClick={() => setActiveTab('template')} className={`flex-1 md:flex-none px-6 py-2.5 rounded-xl text-sm font-black transition-all duration-300 flex items-center justify-center gap-2 ${activeTab === 'template' ? 'bg-white text-primary-600 shadow-sm ring-1 ring-black/5' : 'text-secondary-500 hover:text-secondary-700'}`}>
+                            <span>💬</span> Mensaje
+                        </button>
+                    </div>
+
+                    <div className="flex items-center gap-3">
+                        <label className={`cursor-pointer bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2.5 rounded-xl text-xs font-black uppercase tracking-wider transition-all flex items-center gap-2 shadow-lg shadow-indigo-200 ${isUploading ? 'opacity-70 cursor-wait' : ''}`}>
+                            {isUploading ? <Loader2 size={18} className="animate-spin" /> : <FileSpreadsheet size={18} />}
+                            <span>{isUploading ? 'Subiendo...' : 'Nueva Campaña'}</span>
+                            <input type="file" accept=".xlsx, .xls, .csv" className="hidden" onChange={handleFileUpload} disabled={isUploading} />
+                        </label>
+                    </div>
+                </div>
 
                     {isLoadingData ? (
                         <div className="flex flex-col items-center justify-center py-20 animate-fade-in">
