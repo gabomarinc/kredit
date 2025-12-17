@@ -57,6 +57,8 @@ export const WhatsBlastTab: React.FC<WhatsBlastTabProps> = ({ prospects: sourceP
     const [isLoadingData, setIsLoadingData] = useState(false);
     const [displayedProspects, setDisplayedProspects] = useState<Prospect[]>([]);
     const [isUploading, setIsUploading] = useState(false);
+    const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+    const [campaignToDelete, setCampaignToDelete] = useState<WhatsBlastCampaign | null>(null);
 
     // Load Campaigns on Mount
     useEffect(() => {
@@ -168,24 +170,24 @@ export const WhatsBlastTab: React.FC<WhatsBlastTabProps> = ({ prospects: sourceP
         setNotifications(prev => prev.filter(n => n.id !== id));
     };
 
-    const handleDeleteCampaign = async () => {
+    const handleDeleteClick = () => {
         if (!companyId || activeSource === 'kredit') return;
         
         const campaign = campaigns.find(c => c.id === activeSource);
         if (!campaign) return;
 
-        // Confirmación
-        const confirmed = window.confirm(
-            `¿Estás seguro de que quieres eliminar la campaña "${campaign.name}"?\n\nEsta acción no se puede deshacer.`
-        );
+        setCampaignToDelete(campaign);
+        setShowDeleteConfirm(true);
+    };
 
-        if (!confirmed) return;
+    const handleDeleteConfirm = async () => {
+        if (!companyId || !campaignToDelete) return;
 
         try {
-            const success = await deleteWhatsBlastCampaign(activeSource, companyId);
+            const success = await deleteWhatsBlastCampaign(campaignToDelete.id, companyId);
             
             if (success) {
-                addNotification(`✅ Campaña "${campaign.name}" eliminada exitosamente`);
+                addNotification(`✅ Campaña "${campaignToDelete.name}" eliminada exitosamente`);
                 // Reset to 'kredit' if we deleted the active campaign
                 setActiveSource('kredit');
                 // Reload campaigns list
@@ -196,7 +198,15 @@ export const WhatsBlastTab: React.FC<WhatsBlastTabProps> = ({ prospects: sourceP
         } catch (error) {
             console.error("Error deleting campaign:", error);
             addNotification("Error al eliminar la campaña", "error");
+        } finally {
+            setShowDeleteConfirm(false);
+            setCampaignToDelete(null);
         }
+    };
+
+    const handleDeleteCancel = () => {
+        setShowDeleteConfirm(false);
+        setCampaignToDelete(null);
     };
 
     const handleSaveTemplate = (content: string) => {
@@ -456,7 +466,7 @@ export const WhatsBlastTab: React.FC<WhatsBlastTabProps> = ({ prospects: sourceP
                         {/* Delete Campaign Button - Only show when a campaign is selected */}
                         {activeSource !== 'kredit' && (
                             <button
-                                onClick={handleDeleteCampaign}
+                                onClick={handleDeleteClick}
                                 className="px-4 py-3 rounded-xl bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 transition-all flex items-center gap-2 shadow-sm hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
                                 disabled={isUploading || isLoadingData}
                                 title="Eliminar campaña"
@@ -607,5 +617,49 @@ export const WhatsBlastTab: React.FC<WhatsBlastTabProps> = ({ prospects: sourceP
                     <ToastContainer notifications={notifications} removeNotification={removeNotification} />
                 </div>
             </div>
+
+            {/* Delete Confirmation Modal */}
+            {showDeleteConfirm && campaignToDelete && (
+                <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 pointer-events-none">
+                    <div 
+                        className="absolute inset-0 bg-black/20 backdrop-blur-sm transition-opacity pointer-events-auto"
+                        onClick={handleDeleteCancel}
+                    ></div>
+                    <div className="bg-white border-2 border-red-200 rounded-[2rem] p-6 sm:p-8 max-w-md w-full shadow-2xl relative z-10 pointer-events-auto animate-fade-in-up">
+                        <div className="flex items-start gap-4">
+                            <div className="text-red-600 shrink-0">
+                                <Trash2 size={32} className="mt-1" />
+                            </div>
+                            
+                            <div className="flex-1 min-w-0">
+                                <h3 className="text-red-900 font-bold text-lg mb-2">
+                                    Eliminar Campaña
+                                </h3>
+                                <p className="text-gray-700 leading-relaxed text-sm sm:text-base mb-6">
+                                    ¿Estás seguro de que quieres eliminar la campaña <strong>"{campaignToDelete.name}"</strong>?
+                                </p>
+                                <p className="text-gray-600 text-xs mb-6">
+                                    Esta acción no se puede deshacer.
+                                </p>
+                                
+                                <div className="flex gap-3">
+                                    <button
+                                        onClick={handleDeleteCancel}
+                                        className="flex-1 px-6 py-2.5 rounded-xl font-semibold text-sm transition-colors shadow-sm border-2 border-gray-200 text-gray-700 hover:bg-gray-50"
+                                    >
+                                        Cancelar
+                                    </button>
+                                    <button
+                                        onClick={handleDeleteConfirm}
+                                        className="flex-1 px-6 py-2.5 rounded-xl font-semibold text-sm transition-colors shadow-lg bg-red-600 hover:bg-red-700 text-white"
+                                    >
+                                        Eliminar
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
     );
 };
