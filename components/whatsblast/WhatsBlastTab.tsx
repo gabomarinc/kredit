@@ -336,6 +336,11 @@ export const WhatsBlastTab: React.FC<WhatsBlastTabProps> = ({ prospects: sourceP
         return ['Nombre Completo', 'Teléfono'];
     }, []);
 
+    // Template variables - combine base variables with filterable columns
+    const templateVariables = useMemo(() => {
+        return ['nombre', 'apellido', 'empresa', 'telefono', ...filterableColumns];
+    }, [filterableColumns]);
+
     // Pagination State
     const [currentPage, setCurrentPage] = useState(1);
     const ITEMS_PER_PAGE = 12;
@@ -528,7 +533,7 @@ export const WhatsBlastTab: React.FC<WhatsBlastTabProps> = ({ prospects: sourceP
                             <TemplateEditor
                                 initialTemplate={template}
                                 onSave={handleSaveTemplate}
-                                variables={['nombre', 'apellido', 'empresa', 'telefono', ...filterableColumns]}
+                                variables={templateVariables}
                                 sampleProspect={activeProspects[0]}
                             />
                         </div>
