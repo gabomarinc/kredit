@@ -3145,12 +3145,12 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableZones, onUpdateZo
                       }
                     }}
                     className={`p-6 rounded-2xl border-2 transition-all text-left relative overflow-hidden ${companyData?.plan === 'Wolf of Wallstreet'
-                      ? 'border-purple-500 bg-purple-50/30 shadow-lg'
-                      : 'border-gray-200 hover:border-purple-200 hover:bg-purple-50/20'
+                      ? 'border-primary-500 bg-primary-50/30 shadow-lg'
+                      : 'border-gray-200 hover:border-primary-200 hover:bg-primary-50/20'
                       }`}
                   >
                     {companyData?.plan === 'Wolf of Wallstreet' && (
-                      <div className="absolute top-3 right-3 bg-purple-600 text-white text-xs font-bold px-3 py-1 rounded-full">
+                      <div className="absolute top-3 right-3 text-white text-xs font-bold px-3 py-1 rounded-full" style={{ background: 'linear-gradient(135deg, #29BEA5 0%, #1fa890 100%)' }}>
                         Premium
                       </div>
                     )}
@@ -3162,16 +3162,16 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableZones, onUpdateZo
                         <span>Todas las funciones del plan Freshie</span>
                       </div>
                       <div className="flex items-center gap-2">
-                        <CheckCircle2 size={16} className="text-purple-500" />
-                        <span className="font-semibold text-purple-600">Gestión de propiedades</span>
+                        <CheckCircle2 size={16} className="text-primary-500" />
+                        <span className="font-semibold text-primary-600">Gestión de propiedades</span>
                       </div>
                       <div className="flex items-center gap-2">
-                        <CheckCircle2 size={16} className="text-purple-500" />
-                        <span className="font-semibold text-purple-600">Mostrar propiedades a prospectos</span>
+                        <CheckCircle2 size={16} className="text-primary-500" />
+                        <span className="font-semibold text-primary-600">Mostrar propiedades a prospectos</span>
                       </div>
                       <div className="flex items-center gap-2">
-                        <CheckCircle2 size={16} className="text-purple-500" />
-                        <span className="font-semibold text-purple-600">Seguimiento de intereses</span>
+                        <CheckCircle2 size={16} className="text-primary-500" />
+                        <span className="font-semibold text-primary-600">Seguimiento de intereses</span>
                       </div>
                     </div>
                     <div className="mt-6 pt-4 border-t border-gray-200">
@@ -3179,7 +3179,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableZones, onUpdateZo
                       <div className="text-sm text-gray-500">/ mes</div>
                     </div>
                     {companyData?.plan === 'Wolf of Wallstreet' && (
-                      <div className="mt-4 text-xs font-semibold text-purple-600 bg-purple-100 px-3 py-1 rounded-full inline-block">
+                      <div className="mt-4 text-xs font-semibold text-primary-600 bg-primary-100 px-3 py-1 rounded-full inline-block">
                         Plan Actual
                       </div>
                     )}
