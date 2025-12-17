@@ -2200,12 +2200,13 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableZones, onUpdateZo
             </button>
             <button
               onClick={() => setActiveTab('campaigns')}
-              className={`px-3 sm:px-6 py-2 sm:py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition-all flex items-center gap-1 sm:gap-2 shrink-0 ${activeTab === 'campaigns'
+              className={`px-3 sm:px-6 py-2 sm:py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition-all flex items-center gap-1 sm:gap-2 shrink-0 relative ${activeTab === 'campaigns'
                 ? 'bg-indigo-50 text-indigo-600 shadow-sm'
                 : 'text-gray-400 hover:text-gray-600 hover:bg-gray-50'
                 }`}
             >
               <MessageCircle size={14} className="sm:w-4 sm:h-4" /> <span>Campañas</span>
+              <span className="absolute -top-1 -right-1 bg-gradient-to-r from-red-500 to-pink-500 text-white text-[8px] font-black px-1.5 py-0.5 rounded-full shadow-sm border border-white/50">NUEVO</span>
             </button>
             <div
               className="relative settings-submenu-container"
@@ -4461,10 +4462,11 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableZones, onUpdateZo
 
           <button
             onClick={() => setActiveTab('campaigns')}
-            className={`flex flex-col items-center justify-center w-full p-2 rounded-xl transition-all ${activeTab === 'campaigns' ? 'bg-indigo-50 text-indigo-600' : 'text-gray-400'}`}
+            className={`flex flex-col items-center justify-center w-full p-2 rounded-xl transition-all relative ${activeTab === 'campaigns' ? 'bg-indigo-50 text-indigo-600' : 'text-gray-400'}`}
           >
             <MessageCircle size={20} strokeWidth={activeTab === 'campaigns' ? 2.5 : 2} />
             <span className="text-[10px] font-bold mt-1">Campañas</span>
+            <span className="absolute top-0 right-1 bg-gradient-to-r from-red-500 to-pink-500 text-white text-[7px] font-black px-1 py-0.5 rounded-full shadow-sm border border-white/50">NUEVO</span>
           </button>
 
           <button
