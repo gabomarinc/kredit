@@ -2205,8 +2205,8 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableZones, onUpdateZo
                 : 'text-gray-400 hover:text-gray-600 hover:bg-gray-50'
                 }`}
             >
-              <MessageCircle size={14} className="sm:w-4 sm:h-4" /> <span>Campañas</span>
-              <span className="absolute -top-0.5 -right-0.5 text-white text-[7px] font-black px-1 py-0.5 rounded-full shadow-sm border border-white/50" style={{ background: 'linear-gradient(135deg, #29BEA5 0%, #1fa890 100%)' }}>NUEVO</span>
+              <MessageCircle size={14} className="sm:w-4 sm:h-4" /> <span className="relative">Campañas</span>
+              <span className="absolute -top-1 right-0 text-white text-[7px] font-black px-1 py-0.5 rounded-full shadow-sm border border-white/50" style={{ background: 'linear-gradient(135deg, #29BEA5 0%, #1fa890 100%)' }}>NUEVO</span>
             </button>
             <div
               className="relative settings-submenu-container"
@@ -4465,8 +4465,8 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableZones, onUpdateZo
             className={`flex flex-col items-center justify-center w-full p-2 rounded-xl transition-all relative ${activeTab === 'campaigns' ? 'bg-indigo-50 text-indigo-600' : 'text-gray-400'}`}
           >
             <MessageCircle size={20} strokeWidth={activeTab === 'campaigns' ? 2.5 : 2} />
-            <span className="text-[10px] font-bold mt-1">Campañas</span>
-            <span className="absolute top-0 right-1 text-white text-[6px] font-black px-1 py-0.5 rounded-full shadow-sm border border-white/50" style={{ background: 'linear-gradient(135deg, #29BEA5 0%, #1fa890 100%)' }}>NUEVO</span>
+            <span className="text-[10px] font-bold mt-1 relative">Campañas</span>
+            <span className="absolute top-0 right-0 text-white text-[6px] font-black px-1 py-0.5 rounded-full shadow-sm border border-white/50" style={{ background: 'linear-gradient(135deg, #29BEA5 0%, #1fa890 100%)' }}>NUEVO</span>
           </button>
 
           <button
