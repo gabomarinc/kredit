@@ -2868,10 +2868,9 @@ export const deleteWhatsBlastCampaign = async (campaignId: string, companyId: st
       return false; // Campaign doesn't exist or doesn't belong to company
     }
     
-    // Mark campaign as archived (soft delete)
+    // Physical delete - this will also delete all prospects due to CASCADE
     await client.query(`
-      UPDATE uploads 
-      SET status = 'archived', updated_at = NOW()
+      DELETE FROM uploads 
       WHERE id = $1 AND company_id = $2
     `, [campaignId, companyId]);
     
