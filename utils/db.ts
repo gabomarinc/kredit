@@ -2851,3 +2851,34 @@ export const updateWhatsBlastProspectStatus = async (prospectId: string, status:
     return false;
   }
 }
+
+export const deleteWhatsBlastCampaign = async (campaignId: string, companyId: string): Promise<boolean> => {
+  if (!pool) return false;
+  try {
+    const client = await pool.connect();
+    await ensureTablesExist(client);
+    
+    // Verify that the campaign belongs to the company before deleting
+    const verifyRes = await client.query(`
+      SELECT id FROM uploads WHERE id = $1 AND company_id = $2
+    `, [campaignId, companyId]);
+    
+    if (verifyRes.rows.length === 0) {
+      client.release();
+      return false; // Campaign doesn't exist or doesn't belong to company
+    }
+    
+    // Mark campaign as archived (soft delete)
+    await client.query(`
+      UPDATE uploads 
+      SET status = 'archived', updated_at = NOW()
+      WHERE id = $1 AND company_id = $2
+    `, [campaignId, companyId]);
+    
+    client.release();
+    return true;
+  } catch (e) {
+    console.error("Error deleting campaign:", e);
+    return false;
+  }
+}

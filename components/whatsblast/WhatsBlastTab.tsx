@@ -12,9 +12,10 @@ import {
     getWhatsBlastCampaigns,
     getCampaignProspects,
     updateWhatsBlastProspectStatus,
+    deleteWhatsBlastCampaign,
     WhatsBlastCampaign
 } from '../../utils/db';
-import { Loader2, Database, FileSpreadsheet, History, ChevronDown, Check } from 'lucide-react';
+import { Loader2, Database, FileSpreadsheet, History, ChevronDown, Check, Trash2 } from 'lucide-react';
 
 interface KreditProspect {
     id: string;
@@ -165,6 +166,37 @@ export const WhatsBlastTab: React.FC<WhatsBlastTabProps> = ({ prospects: sourceP
 
     const removeNotification = (id: string) => {
         setNotifications(prev => prev.filter(n => n.id !== id));
+    };
+
+    const handleDeleteCampaign = async () => {
+        if (!companyId || activeSource === 'kredit') return;
+        
+        const campaign = campaigns.find(c => c.id === activeSource);
+        if (!campaign) return;
+
+        // Confirmación
+        const confirmed = window.confirm(
+            `¿Estás seguro de que quieres eliminar la campaña "${campaign.name}"?\n\nEsta acción no se puede deshacer.`
+        );
+
+        if (!confirmed) return;
+
+        try {
+            const success = await deleteWhatsBlastCampaign(activeSource, companyId);
+            
+            if (success) {
+                addNotification(`✅ Campaña "${campaign.name}" eliminada exitosamente`);
+                // Reset to 'kredit' if we deleted the active campaign
+                setActiveSource('kredit');
+                // Reload campaigns list
+                await loadCampaigns();
+            } else {
+                addNotification("Error al eliminar la campaña", "error");
+            }
+        } catch (error) {
+            console.error("Error deleting campaign:", error);
+            addNotification("Error al eliminar la campaña", "error");
+        }
     };
 
     const handleSaveTemplate = (content: string) => {
@@ -398,26 +430,41 @@ export const WhatsBlastTab: React.FC<WhatsBlastTabProps> = ({ prospects: sourceP
 
                 <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6 mb-8 mt-12">
                     {/* Source Selector */}
-                    <div className="relative z-20 group w-full md:w-72">
-                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-secondary-400">
-                            {activeSource === 'kredit' ? <Database size={18} /> : <FileSpreadsheet size={18} />}
+                    <div className="flex items-center gap-3 w-full md:w-auto">
+                        <div className="relative z-20 group flex-1 md:w-72">
+                            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-secondary-400">
+                                {activeSource === 'kredit' ? <Database size={18} /> : <FileSpreadsheet size={18} />}
+                            </div>
+                            <select
+                                value={activeSource}
+                                onChange={(e) => setActiveSource(e.target.value)}
+                                className="w-full pl-10 pr-10 py-3 rounded-xl bg-white border border-secondary-200 text-secondary-700 font-bold focus:ring-2 focus:ring-indigo-100 appearance-none cursor-pointer hover:border-indigo-300 transition-all shadow-sm"
+                                disabled={isUploading || isLoadingData}
+                            >
+                                <option value="kredit" className="font-bold">🏦 Base de Datos Kredit</option>
+                                <optgroup label="Campañas Subidas">
+                                    {campaigns.map(c => (
+                                        <option key={c.id} value={c.id}>📊 {c.name} ({c.total})</option>
+                                    ))}
+                                </optgroup>
+                            </select>
+                            <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none text-secondary-400">
+                                <ChevronDown size={16} />
+                            </div>
                         </div>
-                        <select
-                            value={activeSource}
-                            onChange={(e) => setActiveSource(e.target.value)}
-                            className="w-full pl-10 pr-10 py-3 rounded-xl bg-white border border-secondary-200 text-secondary-700 font-bold focus:ring-2 focus:ring-indigo-100 appearance-none cursor-pointer hover:border-indigo-300 transition-all shadow-sm"
-                            disabled={isUploading || isLoadingData}
-                        >
-                            <option value="kredit" className="font-bold">🏦 Base de Datos Kredit</option>
-                            <optgroup label="Campañas Subidas">
-                                {campaigns.map(c => (
-                                    <option key={c.id} value={c.id}>📊 {c.name} ({c.total})</option>
-                                ))}
-                            </optgroup>
-                        </select>
-                        <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none text-secondary-400">
-                            <ChevronDown size={16} />
-                        </div>
+                        
+                        {/* Delete Campaign Button - Only show when a campaign is selected */}
+                        {activeSource !== 'kredit' && (
+                            <button
+                                onClick={handleDeleteCampaign}
+                                className="px-4 py-3 rounded-xl bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 transition-all flex items-center gap-2 shadow-sm hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
+                                disabled={isUploading || isLoadingData}
+                                title="Eliminar campaña"
+                            >
+                                <Trash2 size={18} />
+                                <span className="text-xs font-bold hidden sm:inline">Eliminar</span>
+                            </button>
+                        )}
                     </div>
 
                     <div className="bg-secondary-50 p-1.5 rounded-2xl flex w-full md:w-auto shadow-inner border border-secondary-100">
