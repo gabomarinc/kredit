@@ -618,7 +618,6 @@ export const WhatsBlastTab: React.FC<WhatsBlastTabProps> = ({ prospects: sourceP
                     <ToastContainer notifications={notifications} removeNotification={removeNotification} />
                 </div>
             </div>
-        </div>
 
         {/* Delete Confirmation Modal */}
         {showDeleteConfirm && campaignToDelete && (
