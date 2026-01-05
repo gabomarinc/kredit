@@ -653,6 +653,97 @@ export const saveProspectInitial = async (
 
 // Actualizar prospecto existente (solo archivos y calculation_result)
 // NUEVO: Los archivos se suben a Google Drive en lugar de guardarse como Base64
+// --- FUNCIONES DE FORMULARIOS ---
+
+// Crear un nuevo formulario
+export const createForm = async (companyId: string, name: string): Promise<Form | null> => {
+  if (!pool) return null;
+
+  try {
+    const client = await pool.connect();
+    // Asegurar que la tabla existe
+    await ensureTablesExist(client);
+
+    const query = `
+      INSERT INTO forms (company_id, name)
+      VALUES ($1, $2)
+      RETURNING id, company_id, name, created_at
+    `;
+
+    const values = [companyId, name];
+    const res = await client.query(query, values);
+    client.release();
+
+    if (res.rows.length > 0) {
+      const row = res.rows[0];
+      return {
+        id: row.id,
+        companyId: row.company_id,
+        name: row.name,
+        createdAt: row.created_at
+      };
+    }
+    return null;
+  } catch (error) {
+    console.error('Error creating form:', error);
+    return null;
+  }
+};
+
+// Obtener formularios de una empresa
+export const getForms = async (companyId: string): Promise<Form[]> => {
+  if (!pool) return [];
+
+  try {
+    const client = await pool.connect();
+    // Asegurar que la tabla existe
+    await ensureTablesExist(client);
+
+    const query = `
+      SELECT id, company_id, name, created_at
+      FROM forms
+      WHERE company_id = $1
+      ORDER BY created_at DESC
+    `;
+
+    const res = await client.query(query, [companyId]);
+    client.release();
+
+    return res.rows.map((row: any) => ({
+      id: row.id,
+      companyId: row.company_id,
+      name: row.name,
+      createdAt: row.created_at
+    }));
+  } catch (error) {
+    console.error('Error getting forms:', error);
+    return [];
+  }
+};
+
+// Eliminar un formulario
+export const deleteForm = async (formId: string, companyId: string): Promise<boolean> => {
+  if (!pool) return false;
+
+  try {
+    const client = await pool.connect();
+
+    // Verificar que el formulario pertenece a la empresa
+    const query = `
+      DELETE FROM forms
+      WHERE id = $1 AND company_id = $2
+    `;
+
+    const res = await client.query(query, [formId, companyId]);
+    client.release();
+
+    return (res.rowCount || 0) > 0;
+  } catch (error) {
+    console.error('Error deleting form:', error);
+    return false;
+  }
+};
+
 export const updateProspectToDB = async (
   prospectId: string,
   personal: PersonalData,
