@@ -3,7 +3,7 @@ import { createPortal } from 'react-dom';
 import {
   Users, DollarSign, LayoutDashboard, FileText, Download, Filter, Calendar, CheckCircle2, X, ChevronDown, MapPin, Briefcase, Settings, Plus, Trash2, Building, Image as ImageIcon, Shield, Save, Code, Copy, ExternalLink, Loader2, User, Target, MessageCircle, ShieldCheck, TrendingUp, Eye, FileText as FileTextIcon, BedDouble, Bath, Heart, ArrowRight, Upload, Check, ChevronLeft, RefreshCw, ChevronRight, Cloud, Calculator, FileCheck, Link as LinkIcon
 } from 'lucide-react';
-import { getProspectsFromDB, getCompanyById, updateCompanyZones, updateCompanyLogo, getPropertiesByCompany, saveProperty, updateProperty, deleteProperty, getPropertyInterestsByCompany, updateCompanyPlan, getPropertyInterestsByProspect, getProjectModelInterestsByProspect, saveProject, getProjectsByCompany, updateProject, deleteProject, updateCompanyName, getProspectDocuments, getPropertyImages, getProjectImages, updateCompanyGoogleDriveConfig, updateCompanyRequestedDocuments, updateCompanyApcDocument } from '../utils/db';
+import { getProspectsFromDB, getCompanyById, updateCompanyZones, updateCompanyLogo, getPropertiesByCompany, saveProperty, updateProperty, deleteProperty, getPropertyInterestsByCompany, updateCompanyPlan, getPropertyInterestsByProspect, getProjectModelInterestsByProspect, saveProject, getProjectsByCompany, updateProject, deleteProject, updateCompanyName, getProspectDocuments, getPropertyImages, getProjectImages, updateCompanyGoogleDriveConfig, updateCompanyRequestedDocuments, updateCompanyApcDocument, createForm, getForms, updateForm, deleteForm } from '../utils/db';
 import { initiateGoogleDriveAuth, uploadFileToDrive, refreshAccessToken } from '../utils/googleDrive';
 import { Prospect, Property, PropertyInterest, PlanType, Project, ProjectModel, Company } from '../types';
 import { NotificationModal, NotificationType } from './ui/NotificationModal';
@@ -2209,15 +2209,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableZones, onUpdateZo
               <MessageCircle size={14} className="sm:w-4 sm:h-4" /> <span className="relative">Campañas</span>
               <span className="absolute -top-[0.575rem] right-0 text-white text-[7px] font-black px-1 py-0.5 rounded-full shadow-sm border border-white/50" style={{ background: 'linear-gradient(135deg, #29BEA5 0%, #1fa890 100%)' }}>NUEVO</span>
             </button>
-            <button
-              onClick={() => setActiveTab('forms')}
-              className={`px-3 sm:px-6 py-2 sm:py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition-all flex items-center gap-1 sm:gap-2 shrink-0 relative ${activeTab === 'forms'
-                ? 'bg-primary-50 text-primary-600 shadow-sm'
-                : 'text-gray-400 hover:text-gray-600 hover:bg-gray-50'
-                }`}
-            >
-              <LinkIcon size={14} className="sm:w-4 sm:h-4" /> <span>Formularios</span>
-            </button>
+
             <div
               className="relative settings-submenu-container"
               onMouseEnter={() => {
@@ -2287,6 +2279,31 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableZones, onUpdateZo
                       </div>
                       <div className="text-xs text-gray-500 leading-relaxed">
                         Integración web, documentos y zonas
+                      </div>
+                    </div>
+                  </button>
+
+                  <button
+                    onClick={() => {
+                      setActiveTab('forms');
+                      setShowSettingsSubmenu(false);
+                    }}
+                    className={`w-full px-5 py-4 text-left hover:bg-primary-50/50 transition-colors flex items-start gap-4 border-b border-gray-50 ${activeTab === 'forms' ? 'bg-primary-50' : ''
+                      }`}
+                  >
+                    <div className={`w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0 transition-colors ${activeTab === 'forms'
+                      ? 'bg-indigo-100 text-primary-600'
+                      : 'bg-gray-100 text-gray-600 group-hover:bg-primary-50'
+                      }`}>
+                      <LinkIcon size={22} strokeWidth={1.5} />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className={`font-bold text-sm mb-1.5 ${activeTab === 'forms' ? 'text-primary-600' : 'text-gray-900'
+                        }`}>
+                        Calculadoras
+                      </div>
+                      <div className="text-xs text-gray-500 leading-relaxed">
+                        Gestiona múltiples calculadoras, documentos y zonas personalizadas
                       </div>
                     </div>
                   </button>

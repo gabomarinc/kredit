@@ -31,10 +31,22 @@ export interface CalculationResult {
   downPaymentAmount: number;
 }
 
+export interface FormConfig {
+  requestedDocuments?: {
+    idFile: boolean;
+    fichaFile: boolean;
+    talonarioFile: boolean;
+    signedAcpFile: boolean;
+  };
+  apcDocumentId?: string; // Google Drive ID
+  zones?: string[];
+}
+
 export interface Form {
   id: string;
   companyId: string;
   name: string;
+  config?: FormConfig;
   createdAt: string;
 }
 

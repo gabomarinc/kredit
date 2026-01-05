@@ -656,7 +656,7 @@ export const saveProspectInitial = async (
 // --- FUNCIONES DE FORMULARIOS ---
 
 // Crear un nuevo formulario
-export const createForm = async (companyId: string, name: string): Promise<Form | null> => {
+export const createForm = async (companyId: string, name: string, config?: FormConfig): Promise<Form | null> => {
   if (!pool) return null;
 
   try {
@@ -664,13 +664,20 @@ export const createForm = async (companyId: string, name: string): Promise<Form 
     // Asegurar que la tabla existe
     await ensureTablesExist(client);
 
+    // Asegurar que la columna config existe (para usuarios existentes)
+    try {
+      await client.query(`ALTER TABLE forms ADD COLUMN IF NOT EXISTS config JSONB DEFAULT '{}'::jsonb`);
+    } catch (e) {
+      // Ignorar error si ya existe
+    }
+
     const query = `
-      INSERT INTO forms (company_id, name)
-      VALUES ($1, $2)
-      RETURNING id, company_id, name, created_at
+      INSERT INTO forms (company_id, name, config)
+      VALUES ($1, $2, $3)
+      RETURNING id, company_id, name, config, created_at
     `;
 
-    const values = [companyId, name];
+    const values = [companyId, name, config ? JSON.stringify(config) : '{}'];
     const res = await client.query(query, values);
     client.release();
 
@@ -680,6 +687,7 @@ export const createForm = async (companyId: string, name: string): Promise<Form 
         id: row.id,
         companyId: row.company_id,
         name: row.name,
+        config: row.config || {},
         createdAt: row.created_at
       };
     }
@@ -700,7 +708,7 @@ export const getForms = async (companyId: string): Promise<Form[]> => {
     await ensureTablesExist(client);
 
     const query = `
-      SELECT id, company_id, name, created_at
+      SELECT id, company_id, name, config, created_at
       FROM forms
       WHERE company_id = $1
       ORDER BY created_at DESC
@@ -713,11 +721,68 @@ export const getForms = async (companyId: string): Promise<Form[]> => {
       id: row.id,
       companyId: row.company_id,
       name: row.name,
+      config: row.config || {},
       createdAt: row.created_at
     }));
   } catch (error) {
     console.error('Error getting forms:', error);
     return [];
+  }
+};
+
+// Obtener un formulario por ID
+export const getFormById = async (formId: string): Promise<Form | null> => {
+  if (!pool) return null;
+
+  try {
+    const client = await pool.connect();
+    const query = `
+      SELECT id, company_id, name, config, created_at
+      FROM forms
+      WHERE id = $1
+    `;
+
+    const res = await client.query(query, [formId]);
+    client.release();
+
+    if (res.rows.length > 0) {
+      const row = res.rows[0];
+      return {
+        id: row.id,
+        companyId: row.company_id,
+        name: row.name,
+        config: row.config || {},
+        createdAt: row.created_at
+      };
+    }
+    return null;
+  } catch (error) {
+    console.error('Error getting form by id:', error);
+    return null;
+  }
+};
+
+// Actualizar un formulario
+export const updateForm = async (formId: string, companyId: string, name: string, config: FormConfig): Promise<boolean> => {
+  if (!pool) return false;
+
+  try {
+    const client = await pool.connect();
+
+    const query = `
+      UPDATE forms
+      SET name = $1, config = $2
+      WHERE id = $3 AND company_id = $4
+    `;
+
+    const values = [name, JSON.stringify(config), formId, companyId];
+    const res = await client.query(query, values);
+    client.release();
+
+    return (res.rowCount || 0) > 0;
+  } catch (error) {
+    console.error('Error updating form:', error);
+    return false;
   }
 };
 
