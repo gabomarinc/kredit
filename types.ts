@@ -31,9 +31,18 @@ export interface CalculationResult {
   downPaymentAmount: number;
 }
 
+export interface Form {
+  id: string;
+  companyId: string;
+  name: string;
+  createdAt: string;
+}
+
 export interface Prospect {
   id: string;
   companyId?: string | null;
+  formId?: string | null; // Nuevo campo para vincular con un formulario
+  formName?: string; // Campo virtual para mostrar en UI
   name: string;
   email: string;
   phone?: string;

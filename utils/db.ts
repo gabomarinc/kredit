@@ -1,6 +1,6 @@
 /// <reference types="vite/client" />
 import { Pool } from '@neondatabase/serverless';
-import { CalculationResult, Prospect, PersonalData, FinancialData, UserPreferences, Project, ProjectModel, Company, CompanyData } from '../types';
+import { CalculationResult, Prospect, PersonalData, FinancialData, UserPreferences, Project, ProjectModel, Company, CompanyData, Form } from '../types';
 import { MOCK_PROSPECTS } from '../constants';
 import pako from 'pako';
 import { uploadProspectFilesToDrive, refreshAccessToken, downloadFileFromDriveAsBase64 } from './googleDrive';
@@ -39,6 +39,23 @@ const ensureTablesExist = async (client: any) => {
         created_at TIMESTAMP DEFAULT NOW()
       )
     `);
+
+    // Tabla de Formularios (Forms)
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS forms (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        company_id UUID REFERENCES companies(id) ON DELETE CASCADE NOT NULL,
+        name TEXT NOT NULL,
+        created_at TIMESTAMP DEFAULT NOW()
+      )
+    `);
+
+    // Índice para forms
+    try {
+      await client.query(`CREATE INDEX IF NOT EXISTS idx_forms_company_id ON forms(company_id)`);
+    } catch (e) {
+      console.warn('Nota: Índice de forms posiblemente ya existe', e);
+    }
 
     // Tabla de zonas por empresa
     await client.query(`
@@ -94,7 +111,6 @@ const ensureTablesExist = async (client: any) => {
     `);
 
     // Agregar columnas de archivos si no existen (para tablas ya creadas)
-    // Agregar columnas de archivos si no existen (para tablas ya creadas)
     try {
       await client.query(`ALTER TABLE prospects ADD COLUMN IF NOT EXISTS company_id UUID REFERENCES companies(id) ON DELETE SET NULL`);
       await client.query(`ALTER TABLE prospects ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP DEFAULT NOW()`);
@@ -104,11 +120,13 @@ const ensureTablesExist = async (client: any) => {
       await client.query(`ALTER TABLE prospects ADD COLUMN IF NOT EXISTS ficha_file_drive_id TEXT`);
       await client.query(`ALTER TABLE prospects ADD COLUMN IF NOT EXISTS talonario_file_drive_id TEXT`);
       await client.query(`ALTER TABLE prospects ADD COLUMN IF NOT EXISTS signed_acp_file_drive_id TEXT`);
+
+      // Columna para Multi-Formularios
+      await client.query(`ALTER TABLE prospects ADD COLUMN IF NOT EXISTS form_id UUID REFERENCES forms(id) ON DELETE SET NULL`);
     } catch (e) {
       console.warn('Nota: Error actualizando columnas de prospects:', e);
     }
 
-    // Agregar columna de plan, role y Google Drive a companies si no existe
     // Agregar columna de plan, role y Google Drive a companies si no existe
     try {
       // Postgres 9.6+ soporta IF NOT EXISTS en ADD COLUMN
@@ -555,7 +573,8 @@ export const saveProspectInitial = async (
   personal: { fullName: string; email: string; phone: string },
   financial: { familyIncome: number },
   preferences: { propertyType: string; bedrooms: number | null; bathrooms: number | null; zone: string[] | string },
-  companyId?: string | null
+  companyId?: string | null,
+  formId?: string | null
 ): Promise<string | null> => {
   if (!pool) {
     console.error('❌ Pool de base de datos no inicializado.');
@@ -582,6 +601,7 @@ export const saveProspectInitial = async (
     const query = `
       INSERT INTO prospects (
         company_id,
+        form_id,
         full_name,
         email,
         phone,
@@ -592,12 +612,13 @@ export const saveProspectInitial = async (
         interested_zones,
         status,
         created_at
-      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, 'Nuevo', NOW())
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, 'Nuevo', NOW())
       RETURNING id
     `;
 
     const values = [
       companyId || null,
+      formId || null,
       personal.fullName,
       personal.email,
       personal.phone,
@@ -609,14 +630,14 @@ export const saveProspectInitial = async (
     ];
 
     console.log('📤 Guardando prospecto inicial con valores:', {
-      full_name: values[1],
-      email: values[2],
-      phone: values[3],
-      monthly_income: values[4],
-      property_type: values[5],
-      bedrooms: values[6],
-      bathrooms: values[7],
-      interested_zones: values[8]
+      full_name: values[2],
+      email: values[3],
+      phone: values[4],
+      monthly_income: values[5],
+      property_type: values[6],
+      bedrooms: values[7],
+      bathrooms: values[8],
+      interested_zones: values[9]
     });
 
     const res = await client.query(query, values);
@@ -909,23 +930,26 @@ export const getProspectsFromDB = async (companyId?: string | null): Promise<Pro
     // IMPORTANTE: Solo mostrar prospectos de la empresa actual
     let query = `
       SELECT 
-        id, company_id, full_name, email, phone, monthly_income, 
-        property_type, bedrooms, bathrooms, interested_zones, 
-        calculation_result, status, created_at, updated_at
-      FROM prospects 
+        p.id, p.company_id, p.full_name, p.email, p.phone, p.monthly_income, 
+        p.property_type, p.bedrooms, p.bathrooms, p.interested_zones, 
+        p.calculation_result, p.status, p.created_at, p.updated_at,
+        p.id_file_drive_id, p.ficha_file_drive_id, p.talonario_file_drive_id, p.signed_acp_file_drive_id,
+        f.name as form_name
+      FROM prospects p
+      LEFT JOIN forms f ON p.form_id = f.id
     `;
 
     const queryParams: any[] = [];
 
     if (companyId) {
-      query += ` WHERE company_id = $1`;
+      query += ` WHERE p.company_id = $1`;
       queryParams.push(companyId);
     } else {
       // Si no hay companyId, solo retornar prospectos sin company_id (por seguridad)
-      query += ` WHERE company_id IS NULL`;
+      query += ` WHERE p.company_id IS NULL`;
     }
 
-    query += ` ORDER BY created_at DESC LIMIT 50`;
+    query += ` ORDER BY p.created_at DESC LIMIT 50`;
 
     const res = await client.query(query, queryParams);
 
@@ -954,23 +978,19 @@ export const getProspectsFromDB = async (companyId?: string | null): Promise<Pro
       propertyType: row.property_type || '',
       bedrooms: row.bedrooms || null,
       bathrooms: row.bathrooms || null,
+      formName: row.form_name || null,
       // Ensure zone is treated safely - puede ser array o string
       zone: Array.isArray(row.interested_zones) && row.interested_zones.length > 0
         ? row.interested_zones
-        : (typeof row.interested_zones === 'string' ? [row.interested_zones.replace(/[{}"\\]/g, '')] : []),
-      // Ensure result is an object
-      result: decompressJSON(row.calculation_result) || {
-        maxPropertyPrice: 0,
-        monthlyPayment: 0,
-        downPaymentPercent: 0,
-        downPaymentAmount: 0
-      },
-      // Archivos en Base64 - NO se cargan por defecto (lazy loading)
-      idFileBase64: null,
-      fichaFileBase64: null,
-      talonarioFileBase64: null,
-      signedAcpFileBase64: null
+        : [row.interested_zones || 'Sin zona'],
+      result: row.calculation_result || null,
+      // Google Drive IDs
+      idFileDriveId: row.id_file_drive_id || null,
+      fichaFileDriveId: row.ficha_file_drive_id || null,
+      talonarioFileDriveId: row.talonario_file_drive_id || null,
+      signedAcpFileDriveId: row.signed_acp_file_drive_id || null
     }));
+
 
   } catch (error) {
     console.error('❌ Error consultando prospectos:', error);
@@ -2879,23 +2899,23 @@ export const deleteWhatsBlastCampaign = async (campaignId: string, companyId: st
   try {
     const client = await pool.connect();
     await ensureTablesExist(client);
-    
+
     // Verify that the campaign belongs to the company before deleting
     const verifyRes = await client.query(`
       SELECT id FROM uploads WHERE id = $1 AND company_id = $2
     `, [campaignId, companyId]);
-    
+
     if (verifyRes.rows.length === 0) {
       client.release();
       return false; // Campaign doesn't exist or doesn't belong to company
     }
-    
+
     // Physical delete - this will also delete all prospects due to CASCADE
     await client.query(`
       DELETE FROM uploads 
       WHERE id = $1 AND company_id = $2
     `, [campaignId, companyId]);
-    
+
     client.release();
     return true;
   } catch (e) {

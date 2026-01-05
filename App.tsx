@@ -15,17 +15,22 @@ function App() {
   // Check for embed mode query param
   const [isEmbedMode, setIsEmbedMode] = useState(false);
   const [embedCompanyId, setEmbedCompanyId] = useState<string | null>(null);
+  const [embedFormId, setEmbedFormId] = useState<string | null>(null);
   const [isLoadingEmbedCompany, setIsLoadingEmbedCompany] = useState(false);
-  
+
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const isEmbed = params.get('mode') === 'embed';
     const companyId = params.get('company_id');
-    
+    const formId = params.get('form_id');
+
     if (isEmbed) {
       setIsEmbedMode(true);
       if (companyId) {
         setEmbedCompanyId(companyId);
+      }
+      if (formId) {
+        setEmbedFormId(formId);
       }
       // Removed transparency logic: We want to keep the Aurora background!
     }
@@ -33,9 +38,9 @@ function App() {
 
   // Standard App State
   const [authState, setAuthState] = useState<AuthState>('selection');
-  const [isAdminView, setIsAdminView] = useState(true); 
+  const [isAdminView, setIsAdminView] = useState(true);
   const [isCheckingSession, setIsCheckingSession] = useState(true);
-  
+
   // App Global Data
   const [zones, setZones] = useState<string[]>(ZONES_PANAMA);
   const [companyName, setCompanyName] = useState('Krêdit');
@@ -60,12 +65,12 @@ function App() {
       }
 
       const savedCompanyId = localStorage.getItem('companyId');
-      
+
       if (savedCompanyId) {
         try {
           console.log('🔄 Verificando sesión guardada...');
           const company = await getCompanyById(savedCompanyId);
-          
+
           if (company) {
             console.log('✅ Sesión válida encontrada, restaurando...');
             // Restaurar datos de la empresa
@@ -98,7 +103,7 @@ function App() {
         console.log('ℹ️ No hay sesión guardada');
         setAuthState('selection');
       }
-      
+
       setIsCheckingSession(false);
     };
 
@@ -134,7 +139,7 @@ function App() {
         setCompanyName(savedCompanyName);
       }
     }
-    
+
     setAuthState('authenticated');
     setIsAdminView(true); // Land on dashboard
   };
@@ -191,8 +196,8 @@ function App() {
     return (
       <div className="min-h-screen py-4 flex items-center justify-center">
         {/* We pass true to isEmbed to remove header/nav elements in ProspectFlow if needed */}
-        <ProspectFlow 
-          availableZones={zones} 
+        <ProspectFlow
+          availableZones={zones}
           companyName={companyName}
           isEmbed={true}
         />
@@ -220,7 +225,7 @@ function App() {
   if (authState === 'selection') {
     return (
       <Layout isWelcomeScreen>
-        <AuthSelection 
+        <AuthSelection
           onLogin={() => setAuthState('login')}
           onRegister={() => setAuthState('register')}
         />
@@ -237,9 +242,9 @@ function App() {
             ← Volver
           </button>
         </div>
-        <Login 
-          onLogin={handleLogin} 
-          onGoToRegister={() => setAuthState('register')} 
+        <Login
+          onLogin={handleLogin}
+          onGoToRegister={() => setAuthState('register')}
         />
       </Layout>
     );
@@ -254,7 +259,7 @@ function App() {
             ← Volver
           </button>
         </div>
-        <Register 
+        <Register
           onRegisterComplete={handleRegisterComplete}
           onGoToLogin={() => setAuthState('login')}
         />
@@ -294,14 +299,14 @@ function App() {
 
   // 4. Main Admin Interface (Authenticated)
   return (
-    <Layout 
-      isAdmin={isAdminView} 
+    <Layout
+      isAdmin={isAdminView}
       onLogout={handleLogout}
       companyName={companyName}
     >
-      <Dashboard 
-        availableZones={zones} 
-        onUpdateZones={setZones} 
+      <Dashboard
+        availableZones={zones}
+        onUpdateZones={setZones}
         companyName={companyName}
         onUpdateCompanyName={setCompanyName}
       />
