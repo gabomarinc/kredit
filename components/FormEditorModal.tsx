@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Form, FormConfig } from '../types';
-import { X, Save, Eye, FileText, MapPin, Loader2, Upload, Trash2, CheckCircle2 } from 'lucide-react';
+import { X, Save, Eye, FileText, MapPin, Loader2, Upload, Trash2, CheckCircle2, Check } from 'lucide-react';
 import { updateForm, getCompanyById } from '../utils/db';
 import { uploadFileToDrive } from '../utils/googleDrive';
 
@@ -81,14 +81,13 @@ export const FormEditorModal: React.FC<FormEditorModalProps> = ({
             // Upload file
             const result = await uploadFileToDrive(
                 company.googleDriveAccessToken,
-                company.googleDriveFolderId,
                 file,
-                `APC_DOC_FORM_${form.id}.pdf`,
-                'application/pdf'
+                company.googleDriveFolderId,
+                `APC_DOC_FORM_${form.id}.pdf`
             );
 
-            if (result && result.id) {
-                setConfig(prev => ({ ...prev, apcDocumentId: result.id }));
+            if (result && result.fileId) {
+                setConfig(prev => ({ ...prev, apcDocumentId: result.fileId }));
             } else {
                 alert('Error al subir el archivo a Google Drive');
             }
@@ -101,8 +100,8 @@ export const FormEditorModal: React.FC<FormEditorModalProps> = ({
     };
 
     return (
-        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-fade-in">
-            <div className="bg-white rounded-[2rem] w-full max-w-7xl h-[90vh] flex overflow-hidden shadow-2xl">
+        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 sm:p-6 bg-black/60 backdrop-blur-sm animate-fade-in transition-all">
+            <div className="bg-white rounded-[2rem] w-full max-w-7xl h-[75vh] max-h-[850px] flex overflow-hidden shadow-[0_25px_50px_-12px_rgba(0,0,0,0.5)] border border-white/20 relative">
 
                 {/* Sidebar / Configuration Panel */}
                 <div className="w-full md:w-1/3 border-r border-gray-100 flex flex-col bg-gray-50/50">
@@ -259,12 +258,12 @@ export const FormEditorModal: React.FC<FormEditorModalProps> = ({
                                     <div className="grid grid-cols-2 gap-2">
                                         {availableZones.map(zone => (
                                             <label key={zone} className={`flex items-center gap-2 p-2 rounded-lg border cursor-pointer transition-all ${config.zones?.includes(zone)
-                                                    ? 'bg-indigo-50 border-indigo-200'
-                                                    : 'bg-white border-gray-200 hover:border-indigo-200'
+                                                ? 'bg-indigo-50 border-indigo-200'
+                                                : 'bg-white border-gray-200 hover:border-indigo-200'
                                                 }`}>
                                                 <div className={`w-4 h-4 rounded border flex items-center justify-center ${config.zones?.includes(zone)
-                                                        ? 'bg-indigo-600 border-indigo-600'
-                                                        : 'border-gray-300'
+                                                    ? 'bg-indigo-600 border-indigo-600'
+                                                    : 'border-gray-300'
                                                     }`}>
                                                     {config.zones?.includes(zone) && <Check size={10} className="text-white" />}
                                                 </div>
