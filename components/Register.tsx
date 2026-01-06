@@ -320,8 +320,8 @@ export const Register: React.FC<RegisterProps> = ({ onRegisterComplete, onGoToLo
                     }
                   }}
                   className={`w-full pl-12 pr-4 py-3.5 rounded-xl border outline-none transition-all text-gray-700 font-medium ${passwordError
-                      ? 'border-red-300 focus:border-red-500 focus:bg-red-50/10'
-                      : 'border-gray-200 focus:border-indigo-500 focus:bg-indigo-50/10'
+                    ? 'border-red-300 focus:border-red-500 focus:bg-red-50/10'
+                    : 'border-gray-200 focus:border-indigo-500 focus:bg-indigo-50/10'
                     }`}
                 />
               </div>
@@ -337,8 +337,8 @@ export const Register: React.FC<RegisterProps> = ({ onRegisterComplete, onGoToLo
               onClick={handleNext}
               disabled={!formData.name || !formData.email || !formData.password || !formData.confirmPassword || passwordError !== '' || formData.password !== formData.confirmPassword}
               className={`w-full py-4 rounded-xl font-bold transition-all flex justify-center items-center gap-2 ${!formData.name || !formData.email || !formData.password || !formData.confirmPassword || passwordError !== '' || formData.password !== formData.confirmPassword
-                  ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                  : 'bg-gray-900 text-white hover:bg-gray-800 shadow-lg shadow-gray-200'
+                ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                : 'bg-gray-900 text-white hover:bg-gray-800 shadow-lg shadow-gray-200'
                 }`}
             >
               Continuar <ArrowRight size={18} />
@@ -402,8 +402,8 @@ export const Register: React.FC<RegisterProps> = ({ onRegisterComplete, onGoToLo
                     type="button"
                     onClick={() => setFormData({ ...formData, role: 'Broker' })}
                     className={`px-6 py-4 rounded-2xl border-2 transition-all font-semibold ${formData.role === 'Broker'
-                        ? 'border-indigo-500 bg-indigo-50 text-indigo-700 shadow-md'
-                        : 'border-gray-200 bg-white text-gray-600 hover:border-gray-300 hover:bg-gray-50'
+                      ? 'border-indigo-500 bg-indigo-50 text-indigo-700 shadow-md'
+                      : 'border-gray-200 bg-white text-gray-600 hover:border-gray-300 hover:bg-gray-50'
                       }`}
                   >
                     Broker
@@ -412,8 +412,8 @@ export const Register: React.FC<RegisterProps> = ({ onRegisterComplete, onGoToLo
                     type="button"
                     onClick={() => setFormData({ ...formData, role: 'Promotora' })}
                     className={`px-6 py-4 rounded-2xl border-2 transition-all font-semibold ${formData.role === 'Promotora'
-                        ? 'border-indigo-500 bg-indigo-50 text-indigo-700 shadow-md'
-                        : 'border-gray-200 bg-white text-gray-600 hover:border-gray-300 hover:bg-gray-50'
+                      ? 'border-indigo-500 bg-indigo-50 text-indigo-700 shadow-md'
+                      : 'border-gray-200 bg-white text-gray-600 hover:border-gray-300 hover:bg-gray-50'
                       }`}
                   >
                     Promotora
@@ -430,8 +430,8 @@ export const Register: React.FC<RegisterProps> = ({ onRegisterComplete, onGoToLo
                 onClick={handleNext}
                 disabled={!formData.companyName}
                 className={`flex-1 py-4 rounded-xl font-bold transition-all flex justify-center items-center gap-2 ${!formData.companyName
-                    ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                    : 'bg-gray-900 text-white hover:bg-gray-800 shadow-lg shadow-gray-200'
+                  ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                  : 'bg-gray-900 text-white hover:bg-gray-800 shadow-lg shadow-gray-200'
                   }`}
               >
                 Continuar <ArrowRight size={18} />
@@ -531,21 +531,14 @@ export const Register: React.FC<RegisterProps> = ({ onRegisterComplete, onGoToLo
                 Atrás
               </button>
 
-              {!isGoogleDriveConnected && (
-                <button
-                  onClick={handleNext}
-                  className="px-6 py-4 text-indigo-600 hover:text-indigo-800 font-medium hover:bg-indigo-50 rounded-xl transition-all"
-                >
-                  Hacerlo más tarde
-                </button>
-              )}
+
 
               <button
                 onClick={handleNext}
                 disabled={!isGoogleDriveConnected}
                 className={`flex-1 py-4 rounded-xl font-bold transition-all flex justify-center items-center gap-2 ${!isGoogleDriveConnected
-                    ? 'hidden' // Ocultar el botón principal si no está conectado, usar "Hacerlo más tarde"
-                    : 'bg-green-600 text-white hover:bg-green-700 shadow-lg shadow-green-200'
+                  ? 'hidden' // Ocultar el botón principal si no está conectado, usar "Hacerlo más tarde"
+                  : 'bg-green-600 text-white hover:bg-green-700 shadow-lg shadow-green-200'
                   }`}
               >
                 Continuar <ArrowRight size={18} />
@@ -613,8 +606,8 @@ export const Register: React.FC<RegisterProps> = ({ onRegisterComplete, onGoToLo
                 onClick={handleFinish}
                 disabled={formData.zones.length === 0 || isLoading}
                 className={`flex-1 py-4 rounded-xl font-bold transition-all flex justify-center items-center gap-2 ${formData.zones.length === 0 || isLoading
-                    ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                    : 'bg-gray-900 text-white hover:bg-gray-800 shadow-lg shadow-gray-200'
+                  ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                  : 'bg-gray-900 text-white hover:bg-gray-800 shadow-lg shadow-gray-200'
                   }`}
               >
                 {isLoading ? (
