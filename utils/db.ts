@@ -416,7 +416,8 @@ export const saveProspectToDB = async (
   financial: FinancialData,
   preferences: UserPreferences,
   result: CalculationResult,
-  companyId?: string | null
+  companyId?: string | null,
+  formId?: string | null
 ) => {
   if (!pool) {
     console.error('❌ Pool de base de datos no inicializado. Verifica VITE_DATABASE_URL en Vercel.');
@@ -442,6 +443,7 @@ export const saveProspectToDB = async (
     const query = `
       INSERT INTO prospects (
         company_id,
+        form_id,
         full_name, 
         email, 
         phone, 
@@ -453,12 +455,13 @@ export const saveProspectToDB = async (
         calculation_result,
         status,
         created_at
-      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, 'Nuevo', NOW())
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, 'Nuevo', NOW())
       RETURNING id
     `;
 
     const values = [
       companyId || null,
+      formId || null,
       personal.fullName,
       personal.email,
       personal.phone,

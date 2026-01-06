@@ -200,6 +200,7 @@ function App() {
           availableZones={zones}
           companyName={companyName}
           isEmbed={true}
+          formId={embedFormId}
         />
       </div>
     );
