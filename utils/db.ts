@@ -1,6 +1,6 @@
 /// <reference types="vite/client" />
 import { Pool } from '@neondatabase/serverless';
-import { CalculationResult, Prospect, PersonalData, FinancialData, UserPreferences, Project, ProjectModel, Company, CompanyData, Form } from '../types';
+import { CalculationResult, Prospect, PersonalData, FinancialData, UserPreferences, Project, ProjectModel, Company, CompanyData, Form, FormConfig } from '../types';
 import { MOCK_PROSPECTS } from '../constants';
 import pako from 'pako';
 import { uploadProspectFilesToDrive, refreshAccessToken, downloadFileFromDriveAsBase64 } from './googleDrive';
