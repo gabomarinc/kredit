@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { Form, FormConfig } from '../types';
 import { X, Save, Eye, FileText, MapPin, Loader2, Upload, Trash2, CheckCircle2, Check } from 'lucide-react';
 import { updateForm, getCompanyById } from '../utils/db';
@@ -99,8 +100,8 @@ export const FormEditorModal: React.FC<FormEditorModalProps> = ({
         }
     };
 
-    return (
-        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 sm:p-6 bg-black/60 backdrop-blur-sm animate-fade-in transition-all">
+    return createPortal(
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 sm:p-6 bg-black/60 backdrop-blur-sm animate-fade-in transition-all">
             <div className="bg-white rounded-[2rem] w-full max-w-7xl h-[75vh] max-h-[850px] flex overflow-hidden shadow-[0_25px_50px_-12px_rgba(0,0,0,0.5)] border border-white/20 relative">
 
                 {/* Sidebar / Configuration Panel */}
@@ -324,6 +325,9 @@ export const FormEditorModal: React.FC<FormEditorModalProps> = ({
                 </div>
 
             </div>
-        </div>
+        </div>,
+        document.body
     );
 };
+
+
