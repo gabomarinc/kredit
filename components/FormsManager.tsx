@@ -3,6 +3,7 @@ import { Plus, Trash2, Copy, Check, ExternalLink, Link as LinkIcon, Loader2, Set
 import { createForm, getForms, deleteForm, getCompanyById } from '../utils/db';
 import { Form } from '../types';
 import { FormEditorModal } from './FormEditorModal';
+import { ConfirmationModal } from './ui/ConfirmationModal';
 
 interface FormsManagerProps {
     companyId: string;
@@ -16,6 +17,7 @@ export const FormsManager: React.FC<FormsManagerProps> = ({ companyId }) => {
     const [copiedId, setCopiedId] = useState<string | null>(null);
     const [editingForm, setEditingForm] = useState<Form | null>(null);
     const [availableZones, setAvailableZones] = useState<string[]>([]);
+    const [formToDelete, setFormToDelete] = useState<string | null>(null);
 
     useEffect(() => {
         loadForms();
@@ -50,13 +52,19 @@ export const FormsManager: React.FC<FormsManagerProps> = ({ companyId }) => {
         }
     };
 
-    const handleDelete = async (id: string, e: React.MouseEvent) => {
+    const handleDeleteClick = (id: string, e: React.MouseEvent) => {
         e.stopPropagation();
-        if (!confirm('¿Estás seguro de eliminar esta calculadora? Los prospectos asociados perderán la referencia de origen.')) return;
-        const success = await deleteForm(id, companyId);
+        setFormToDelete(id);
+    };
+
+    const confirmDelete = async () => {
+        if (!formToDelete) return;
+
+        const success = await deleteForm(formToDelete, companyId);
         if (success) {
-            setForms(forms.filter(f => f.id !== id));
+            setForms(forms.filter(f => f.id !== formToDelete));
         }
+        setFormToDelete(null);
     };
 
     const getFormLink = (formId: string) => {
@@ -171,7 +179,7 @@ export const FormsManager: React.FC<FormsManagerProps> = ({ companyId }) => {
                                     </a>
 
                                     <button
-                                        onClick={(e) => handleDelete(form.id, e)}
+                                        onClick={(e) => handleDeleteClick(form.id, e)}
                                         className="p-2.5 bg-red-50 text-red-500 rounded-xl hover:bg-red-100 transition-colors"
                                         title="Eliminar formulario"
                                     >
@@ -196,6 +204,17 @@ export const FormsManager: React.FC<FormsManagerProps> = ({ companyId }) => {
                     }}
                 />
             )}
+
+            {/* Delete Confirmation Modal */}
+            <ConfirmationModal
+                isOpen={!!formToDelete}
+                onClose={() => setFormToDelete(null)}
+                onConfirm={confirmDelete}
+                title="¿Eliminar Calculadora?"
+                message="Esta acción es irreversible. Los prospectos que se registraron usando esta calculadora perderán la referencia de origen."
+                confirmLabel="Eliminar"
+                isDanger
+            />
         </div>
     );
 };
