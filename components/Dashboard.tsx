@@ -2480,6 +2480,11 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableZones, onUpdateZo
                                 </span>
                               </div>
                             </td>
+                            <td className="px-3 sm:px-6 py-4 sm:py-5 hidden lg:table-cell">
+                              <span className="font-bold text-primary-600 bg-primary-50 px-2 sm:px-3 py-1 rounded-lg text-xs whitespace-nowrap">
+                                {prospect.formName || 'Calc. Principal'}
+                              </span>
+                            </td>
                             <td className="px-3 sm:px-6 py-4 sm:py-5 hidden sm:table-cell">
                               <span className="text-sm text-gray-500 whitespace-nowrap">{prospect.dateDisplay || new Date(prospect.date).toLocaleDateString('es-PA')}</span>
                             </td>
