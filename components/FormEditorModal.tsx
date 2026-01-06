@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { Form, FormConfig } from '../types';
-import { X, Save, Eye, FileText, MapPin, Loader2, Upload, Trash2, CheckCircle2, Check } from 'lucide-react';
+import { X, Save, Eye, FileText, MapPin, Loader2, Upload, Trash2, CheckCircle2, Check, Copy, Code } from 'lucide-react';
 import { updateForm, getCompanyById } from '../utils/db';
 import { uploadFileToDrive } from '../utils/googleDrive';
 
@@ -22,8 +22,9 @@ export const FormEditorModal: React.FC<FormEditorModalProps> = ({
 }) => {
     const [name, setName] = useState(form.name);
     const [config, setConfig] = useState<FormConfig>(form.config || {});
-    const [activeTab, setActiveTab] = useState<'general' | 'documents' | 'apc' | 'zones'>('general');
+    const [activeTab, setActiveTab] = useState<'general' | 'documents' | 'apc' | 'zones' | 'integrate'>('general');
     const [isSaving, setIsSaving] = useState(false);
+    const [isCopied, setIsCopied] = useState(false);
     const [previewKey, setPreviewKey] = useState(0); // To force iframe refresh
 
     // Initialize config defaults if missing
@@ -152,6 +153,12 @@ export const FormEditorModal: React.FC<FormEditorModalProps> = ({
                                 className={`flex-1 py-2 px-3 rounded-lg text-sm font-semibold transition-all ${activeTab === 'zones' ? 'bg-white shadow-sm text-indigo-600' : 'text-gray-500 hover:text-gray-700'}`}
                             >
                                 Zonas
+                            </button>
+                            <button
+                                onClick={() => setActiveTab('integrate')}
+                                className={`flex-1 py-2 px-3 rounded-lg text-sm font-semibold transition-all ${activeTab === 'integrate' ? 'bg-white shadow-sm text-indigo-600' : 'text-gray-500 hover:text-gray-700'}`}
+                            >
+                                Integrar
                             </button>
                         </div>
 
@@ -286,6 +293,53 @@ export const FormEditorModal: React.FC<FormEditorModalProps> = ({
                                                 <span className="text-xs font-medium text-gray-700 truncate">{zone}</span>
                                             </label>
                                         ))}
+                                    </div>
+                                </div>
+                            )}
+
+                            {activeTab === 'integrate' && (
+                                <div className="space-y-6">
+                                    <h3 className="text-sm font-semibold text-gray-900 flex items-center gap-2">
+                                        <Code size={16} className="text-indigo-500" />
+                                        Integrar en tu Sitio Web
+                                    </h3>
+
+                                    <div className="bg-indigo-50 rounded-xl p-4 border border-indigo-100">
+                                        <h4 className="text-sm font-bold text-indigo-900 mb-2">Cómo instalar:</h4>
+                                        <ol className="list-decimal list-inside space-y-2 text-xs text-indigo-800">
+                                            <li><span className="font-semibold">Copia el código</span> que aparece abajo.</li>
+                                            <li>Abre tu editor web (Wordpress, Wix, Squarespace, etc).</li>
+                                            <li>Agrega un bloque <span className="font-semibold">"HTML"</span> o <span className="font-semibold">"Embed"</span>.</li>
+                                            <li>Pega el código y publica los cambios.</li>
+                                        </ol>
+                                    </div>
+
+                                    <div>
+                                        <div className="flex items-center justify-between mb-2">
+                                            <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Código de Inserción (Iframe)</label>
+                                            <span className="text-xs text-green-600 font-medium px-2 py-0.5 bg-green-50 rounded-full border border-green-100 hidden peer-active:block">¡Copiado!</span>
+                                        </div>
+                                        <div className="relative group">
+                                            <div className="absolute top-2 right-2">
+                                                <button
+                                                    onClick={() => {
+                                                        const code = `<iframe src="${iframeUrl}" width="100%" height="800" frameborder="0" style="border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.1);"></iframe>`;
+                                                        navigator.clipboard.writeText(code);
+                                                        setIsCopied(true);
+                                                        setTimeout(() => setIsCopied(false), 2000);
+                                                    }}
+                                                    className={`p-2 rounded-lg transition-all ${isCopied ? 'bg-green-500 text-white' : 'bg-white text-gray-500 hover:text-indigo-600 shadow-sm border border-gray-200'}`}
+                                                    title="Copiar código"
+                                                >
+                                                    {isCopied ? <Check size={16} /> : <Copy size={16} />}
+                                                </button>
+                                            </div>
+                                            <textarea
+                                                readOnly
+                                                className="w-full h-32 p-4 text-xs font-mono text-gray-600 bg-gray-50 rounded-xl border border-gray-200 resize-none focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
+                                                value={`<iframe src="${iframeUrl}" width="100%" height="800" frameborder="0" style="border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.1);"></iframe>`}
+                                            />
+                                        </div>
                                     </div>
                                 </div>
                             )}
