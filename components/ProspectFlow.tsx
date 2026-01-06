@@ -64,14 +64,16 @@ const FileUpload = ({ label, file, setFile }: { label: string, file: File | null
   </div>
 );
 
+
 interface ApcSignatureModalProps {
   isOpen: boolean;
   onClose: () => void;
   fullName: string;
   onSigned: (file: File) => void;
+  pdfUrl?: string; // Nuevo prop para URL dinámica
 }
 
-const ApcSignatureModal: React.FC<ApcSignatureModalProps> = ({ isOpen, onClose, fullName, onSigned }) => {
+const ApcSignatureModal: React.FC<ApcSignatureModalProps> = ({ isOpen, onClose, fullName, onSigned, pdfUrl = '/apc.pdf' }) => {
   const [name, setName] = useState(fullName || '');
   const [idNumber, setIdNumber] = useState('');
   const [isSigning, setIsSigning] = useState(false);
@@ -96,8 +98,8 @@ const ApcSignatureModal: React.FC<ApcSignatureModalProps> = ({ isOpen, onClose, 
     try {
       setIsSigning(true);
 
-      // 1. Cargar PDF base de APC
-      const existingPdfBytes = await fetch('/apc.pdf').then(res => res.arrayBuffer());
+      // 1. Cargar PDF base de APC (usando la URL dinámica)
+      const existingPdfBytes = await fetch(pdfUrl).then(res => res.arrayBuffer());
       const pdfDoc = await PDFDocument.load(existingPdfBytes);
       const pages = pdfDoc.getPages();
       const firstPage = pages[0];
@@ -182,7 +184,7 @@ const ApcSignatureModal: React.FC<ApcSignatureModalProps> = ({ isOpen, onClose, 
           {/* Visor del PDF */}
           <div className="bg-gray-50 rounded-2xl border border-gray-200 p-3 flex items-center justify-center">
             <div className="w-full max-h-[70vh] overflow-auto flex justify-center">
-              <Document file="/apc.pdf" loading={<div className="text-sm text-gray-500">Cargando PDF...</div>}>
+              <Document file={pdfUrl} loading={<div className="text-sm text-gray-500">Cargando PDF...</div>}>
                 <Page pageNumber={1} width={500} />
               </Document>
             </div>
@@ -555,7 +557,8 @@ export const ProspectFlow: React.FC<ProspectFlowProps> = ({ availableZones, comp
             financial,
             preferences,
             companyId,
-            formId
+            formId,
+            result
           );
           if (savedId) {
             setProspectId(savedId);
@@ -1155,6 +1158,10 @@ export const ProspectFlow: React.FC<ProspectFlowProps> = ({ availableZones, comp
             onClose={() => setShowApcModal(false)}
             fullName={personal.fullName}
             onSigned={(file) => setPersonal(prev => ({ ...prev, signedAcpFile: file }))}
+            pdfUrl={company?.apcDocumentDriveId
+              ? `/api/google-drive/proxy-file?fileId=${company.apcDocumentDriveId}&companyId=${company?.id}`
+              : '/apc.pdf'
+            }
           />
         )}
 

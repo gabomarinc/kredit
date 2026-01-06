@@ -594,10 +594,11 @@ export const saveProspectToDB = async (
 // Guardar prospecto inicial (nombre, correo, teléfono, monthly_income, property_type, bedrooms, bathrooms, interested_zones)
 export const saveProspectInitial = async (
   personal: { fullName: string; email: string; phone: string },
-  financial: { familyIncome: number },
-  preferences: { propertyType: string; bedrooms: number | null; bathrooms: number | null; zone: string[] | string },
+  financial: FinancialData,
+  preferences: UserPreferences,
   companyId?: string | null,
-  formId?: string | null
+  formId?: string | null,
+  result?: CalculationResult | null
 ): Promise<string | null> => {
   if (!pool) {
     console.error('❌ Pool de base de datos no inicializado.');
@@ -619,6 +620,7 @@ export const saveProspectInitial = async (
     const propertyType = String(preferences.propertyType || '');
     const bedrooms = preferences.bedrooms !== undefined && preferences.bedrooms !== null ? Number(preferences.bedrooms) : null;
     const bathrooms = preferences.bathrooms !== undefined && preferences.bathrooms !== null ? parseFloat(String(preferences.bathrooms)) : null;
+    const calculationResultJson = result ? JSON.stringify(result) : null;
 
     // Insertar datos básicos + preferencias
     const query = `
@@ -633,9 +635,10 @@ export const saveProspectInitial = async (
         bedrooms,
         bathrooms,
         interested_zones,
+        calculation_result,
         status,
         created_at
-      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, 'Nuevo', NOW())
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, 'Nuevo', NOW())
       RETURNING id
     `;
 
@@ -649,7 +652,8 @@ export const saveProspectInitial = async (
       propertyType,
       bedrooms,
       bathrooms,
-      zonesArray
+      zonesArray,
+      calculationResultJson
     ];
 
     console.log('📤 Guardando prospecto inicial con valores:', {
