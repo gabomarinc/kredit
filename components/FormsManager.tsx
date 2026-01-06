@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, Trash2, Copy, Check, ExternalLink, Link as LinkIcon, Loader2, Settings2 } from 'lucide-react';
+import { Plus, Trash2, Copy, Check, ExternalLink, Link as LinkIcon, Loader2, Settings2, Lock } from 'lucide-react';
 import { createForm, getForms, deleteForm, getCompanyById } from '../utils/db';
-import { Form } from '../types';
+import { Form, Company, PlanType } from '../types';
 import { FormEditorModal } from './FormEditorModal';
 import { ConfirmationModal } from './ui/ConfirmationModal';
 
@@ -9,8 +9,14 @@ interface FormsManagerProps {
     companyId: string;
 }
 
+const PLAN_LIMITS: Record<PlanType, number> = {
+    'Freshie': 2,
+    'Wolf of Wallstreet': 5
+};
+
 export const FormsManager: React.FC<FormsManagerProps> = ({ companyId }) => {
     const [forms, setForms] = useState<Form[]>([]);
+    const [company, setCompany] = useState<Company | null>(null);
     const [isLoading, setIsLoading] = useState(true);
     const [newFormName, setNewFormName] = useState('');
     const [isCreating, setIsCreating] = useState(false);
@@ -20,22 +26,22 @@ export const FormsManager: React.FC<FormsManagerProps> = ({ companyId }) => {
     const [formToDelete, setFormToDelete] = useState<string | null>(null);
 
     useEffect(() => {
-        loadForms();
-        loadZones();
+        loadData();
     }, [companyId]);
 
-    const loadForms = async () => {
+    const loadData = async () => {
         setIsLoading(true);
-        const data = await getForms(companyId);
-        setForms(data);
-        setIsLoading(false);
-    };
+        const [formsData, companyData] = await Promise.all([
+            getForms(companyId),
+            getCompanyById(companyId)
+        ]);
 
-    const loadZones = async () => {
-        const company = await getCompanyById(companyId);
-        if (company) {
-            setAvailableZones(company.zones || []);
+        setForms(formsData);
+        if (companyData) {
+            setCompany(companyData);
+            setAvailableZones(companyData.zones || []);
         }
+        setIsLoading(false);
     };
 
     const handleCreate = async () => {
@@ -83,31 +89,59 @@ export const FormsManager: React.FC<FormsManagerProps> = ({ companyId }) => {
         }
     };
 
+    const currentPlan = company?.plan || 'Freshie';
+    const limit = PLAN_LIMITS[currentPlan] || 2;
+    const canCreate = forms.length < limit;
+
     return (
         <div className="bg-white rounded-[2.5rem] p-8 shadow-[0_20px_60px_-15px_rgba(0,0,0,0.05)] border border-white/50 animate-fade-in-up">
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
                 <div>
                     <h2 className="text-2xl font-bold text-gray-900 mb-1">Gestor de Calculadoras</h2>
-                    <p className="text-gray-500 text-sm">Crea enlaces personalizados con configuraciones específicas (documentos, zonas, etc).</p>
+                    <p className="text-gray-500 text-sm">Crea enlaces personalizados con configuraciones específicas.</p>
                 </div>
+                {company && (
+                    <div className="px-4 py-2 bg-gray-50 rounded-xl border border-gray-100 flex items-center gap-3">
+                        <div className="text-xs font-medium text-gray-500">Plan actual: <span className="text-indigo-600 font-bold">{currentPlan}</span></div>
+                        <div className="h-4 w-px bg-gray-200"></div>
+                        <div className={`text-xs font-bold ${canCreate ? 'text-green-600' : 'text-amber-500'}`}>
+                            {forms.length} / {limit} Calculadoras
+                        </div>
+                    </div>
+                )}
             </div>
 
             {/* Create New Form */}
-            <div className="bg-gray-50/50 p-6 rounded-2xl border border-gray-100 mb-8">
-                <label className="block text-sm font-semibold text-gray-700 mb-3">Nueva Calculadora</label>
+            <div className={`p-6 rounded-2xl border mb-8 transition-all ${canCreate
+                    ? 'bg-gray-50/50 border-gray-100'
+                    : 'bg-orange-50/50 border-orange-100 opacity-90'
+                }`}>
+                <div className="flex justify-between items-start mb-3">
+                    <label className="block text-sm font-semibold text-gray-700">Nueva Calculadora</label>
+                    {!canCreate && (
+                        <span className="text-xs font-medium text-orange-600 flex items-center gap-1 bg-orange-100 px-2 py-1 rounded-lg">
+                            <Lock size={12} /> Límite del plan alcanzado
+                        </span>
+                    )}
+                </div>
+
                 <div className="flex gap-3">
                     <input
                         type="text"
                         value={newFormName}
                         onChange={(e) => setNewFormName(e.target.value)}
-                        onKeyPress={(e) => e.key === 'Enter' && handleCreate()}
-                        placeholder="Ej: Campaña Facebook, Landing Page..."
-                        className="flex-1 px-5 py-3 rounded-xl border border-gray-200 focus:border-indigo-500 outline-none bg-white transition-all focus:shadow-sm"
+                        onKeyPress={(e) => e.key === 'Enter' && canCreate && handleCreate()}
+                        placeholder={canCreate ? "Ej: Campaña Facebook, Landing Page..." : "Actualiza tu plan para crear más calculadoras"}
+                        disabled={!canCreate || isCreating}
+                        className="flex-1 px-5 py-3 rounded-xl border border-gray-200 focus:border-indigo-500 outline-none bg-white transition-all focus:shadow-sm disabled:bg-gray-100 disabled:text-gray-400"
                     />
                     <button
                         onClick={handleCreate}
-                        disabled={!newFormName.trim() || isCreating}
-                        className="px-6 py-3 bg-indigo-600 text-white rounded-xl font-bold hover:bg-indigo-700 transition-all flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed shadow-md shadow-indigo-100"
+                        disabled={!canCreate || !newFormName.trim() || isCreating}
+                        className={`px-6 py-3 rounded-xl font-bold transition-all flex items-center gap-2 shadow-md ${!canCreate || !newFormName.trim() || isCreating
+                                ? 'bg-gray-200 text-gray-400 cursor-not-allowed shadow-none'
+                                : 'bg-indigo-600 text-white hover:bg-indigo-700 shadow-indigo-100'
+                            }`}
                     >
                         {isCreating ? <Loader2 size={20} className="animate-spin" /> : <Plus size={20} />}
                         <span className="hidden sm:inline">Crear</span>

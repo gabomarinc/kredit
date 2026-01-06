@@ -2258,30 +2258,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableZones, onUpdateZo
                     }
                   }}
                 >
-                  <button
-                    onClick={() => {
-                      setActiveTab('calculator-config');
-                      setShowSettingsSubmenu(false);
-                    }}
-                    className={`w-full px-5 py-4 text-left hover:bg-primary-50/50 transition-colors flex items-start gap-4 border-b border-gray-50 last:border-b-0 ${activeTab === 'calculator-config' ? 'bg-primary-50' : ''
-                      }`}
-                  >
-                    <div className={`w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0 transition-colors ${activeTab === 'calculator-config'
-                      ? 'bg-indigo-100 text-primary-600'
-                      : 'bg-gray-100 text-gray-600 group-hover:bg-primary-50'
-                      }`}>
-                      <Calculator size={22} strokeWidth={1.5} />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className={`font-bold text-sm mb-1.5 ${activeTab === 'calculator-config' ? 'text-primary-600' : 'text-gray-900'
-                        }`}>
-                        Configurar Calculadora
-                      </div>
-                      <div className="text-xs text-gray-500 leading-relaxed">
-                        Integración web, documentos y zonas
-                      </div>
-                    </div>
-                  </button>
+
 
                   <button
                     onClick={() => {

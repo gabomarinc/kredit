@@ -86,6 +86,26 @@ const ensureTablesExist = async (client: any) => {
       console.warn('Nota: No se pudo agregar la restricción UNIQUE (puede que ya exista):', e);
     }
 
+    // Migración: Agregar columna 'plan' a companies si no existe
+    try {
+      await client.query(`
+        ALTER TABLE companies 
+        ADD COLUMN IF NOT EXISTS plan TEXT DEFAULT 'Freshie' CHECK (plan IN ('Freshie', 'Wolf of Wallstreet'))
+      `);
+    } catch (e) {
+      console.warn('Nota: No se pudo agregar la columna plan:', e);
+    }
+
+    // Migración: Agregar columna 'config' a forms si no existe (ya estaba planeado, aseguramos aquí)
+    try {
+      await client.query(`
+        ALTER TABLE forms
+        ADD COLUMN IF NOT EXISTS config JSONB
+      `);
+    } catch (e) {
+      console.warn('Nota: No se pudo agregar la columna config a forms:', e);
+    }
+
     // Tabla de prospectos
     await client.query(`
       CREATE TABLE IF NOT EXISTS prospects (
