@@ -39,10 +39,31 @@ export default async function handler(req: any, res: any) {
       <head>
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <meta name="color-scheme" content="light">
+        <meta name="supported-color-schemes" content="light">
         <title>Nuevo Prospecto Recibido</title>
+        <style>
+          :root {
+            color-scheme: light;
+          }
+          body {
+            background-color: #FAFDFC !important;
+            color: #2C3E50 !important;
+          }
+          .light-mode-container {
+            background-color: #ffffff !important;
+            color: #2C3E50 !important;
+          }
+          .light-mode-text {
+            color: #111827 !important;
+          }
+          .light-mode-subtext {
+            color: #6B7280 !important;
+          }
+        </style>
       </head>
       <body style="font-family: 'Satoshi', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #2C3E50; background-color: #FAFDFC; margin: 0; padding: 0;">
-        <div style="max-width: 600px; margin: 40px auto; background: white; border-radius: 24px; overflow: hidden; box-shadow: 0 20px 60px -15px rgba(0,0,0,0.05); border: 1px solid #E5E7EB;">
+        <div class="light-mode-container" style="max-width: 600px; margin: 40px auto; background: white; border-radius: 24px; overflow: hidden; box-shadow: 0 20px 60px -15px rgba(0,0,0,0.05); border: 1px solid #E5E7EB;">
           
           <!-- Header -->
           <div style="background: linear-gradient(135deg, #1A1A1A 0%, #2C3E50 100%); padding: 32px; text-align: center;">
@@ -51,7 +72,7 @@ export default async function handler(req: any, res: any) {
           </div>
           
           <!-- Content -->
-          <div style="padding: 32px;">
+          <div class="light-mode-container" style="padding: 32px; background-color: #ffffff;">
             
             <!-- Perfil Principal -->
             <div style="text-align: center; margin-bottom: 32px;">
@@ -62,8 +83,8 @@ export default async function handler(req: any, res: any) {
                   </td>
                 </tr>
               </table>
-              <h2 style="margin: 0; color: #111827; font-size: 20px;">${name}</h2>
-              <p style="margin: 4px 0 0; color: #6B7280; font-size: 14px;">${email} • ${phone || 'Sin teléfono'}</p>
+              <h2 class="light-mode-text" style="margin: 0; color: #111827; font-size: 20px;">${name}</h2>
+              <p class="light-mode-subtext" style="margin: 4px 0 0; color: #6B7280; font-size: 14px;">${email} • ${phone || 'Sin teléfono'}</p>
             </div>
 
             <!-- Detalles Grid - Using Table for Email Compatibility -->
