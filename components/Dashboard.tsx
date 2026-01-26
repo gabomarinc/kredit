@@ -3,7 +3,7 @@ import { createPortal } from 'react-dom';
 import {
   Users, DollarSign, LayoutDashboard, FileText, Download, Filter, Calendar, CheckCircle2, X, ChevronDown, MapPin, Briefcase, Settings, Plus, Trash2, Building, Image as ImageIcon, Shield, Save, Code, Copy, ExternalLink, Loader2, User, Target, MessageCircle, ShieldCheck, TrendingUp, Eye, FileText as FileTextIcon, BedDouble, Bath, Heart, ArrowRight, Upload, Check, ChevronLeft, RefreshCw, ChevronRight, Cloud, Calculator, FileCheck, Link as LinkIcon
 } from 'lucide-react';
-import { getProspectsFromDB, getCompanyById, updateCompanyZones, updateCompanyLogo, getPropertiesByCompany, saveProperty, updateProperty, deleteProperty, getPropertyInterestsByCompany, updateCompanyPlan, getPropertyInterestsByProspect, getProjectModelInterestsByProspect, saveProject, getProjectsByCompany, updateProject, deleteProject, updateCompanyName, getProspectDocuments, getPropertyImages, getProjectImages, updateCompanyGoogleDriveConfig, updateCompanyRequestedDocuments, updateCompanyApcDocument, createForm, getForms, updateForm, deleteForm } from '../utils/db';
+import { getProspectsFromDB, getCompanyById, updateCompanyZones, updateCompanyLogo, getPropertiesByCompany, saveProperty, updateProperty, deleteProperty, getPropertyInterestsByCompany, updateCompanyPlan, getPropertyInterestsByProspect, getProjectModelInterestsByProspect, saveProject, getProjectsByCompany, updateProject, deleteProject, updateCompanyName, getProspectDocuments, getPropertyImages, getProjectImages, updateCompanyGoogleDriveConfig, updateCompanyRequestedDocuments, updateCompanyApcDocument, createForm, getForms, updateForm, deleteForm, updateCompanyNotificationEmail } from '../utils/db';
 import { initiateGoogleDriveAuth, uploadFileToDrive, refreshAccessToken } from '../utils/googleDrive';
 import { Prospect, Property, PropertyInterest, PlanType, Project, ProjectModel, Company } from '../types';
 import { NotificationModal, NotificationType } from './ui/NotificationModal';
@@ -1073,6 +1073,10 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableZones, onUpdateZo
   const [settingsSubmenuTimeout, setSettingsSubmenuTimeout] = useState<NodeJS.Timeout | null>(null);
   const [selectedProspect, setSelectedProspect] = useState<Prospect | null>(null);
   const [selectedDocument, setSelectedDocument] = useState<{ type: string; url: string; name: string } | null>(null);
+  const [adminName, setAdminName] = useState('');
+  const [adminEmail, setAdminEmail] = useState('');
+  const [notificationEmail, setNotificationEmail] = useState('');
+  const [isSavingNotificationEmail, setIsSavingNotificationEmail] = useState(false);
   const [newZone, setNewZone] = useState('');
   const [copied, setCopied] = useState(false);
   const [isSavingCompanyName, setIsSavingCompanyName] = useState(false);
@@ -1122,8 +1126,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableZones, onUpdateZo
   });
 
   // Settings State - Cargar desde DB
-  const [adminName, setAdminName] = useState('Admin Gerente');
-  const [adminEmail, setAdminEmail] = useState('gerencia@kredit.com');
+  // Settings State - Cargar desde DB
   const [companyData, setCompanyData] = useState<Company | null>(null);
   const [logoError, setLogoError] = useState(false);
   const [isUpdatingLogo, setIsUpdatingLogo] = useState(false);
@@ -1265,6 +1268,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableZones, onUpdateZo
     const fetchData = async () => {
       setIsLoading(true);
       try {
+
         // Cargar prospectos
         await loadProspects();
 
@@ -1282,6 +1286,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableZones, onUpdateZo
               logoUrlPreview: company.logoUrl ? company.logoUrl.substring(0, 50) + '...' : 'none'
             });
             setCompanyData(company);
+            if (company.notificationEmail) setNotificationEmail(company.notificationEmail);
             setIsPromotora(company.role === 'Promotora'); // Establecer inmediatamente
             setAdminName(company.name);
             setAdminEmail(company.email);
@@ -3537,6 +3542,53 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableZones, onUpdateZo
                     className="w-full px-5 py-3 rounded-xl border border-gray-200 focus:border-primary-500 outline-none bg-gray-50 focus:bg-white transition-colors text-gray-900 font-medium"
                     placeholder="email@ejemplo.com"
                   />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Email para Notificaciones</label>
+                  <p className="text-xs text-gray-400 mb-2">Recibe una alerta cada vez que llegue un nuevo prospecto.</p>
+                  <div className="flex gap-2">
+                    <input
+                      type="email"
+                      value={notificationEmail}
+                      onChange={(e) => setNotificationEmail(e.target.value)}
+                      className="flex-1 px-5 py-3 rounded-xl border border-gray-200 focus:border-primary-500 outline-none bg-gray-50 focus:bg-white transition-colors text-gray-900 font-medium"
+                      placeholder="notificaciones@ejemplo.com"
+                    />
+                    <button
+                      onClick={async () => {
+                        const companyId = localStorage.getItem('companyId');
+                        if (!companyId) return;
+
+                        setIsSavingNotificationEmail(true);
+                        try {
+                          const success = await updateCompanyNotificationEmail(companyId, notificationEmail);
+                          if (success) {
+                            setNotification({
+                              isOpen: true,
+                              type: 'success',
+                              message: 'Email de notificaciones actualizado.',
+                              title: 'Guardado'
+                            });
+                          } else {
+                            throw new Error('Failed to update');
+                          }
+                        } catch (error) {
+                          setNotification({
+                            isOpen: true,
+                            type: 'error',
+                            message: 'Error al actualizar el email.',
+                            title: 'Error'
+                          });
+                        } finally {
+                          setIsSavingNotificationEmail(false);
+                        }
+                      }}
+                      disabled={isSavingNotificationEmail}
+                      className="px-4 bg-gray-900 text-white rounded-xl hover:bg-gray-800 disabled:opacity-50 transition-colors flex items-center justify-center"
+                    >
+                      {isSavingNotificationEmail ? <Loader2 size={18} className="animate-spin" /> : <Save size={18} />}
+                    </button>
+                  </div>
                 </div>
                 <div className="pt-4 border-t border-gray-100">
                   <p className="text-xs text-gray-500">

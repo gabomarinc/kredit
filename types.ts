@@ -166,6 +166,7 @@ export interface CompanyData {
   googleDriveAccessToken?: string;
   googleDriveRefreshToken?: string;
   googleDriveFolderId?: string;
+  notificationEmail?: string;
 }
 
 export interface Company {
@@ -187,5 +188,6 @@ export interface Company {
     talonarioFile: boolean;
     signedAcpFile: boolean;
   };
+  notificationEmail?: string;
   createdAt?: string;
 }

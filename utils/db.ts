@@ -159,6 +159,9 @@ const ensureTablesExist = async (client: any) => {
       // Columnas para Configurar Calculadora (Fase 1)
       await client.query(`ALTER TABLE companies ADD COLUMN IF NOT EXISTS apc_document_drive_id TEXT`);
       await client.query(`ALTER TABLE companies ADD COLUMN IF NOT EXISTS requested_documents JSONB DEFAULT '{"idFile": true, "fichaFile": true, "talonarioFile": true, "signedAcpFile": true}'::jsonb`);
+
+      // Nueva columna para email de notificaciones
+      await client.query(`ALTER TABLE companies ADD COLUMN IF NOT EXISTS notification_email TEXT`);
     } catch (e) {
       console.warn('Nota: Error al intentar actualizar columnas de companies:', e);
     }
@@ -1624,7 +1627,8 @@ export const getCompanyById = async (companyId: string): Promise<Company | null>
       googleDriveRefreshToken: company.google_drive_refresh_token || undefined,
       googleDriveFolderId: company.google_drive_folder_id || undefined,
       requestedDocuments: requestedDocuments,
-      apcDocumentDriveId: company.apc_document_drive_id || undefined
+      apcDocumentDriveId: company.apc_document_drive_id || undefined,
+      notificationEmail: company.notification_email || undefined, // Nuevo campo
     };
 
   } catch (error) {
@@ -1723,6 +1727,30 @@ export const updateCompanyName = async (companyId: string, companyName: string):
 
   } catch (error) {
     console.error('❌ Error actualizando nombre de la empresa:', error);
+    return false;
+  }
+};
+
+// Actualizar email de notificaciones de la empresa
+export const updateCompanyNotificationEmail = async (companyId: string, email: string): Promise<boolean> => {
+  if (!pool) return false;
+
+  try {
+    const client = await pool.connect();
+    // Asegurar que la columna existe (por si acaso la migración inicial no corrió o es vieja)
+    try {
+      await client.query(`ALTER TABLE companies ADD COLUMN IF NOT EXISTS notification_email TEXT`);
+    } catch (e) { /* ignorar */ }
+
+    await client.query(
+      'UPDATE companies SET notification_email = $1 WHERE id = $2',
+      [email, companyId]
+    );
+    client.release();
+    console.log('✅ Email de notificaciones actualizado:', email);
+    return true;
+  } catch (error) {
+    console.error('Error updating company notification email:', error);
     return false;
   }
 };

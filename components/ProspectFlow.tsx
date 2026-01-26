@@ -604,6 +604,41 @@ export const ProspectFlow: React.FC<ProspectFlowProps> = ({ availableZones, comp
         console.log('✅ [PRINCIPAL] Datos finales guardados exitosamente ANTES de mostrar resultados');
         setHasSavedFinalData(true);
 
+        // --- ENVIAR NOTIFICACIÓN ---
+        try {
+          // Usar company del state o buscarlo si necesario
+          const targetCompany = company; // El del state debería estar actualizado
+          if (targetCompany && (targetCompany.email || targetCompany.notificationEmail)) {
+            console.log('📧 Iniciando envío de notificación...');
+            const recipient = targetCompany.notificationEmail || targetCompany.email;
+
+            // No esperamos a que termine para no bloquear la UI
+            fetch('/api/notifications/new-prospect', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                prospect: {
+                  name: personal.fullName,
+                  email: personal.email,
+                  phone: personal.phone,
+                  income: financial.familyIncome,
+                  propertyType: preferences.propertyType,
+                  zone: preferences.zone,
+                  status: 'Nuevo',
+                  result: result
+                },
+                recipientEmail: recipient
+              })
+            }).then(res => {
+              if (res.ok) console.log('✅ Notificación enviada a:', recipient);
+              else console.error('❌ Error envío notificación:', res.statusText);
+            }).catch(err => console.error('❌ Error red notificación:', err));
+          }
+        } catch (e) {
+          console.error('Error preparando notificación:', e);
+        }
+        // ---------------------------
+
         // Cargar propiedades/proyectos disponibles si la empresa tiene plan Premium
         if (companyId) {
           try {
