@@ -55,36 +55,52 @@ export default async function handler(req: any, res: any) {
             
             <!-- Perfil Principal -->
             <div style="text-align: center; margin-bottom: 32px;">
-              <div style="width: 64px; height: 64px; background: #F3F4F6; color: #4B5563; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-size: 24px; font-weight: bold; margin-bottom: 16px;">
-                ${name.charAt(0).toUpperCase()}
-              </div>
+              <table role="presentation" border={0} cellPadding={0} cellSpacing={0} style="margin: 0 auto; margin-bottom: 16px;">
+                <tr>
+                  <td style="width: 64px; height: 64px; background: #F3F4F6; color: #4B5563; border-radius: 50%; text-align: center; vertical-align: middle; font-size: 24px; font-weight: bold; line-height: 64px; font-family: sans-serif;">
+                    ${name.charAt(0).toUpperCase()}
+                  </td>
+                </tr>
+              </table>
               <h2 style="margin: 0; color: #111827; font-size: 20px;">${name}</h2>
               <p style="margin: 4px 0 0; color: #6B7280; font-size: 14px;">${email} • ${phone || 'Sin teléfono'}</p>
             </div>
 
-            <!-- Detalles Grid -->
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 32px;">
-              <div style="background: #F9FAFB; padding: 16px; border-radius: 12px;">
-                <p style="margin: 0; font-size: 12px; color: #6B7280; text-transform: uppercase; font-weight: 600;">Ingreso Mensual</p>
-                <p style="margin: 4px 0 0; font-size: 16px; font-weight: 700; color: #111827;">$${Number(income).toLocaleString('en-US')}</p>
-              </div>
-              <div style="background: #F9FAFB; padding: 16px; border-radius: 12px;">
-                <p style="margin: 0; font-size: 12px; color: #6B7280; text-transform: uppercase; font-weight: 600;">Presupuesto Max</p>
-                <p style="margin: 4px 0 0; font-size: 16px; font-weight: 700; color: #059669;">~$${result?.maxPropertyPrice ? Number(result.maxPropertyPrice).toLocaleString('en-US') : '0'}</p>
-              </div>
-              <div style="background: #F9FAFB; padding: 16px; border-radius: 12px;">
-                <p style="margin: 0; font-size: 12px; color: #6B7280; text-transform: uppercase; font-weight: 600;">Tipo Propiedad</p>
-                <p style="margin: 4px 0 0; font-size: 16px; font-weight: 600; color: #374151;">${propertyType || 'No especificado'}</p>
-              </div>
-              <div style="background: #F9FAFB; padding: 16px; border-radius: 12px;">
-                <p style="margin: 0; font-size: 12px; color: #6B7280; text-transform: uppercase; font-weight: 600;">Zona Interés</p>
-                <p style="margin: 4px 0 0; font-size: 16px; font-weight: 600; color: #374151;">${Array.isArray(zone) ? zone.join(', ') : zone || 'No especificada'}</p>
-              </div>
-            </div>
+            <!-- Detalles Grid - Using Table for Email Compatibility -->
+            <table role="presentation" border={0} cellPadding={0} cellSpacing={0} width="100%" style="margin-bottom: 32px;">
+              <tr>
+                <td width="48%" style="padding-bottom: 16px; padding-right: 2%;">
+                  <div style="background: #F9FAFB; padding: 16px; border-radius: 12px; height: 100%;">
+                    <p style="margin: 0; font-size: 11px; color: #6B7280; text-transform: uppercase; font-weight: 600; letter-spacing: 0.5px;">Ingreso Mensual</p>
+                    <p style="margin: 6px 0 0; font-size: 16px; font-weight: 700; color: #111827;">$${Number(income).toLocaleString('en-US')}</p>
+                  </div>
+                </td>
+                <td width="48%" style="padding-bottom: 16px; padding-left: 2%;">
+                  <div style="background: #F9FAFB; padding: 16px; border-radius: 12px; height: 100%;">
+                    <p style="margin: 0; font-size: 11px; color: #6B7280; text-transform: uppercase; font-weight: 600; letter-spacing: 0.5px;">Presupuesto Max</p>
+                    <p style="margin: 6px 0 0; font-size: 16px; font-weight: 700; color: #059669;">~$${result?.maxPropertyPrice ? Number(result.maxPropertyPrice).toLocaleString('en-US') : '0'}</p>
+                  </div>
+                </td>
+              </tr>
+              <tr>
+                <td width="48%" style="padding-right: 2%;">
+                  <div style="background: #F9FAFB; padding: 16px; border-radius: 12px; height: 100%;">
+                    <p style="margin: 0; font-size: 11px; color: #6B7280; text-transform: uppercase; font-weight: 600; letter-spacing: 0.5px;">Tipo Propiedad</p>
+                    <p style="margin: 6px 0 0; font-size: 15px; font-weight: 600; color: #374151;">${propertyType || 'No especificado'}</p>
+                  </div>
+                </td>
+                <td width="48%" style="padding-left: 2%;">
+                  <div style="background: #F9FAFB; padding: 16px; border-radius: 12px; height: 100%;">
+                    <p style="margin: 0; font-size: 11px; color: #6B7280; text-transform: uppercase; font-weight: 600; letter-spacing: 0.5px;">Zona Interés</p>
+                    <p style="margin: 6px 0 0; font-size: 15px; font-weight: 600; color: #374151;">${Array.isArray(zone) ? zone.join(', ') : zone || 'No especificada'}</p>
+                  </div>
+                </td>
+              </tr>
+            </table>
 
             <!-- Botón de Acción -->
             <div style="text-align: center;">
-              <a href="${req.headers.origin || 'https://kr-dit.vercel.app'}" style="display: inline-block; background: #111827; color: white; text-decoration: none; padding: 14px 28px; border-radius: 12px; font-weight: 600; font-size: 14px;">
+              <a href="${req.headers.origin || 'https://kr-dit.vercel.app'}" style="display: inline-block; background: #111827; color: white; text-decoration: none; padding: 16px 32px; border-radius: 14px; font-weight: 600; font-size: 14px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);">
                 Ver Prospecto en Dashboard
               </a>
             </div>
