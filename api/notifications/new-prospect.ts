@@ -3,37 +3,37 @@ import { Resend } from 'resend';
 const resend = new Resend(process.env.RESEND_API_KEY);
 
 export default async function handler(req: any, res: any) {
-    if (req.method !== 'POST') {
-        return res.status(405).json({ error: 'Method not allowed' });
+  if (req.method !== 'POST') {
+    return res.status(405).json({ error: 'Method not allowed' });
+  }
+
+  try {
+    const { prospect, recipientEmail } = req.body;
+
+    if (!prospect || !recipientEmail) {
+      return res.status(400).json({ error: 'Faltan datos requeridos (prospect o recipientEmail)' });
     }
 
-    try {
-        const { prospect, recipientEmail } = req.body;
+    // Validar formato de email básico
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(recipientEmail)) {
+      return res.status(400).json({ error: 'Email de destinatario inválido' });
+    }
 
-        if (!prospect || !recipientEmail) {
-            return res.status(400).json({ error: 'Faltan datos requeridos (prospect o recipientEmail)' });
-        }
+    // Formatear datos para el email
+    const {
+      name,
+      email,
+      phone,
+      income,
+      propertyType,
+      zone,
+      status,
+      result
+    } = prospect;
 
-        // Validar formato de email básico
-        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        if (!emailRegex.test(recipientEmail)) {
-            return res.status(400).json({ error: 'Email de destinatario inválido' });
-        }
-
-        // Formatear datos para el email
-        const {
-            name,
-            email,
-            phone,
-            income,
-            propertyType,
-            zone,
-            status,
-            result
-        } = prospect;
-
-        // Construir HTML del correo
-        const htmlContent = `
+    // Construir HTML del correo
+    const htmlContent = `
       <!DOCTYPE html>
       <html>
       <head>
@@ -102,18 +102,18 @@ export default async function handler(req: any, res: any) {
       </html>
     `;
 
-        // Enviar email
-        const data = await resend.emails.send({
-            from: 'Krêdit <noreply@resend.dev>', // Idealmente configurar un dominio propio luego
-            to: recipientEmail,
-            subject: `Nuevo Prospecto: ${name} - Krêdit`,
-            html: htmlContent
-        });
+    // Enviar email
+    const data = await resend.emails.send({
+      from: 'Krêdit <notificaciones@konsul.digital>', // Dominio verificado
+      to: recipientEmail,
+      subject: `Nuevo Prospecto: ${name} - Krêdit`,
+      html: htmlContent
+    });
 
-        return res.status(200).json({ success: true, data });
+    return res.status(200).json({ success: true, data });
 
-    } catch (error) {
-        console.error('❌ Error enviando notificación de prospecto:', error);
-        return res.status(500).json({ error: 'Error interno del servidor al enviar correo' });
-    }
+  } catch (error) {
+    console.error('❌ Error enviando notificación de prospecto:', error);
+    return res.status(500).json({ error: 'Error interno del servidor al enviar correo' });
+  }
 }
