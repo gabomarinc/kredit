@@ -76,7 +76,7 @@ export default async function handler(req: any, res: any) {
             
             <!-- Perfil Principal -->
             <div style="text-align: center; margin-bottom: 32px;">
-              <table role="presentation" border={0} cellPadding={0} cellSpacing={0} style="margin: 0 auto; margin-bottom: 16px;">
+              <table role="presentation" border="0" cellpadding="0" cellspacing="0" style="margin: 0 auto; margin-bottom: 16px;">
                 <tr>
                   <td style="width: 64px; height: 64px; background: #F3F4F6; color: #4B5563; border-radius: 50%; text-align: center; vertical-align: middle; font-size: 24px; font-weight: bold; line-height: 64px; font-family: sans-serif;">
                     ${name.charAt(0).toUpperCase()}
@@ -88,7 +88,7 @@ export default async function handler(req: any, res: any) {
             </div>
 
             <!-- Detalles Grid - Using Table for Email Compatibility -->
-            <table role="presentation" border={0} cellPadding={0} cellSpacing={0} width="100%" style="margin-bottom: 32px;">
+            <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%" style="margin-bottom: 32px;">
               <tr>
                 <td width="48%" style="padding-bottom: 16px; padding-right: 2%;">
                   <div style="background: #F9FAFB; padding: 16px; border-radius: 12px; height: 100%;">
