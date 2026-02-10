@@ -5,7 +5,7 @@ import { calculateAffordability, formatCurrency } from '../utils/calculator';
 import { saveProspectToDB, getCompanyById, getAvailablePropertiesForProspect, savePropertyInterest, getCompanyById as getCompany, saveProspectInitial, updateProspectToDB, getAvailableProjectsForProspect, saveProjectModelInterest, getFormById } from '../utils/db';
 import { Property, PlanType, Project, ProjectModel } from '../types';
 import {
-  Home, Building2, MapPin, User, Upload, FileCheck, ArrowRight, CheckCircle2, Download, HeartHandshake, ChevronLeft, Check, BedDouble, Bath, Star, TrendingDown, X, Loader2, Heart
+  Home, Building2, MapPin, User, Upload, FileCheck, ArrowRight, CheckCircle2, Download, HeartHandshake, ChevronLeft, Check, BedDouble, Bath, Star, TrendingDown, X, Loader2, Heart, Lock
 } from 'lucide-react';
 import { NotificationModal, NotificationType } from './ui/NotificationModal';
 import SignatureCanvas from 'react-signature-canvas';
@@ -1068,25 +1068,53 @@ export const ProspectFlow: React.FC<ProspectFlowProps> = ({ availableZones, comp
               <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4 tracking-tight">¡Excelente, {personal.fullName.split(' ')[0]}!</h2>
               <p className="text-gray-500 text-lg mb-8">Basado en tu capacidad, puedes aplicar a:</p>
 
-              {/* Monto destacado */}
-              <div className="bg-gradient-to-br from-indigo-50 to-purple-50 p-8 rounded-[2rem] border-2 border-indigo-200 mb-8">
-                <p className="text-indigo-400 text-sm uppercase tracking-bold font-bold mb-2">Monto Total al que Puedes Aplicar</p>
-                <p className="text-5xl md:text-6xl font-bold text-indigo-900 mb-2">{formatCurrency(result.maxPropertyPrice)}</p>
-                <p className="text-gray-500 text-sm">Letra mensual estimada: {formatCurrency(result.monthlyPayment)}</p>
-              </div>
+              {/* Unified Card */}
+              <div className="bg-gradient-to-br from-indigo-50 to-purple-50 p-8 md:p-10 rounded-[2.5rem] border-2 border-indigo-100 shadow-xl relative overflow-hidden">
 
-              {/* Prompt de Validación */}
-              <div className="bg-white p-8 rounded-[2rem] border border-gray-100 shadow-lg mb-8">
-                <h3 className="text-2xl font-bold text-gray-900 mb-4">¿Quieres validar tu pre-aprobación bancaria?</h3>
-                <p className="text-gray-600 mb-6 leading-relaxed">
-                  Para obtener una pre-aprobación oficial, necesitamos validar tu información con documentos adicionales.
-                </p>
-                <button
-                  onClick={handleValidation}
-                  className="bg-gradient-to-r from-indigo-600 to-purple-600 text-white px-12 py-5 rounded-full font-bold text-lg hover:from-indigo-700 hover:to-purple-700 transition-all duration-300 shadow-xl shadow-indigo-200 hover:shadow-2xl hover:shadow-indigo-300 transform hover:scale-105 animate-pulse hover:animate-none"
-                >
-                  Validar Pre-Aprobación
-                </button>
+                {/* Decorative background elements */}
+                <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-200/20 rounded-full blur-3xl -mr-32 -mt-32 pointer-events-none"></div>
+                <div className="absolute bottom-0 left-0 w-64 h-64 bg-purple-200/20 rounded-full blur-3xl -ml-32 -mb-32 pointer-events-none"></div>
+
+                {/* Monto Total */}
+                <div className="relative z-10 mb-10">
+                  <p className="text-indigo-500 text-sm uppercase tracking-widest font-bold mb-3">Monto Total al que Puedes Aplicar</p>
+                  <p className="text-5xl md:text-7xl font-extrabold text-indigo-900 tracking-tight leading-none">
+                    {formatCurrency(result.maxPropertyPrice)}
+                  </p>
+                </div>
+
+                {/* Divider with "plus" visual if desired, or just spacing */}
+
+                {/* Letra Mensual (Blurred) */}
+                <div className="relative z-10 mb-12">
+                  <p className="text-gray-500 text-lg md:text-xl font-medium mb-3">Letra mensual estimada</p>
+                  <div className="relative inline-flex items-center justify-center">
+                    <p className="text-4xl md:text-5xl font-bold text-gray-800 blur-md select-none opacity-40 transform scale-y-110">
+                      {formatCurrency(result.monthlyPayment)}
+                    </p>
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      <div className="bg-white/50 backdrop-blur-sm p-3 rounded-full shadow-sm">
+                        <Lock size={24} className="text-indigo-400" />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Unlock Section */}
+                <div className="relative z-10 bg-white/60 backdrop-blur-md p-6 md:p-8 rounded-[2rem] border border-white/60 shadow-lg shadow-indigo-100/50">
+                  <p className="text-gray-700 font-semibold mb-4 text-lg">Desbloquea tu letra mensual estimada</p>
+                  <button
+                    onClick={handleValidation}
+                    className="w-full sm:w-auto bg-gradient-to-r from-indigo-600 to-purple-600 text-white px-8 md:px-10 py-4 md:py-5 rounded-full font-bold text-lg hover:from-indigo-700 hover:to-purple-700 transition-all duration-300 shadow-xl shadow-indigo-200 hover:shadow-2xl hover:shadow-indigo-300 transform hover:scale-[1.02] active:scale-[0.98] animate-pulse hover:animate-none flex items-center justify-center gap-2 mx-auto"
+                  >
+                    <Lock size={20} className="text-indigo-100" />
+                    Desbloquea Pre-Aprobación Bancaria
+                  </button>
+                  <p className="text-xs text-gray-400 mt-4 leading-relaxed max-w-md mx-auto">
+                    Para obtener una pre-aprobación oficial, necesitamos validar tu información con documentos adicionales.
+                  </p>
+                </div>
+
               </div>
             </div>
           </div>
