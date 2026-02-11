@@ -3781,7 +3781,8 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableZones, onUpdateZo
               </div>
 
               {/* Financial Cards */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+              {/* Financial Cards */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4 mb-8">
                 <div className="bg-gray-50 p-4 rounded-2xl border border-gray-100">
                   <div className="flex items-center gap-2 mb-2">
                     <DollarSign size={18} className="text-primary-600" />
@@ -3816,6 +3817,24 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableZones, onUpdateZo
                   </div>
                   <p className="text-lg font-bold text-gray-900">
                     {selectedProspect.phone || 'N/A'}
+                  </p>
+                </div>
+                <div className="bg-gray-50 p-4 rounded-2xl border border-gray-100">
+                  <div className="flex items-center gap-2 mb-2">
+                    <BedDouble size={18} className="text-primary-600" />
+                    <span className="text-xs text-gray-500 font-semibold uppercase">Habitaciones</span>
+                  </div>
+                  <p className="text-lg font-bold text-gray-900">
+                    {selectedProspect.bedrooms || 'N/A'}
+                  </p>
+                </div>
+                <div className="bg-gray-50 p-4 rounded-2xl border border-gray-100">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Bath size={18} className="text-primary-600" />
+                    <span className="text-xs text-gray-500 font-semibold uppercase">Baños</span>
+                  </div>
+                  <p className="text-lg font-bold text-gray-900">
+                    {selectedProspect.bathrooms || 'N/A'}
                   </p>
                 </div>
               </div>
