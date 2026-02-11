@@ -185,7 +185,7 @@ const ApcSignatureModal: React.FC<ApcSignatureModalProps> = ({ isOpen, onClose, 
           <div className="bg-gray-50 rounded-2xl border border-gray-200 p-3 flex items-center justify-center">
             <div className="w-full max-h-[70vh] overflow-auto flex justify-center">
               <Document file={pdfUrl} loading={<div className="text-sm text-gray-500">Cargando PDF...</div>}>
-                <Page pageNumber={1} width={500} />
+                <Page pageNumber={1} width={500} renderTextLayer={false} renderAnnotationLayer={false} />
               </Document>
             </div>
           </div>
