@@ -1029,6 +1029,30 @@ export const ProspectFlow: React.FC<ProspectFlowProps> = ({ availableZones, comp
                       if (savedId) {
                         setProspectId(savedId);
                         console.log('✅ Prospecto inicial guardado con todos los datos:', savedId);
+
+                        // Enviar notificación de nuevo prospecto (por si abandona aquí)
+                        if (company && (company.email || company.notificationEmail)) {
+                          const recipient = company.notificationEmail || company.email;
+                          fetch('/api/notifications/new-prospect', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                              prospect: {
+                                name: personal.fullName,
+                                email: personal.email,
+                                phone: personal.phone,
+                                income: financial.familyIncome,
+                                propertyType: preferences.propertyType,
+                                zone: preferences.zone,
+                                bedrooms: preferences.bedrooms,
+                                bathrooms: preferences.bathrooms,
+                                status: 'Nuevo',
+                                result: result
+                              },
+                              recipientEmail: recipient
+                            })
+                          }).catch(err => console.error('Error enviando notificación inicial:', err));
+                        }
                       }
                     } catch (e) {
                       console.error('Error guardando prospecto inicial:', e);

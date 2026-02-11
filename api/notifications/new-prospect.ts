@@ -117,6 +117,20 @@ export default async function handler(req: any, res: any) {
                   </div>
                 </td>
               </tr>
+              <tr>
+                <td width="48%" style="padding-top: 16px; padding-right: 2%;">
+                  <div style="background: #F9FAFB; padding: 16px; border-radius: 12px; height: 100%;">
+                    <p style="margin: 0; font-size: 11px; color: #6B7280; text-transform: uppercase; font-weight: 600; letter-spacing: 0.5px;">Habitaciones</p>
+                    <p style="margin: 6px 0 0; font-size: 15px; font-weight: 600; color: #374151;">${prospect.bedrooms || 'No especificado'}</p>
+                  </div>
+                </td>
+                <td width="48%" style="padding-top: 16px; padding-left: 2%;">
+                  <div style="background: #F9FAFB; padding: 16px; border-radius: 12px; height: 100%;">
+                    <p style="margin: 0; font-size: 11px; color: #6B7280; text-transform: uppercase; font-weight: 600; letter-spacing: 0.5px;">Baños</p>
+                    <p style="margin: 6px 0 0; font-size: 15px; font-weight: 600; color: #374151;">${prospect.bathrooms || 'No especificado'}</p>
+                  </div>
+                </td>
+              </tr>
             </table>
 
             <!-- Botón de Acción -->
