@@ -2,8 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { Form, FormConfig } from '../types';
 import { X, Save, Eye, FileText, MapPin, Loader2, Upload, Trash2, CheckCircle2, Check, Copy, Code } from 'lucide-react';
-import { updateForm, getCompanyById } from '../utils/db';
-import { uploadFileToDrive } from '../utils/googleDrive';
+import { updateForm, getCompanyById, updateCompanyGoogleDriveConfig } from '../utils/db';
+import { uploadFileToDrive, refreshAccessToken } from '../utils/googleDrive';
 
 interface FormEditorModalProps {
     form: Form;
@@ -77,21 +77,61 @@ export const FormEditorModal: React.FC<FormEditorModalProps> = ({
             const company = await getCompanyById(companyId);
             if (!company?.googleDriveAccessToken || !company?.googleDriveFolderId) {
                 alert('Debes conectar Google Drive en la Configuración General primero.');
+                setIsUploading(false);
                 return;
             }
 
-            // Upload file
-            const result = await uploadFileToDrive(
-                company.googleDriveAccessToken,
-                file,
-                company.googleDriveFolderId,
-                `APC_DOC_FORM_${form.id}.pdf`
-            );
+            let accessToken = company.googleDriveAccessToken;
+            const refreshToken = company.googleDriveRefreshToken;
+            const folderId = company.googleDriveFolderId;
 
-            if (result && result.fileId) {
-                setConfig(prev => ({ ...prev, apcDocumentId: result.fileId }));
-            } else {
-                alert('Error al subir el archivo a Google Drive');
+            // Intentar subir el archivo
+            try {
+                const result = await uploadFileToDrive(
+                    accessToken,
+                    file,
+                    folderId,
+                    `APC_DOC_FORM_${form.id}.pdf`
+                );
+
+                if (result && result.fileId) {
+                    setConfig(prev => ({ ...prev, apcDocumentId: result.fileId }));
+                } else {
+                    alert('Error al subir el archivo a Google Drive');
+                }
+            } catch (error: any) {
+                // Si es 401 (token expirado), intentar refrescar token y reintentar
+                if (error?.status === 401 && refreshToken) {
+                    console.log('🔄 Token expirado, renovando...');
+                    const newAccessToken = await refreshAccessToken(refreshToken);
+
+                    if (newAccessToken) {
+                        console.log('✅ Token renovado, reintentando subida...');
+
+                        // Actualizar token en BD
+                        await updateCompanyGoogleDriveConfig(companyId, newAccessToken, refreshToken, folderId);
+
+                        // Reintentar subida con el nuevo token
+                        const result = await uploadFileToDrive(
+                            newAccessToken,
+                            file,
+                            folderId,
+                            `APC_DOC_FORM_${form.id}.pdf`
+                        );
+
+                        if (result && result.fileId) {
+                            setConfig(prev => ({ ...prev, apcDocumentId: result.fileId }));
+                        } else {
+                            alert('Error al subir el archivo a Google Drive');
+                        }
+                    } else {
+                        console.error('❌ No se pudo renovar el token');
+                        alert('Tu sesión de Google Drive ha expirado. Por favor, reconecta Google Drive en Configuración General.');
+                    }
+                } else {
+                    // Otro tipo de error
+                    throw error;
+                }
             }
         } catch (error) {
             console.error('Error uploading APC:', error);
