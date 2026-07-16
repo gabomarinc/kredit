@@ -1,17 +1,16 @@
 import React, { useState, useEffect } from 'react';
+import { useKindeAuth } from '@kinde-oss/kinde-auth-react';
 import { Layout } from './components/ui/Layout';
 import { ProspectFlow } from './components/ProspectFlow';
 import { Dashboard } from './components/Dashboard';
 import { Login } from './components/Login';
 import { Register } from './components/Register';
-import { ResetPassword } from './components/ResetPassword';
-import { AuthSelection } from './components/AuthSelection';
 import { ZONES_PANAMA } from './constants';
-import { getCompanyById } from './utils/db';
-
-type AuthState = 'selection' | 'login' | 'register' | 'reset-password' | 'authenticated';
+import { getCompanyById, getCompanyByEmail } from './utils/db';
 
 function App() {
+  const { isLoading: isKindeLoading, isAuthenticated, user, logout } = useKindeAuth();
+
   // Check for embed mode query param
   const [isEmbedMode, setIsEmbedMode] = useState(false);
   const [embedCompanyId, setEmbedCompanyId] = useState<string | null>(null);
@@ -32,12 +31,11 @@ function App() {
       if (formId) {
         setEmbedFormId(formId);
       }
-      // Removed transparency logic: We want to keep the Aurora background!
     }
   }, []);
 
   // Standard App State
-  const [authState, setAuthState] = useState<AuthState>('selection');
+  const [isOnboarded, setIsOnboarded] = useState<boolean | null>(null);
   const [isAdminView, setIsAdminView] = useState(true);
   const [isCheckingSession, setIsCheckingSession] = useState(true);
 
@@ -45,110 +43,54 @@ function App() {
   const [zones, setZones] = useState<string[]>(ZONES_PANAMA);
   const [companyName, setCompanyName] = useState('Krêdit');
 
-  // Verificar si hay token de reset en la URL
+  // Verificar si el usuario está registrado en DB al cambiar estado de Kinde
   useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    const resetToken = params.get('token');
-    if (resetToken) {
-      setAuthState('reset-password');
-    }
-  }, []);
+    const checkUserOnboarding = async () => {
+      if (isKindeLoading) return;
 
-  // Verificar sesión guardada al cargar la aplicación
-  useEffect(() => {
-    const checkSession = async () => {
-      // No verificar sesión si estamos en reset-password
-      const params = new URLSearchParams(window.location.search);
-      if (params.get('token')) {
-        setIsCheckingSession(false);
-        return;
-      }
-
-      const savedCompanyId = localStorage.getItem('companyId');
-
-      if (savedCompanyId) {
+      if (isAuthenticated && user?.email) {
         try {
-          console.log('🔄 Verificando sesión guardada...');
-          const company = await getCompanyById(savedCompanyId);
+          console.log('🔄 Buscando datos de la empresa por email:', user.email);
+          const company = await getCompanyByEmail(user.email);
 
           if (company) {
-            console.log('✅ Sesión válida encontrada, restaurando...');
-            // Restaurar datos de la empresa
+            console.log('✅ Empresa encontrada en DB:', company.companyName);
             setCompanyName(company.companyName);
             setZones(company.zones.length > 0 ? company.zones : ZONES_PANAMA);
-            // Restaurar datos en localStorage por si acaso
+            
+            // Guardar localmente para compatibilidad con código existente
             localStorage.setItem('companyId', company.id);
             localStorage.setItem('companyName', company.companyName);
             localStorage.setItem('zones', JSON.stringify(company.zones));
-            // Establecer como autenticado
-            setAuthState('authenticated');
-            setIsAdminView(true);
+
+            setIsOnboarded(true);
           } else {
-            console.log('⚠️ Sesión inválida, limpiando...');
-            // Limpiar datos inválidos
-            localStorage.removeItem('companyId');
-            localStorage.removeItem('companyName');
-            localStorage.removeItem('zones');
-            setAuthState('selection');
+            console.log('⚠️ Empresa no registrada en DB, requiere onboarding');
+            setIsOnboarded(false);
           }
         } catch (error) {
-          console.error('❌ Error verificando sesión:', error);
-          // En caso de error, limpiar y mostrar pantalla de selección
-          localStorage.removeItem('companyId');
-          localStorage.removeItem('companyName');
-          localStorage.removeItem('zones');
-          setAuthState('selection');
+          console.error('❌ Error buscando empresa en DB:', error);
+          setIsOnboarded(false);
         }
       } else {
-        console.log('ℹ️ No hay sesión guardada');
-        setAuthState('selection');
+        console.log('ℹ️ Usuario no autenticado en Kinde');
+        setIsOnboarded(null);
       }
-
       setIsCheckingSession(false);
     };
 
-    // Solo verificar sesión si no estamos en modo embed
     if (!isEmbedMode) {
-      checkSession();
+      checkUserOnboarding();
     } else {
       setIsCheckingSession(false);
     }
-  }, [isEmbedMode]);
-
-  const handleLogin = async () => {
-    // Cargar datos de la empresa desde localStorage o DB
-    const companyId = localStorage.getItem('companyId');
-    if (companyId) {
-      const company = await getCompanyById(companyId);
-      if (company) {
-        setCompanyName(company.companyName);
-        setZones(company.zones.length > 0 ? company.zones : ZONES_PANAMA);
-      }
-    } else {
-      // Si no hay companyId, usar valores por defecto
-      const savedZones = localStorage.getItem('zones');
-      if (savedZones) {
-        try {
-          setZones(JSON.parse(savedZones));
-        } catch (e) {
-          setZones(ZONES_PANAMA);
-        }
-      }
-      const savedCompanyName = localStorage.getItem('companyName');
-      if (savedCompanyName) {
-        setCompanyName(savedCompanyName);
-      }
-    }
-
-    setAuthState('authenticated');
-    setIsAdminView(true); // Land on dashboard
-  };
+  }, [isKindeLoading, isAuthenticated, user, isEmbedMode]);
 
   const handleRegisterComplete = (data: { companyName: string; zones: string[] }) => {
     setCompanyName(data.companyName);
     setZones(data.zones.length > 0 ? data.zones : ZONES_PANAMA);
-    setAuthState('authenticated');
-    setIsAdminView(true); // Land on dashboard
+    setIsOnboarded(true);
+    setIsAdminView(true); // Redirigir al dashboard
   };
 
   // Load company data when in embed mode with company_id
@@ -178,10 +120,7 @@ function App() {
   }, [isEmbedMode, embedCompanyId]);
 
   // --- EMBEDDED / PUBLIC VIEW MODE ---
-  // This renders ONLY the form, no admin header, no login checks. 
-  // Designed to be inside an iframe on the client's website.
   if (isEmbedMode) {
-    // Show loading while fetching company data
     if (isLoadingEmbedCompany) {
       return (
         <div className="min-h-screen flex items-center justify-center">
@@ -195,7 +134,6 @@ function App() {
 
     return (
       <div className="min-h-screen py-4 flex items-center justify-center">
-        {/* We pass true to isEmbed to remove header/nav elements in ProspectFlow if needed */}
         <ProspectFlow
           availableZones={zones}
           companyName={companyName}
@@ -206,15 +144,15 @@ function App() {
     );
   }
 
-  // --- STANDARD APP FLOW (For the Agency/Client) ---
+  // --- STANDARD APP FLOW ---
 
-  // Mostrar loading mientras se verifica la sesión
-  if (isCheckingSession) {
+  // Mostrar loading si Kinde o la base de datos están verificando sesión
+  if (isKindeLoading || isCheckingSession) {
     return (
       <Layout isWelcomeScreen>
         <div className="min-h-screen flex items-center justify-center">
           <div className="text-center">
-            <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mb-4"></div>
+            <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-primary-500 mb-4"></div>
             <p className="text-gray-500">Verificando sesión...</p>
           </div>
         </div>
@@ -222,83 +160,40 @@ function App() {
     );
   }
 
-  // 1. Initial Selection Screen
-  if (authState === 'selection') {
+  // 1. Si no está autenticado, mostrar pantalla de login
+  if (!isAuthenticated) {
     return (
       <Layout isWelcomeScreen>
-        <AuthSelection
-          onLogin={() => setAuthState('login')}
-          onRegister={() => setAuthState('register')}
-        />
+        <Login />
       </Layout>
     );
   }
 
-  // 2. Login Screen
-  if (authState === 'login') {
+  // 2. Si está autenticado pero no está en la base de datos local, mostrar Asistente de Configuración (Onboarding)
+  if (isAuthenticated && isOnboarded === false) {
     return (
       <Layout>
-        <div className="absolute top-6 left-6 z-10">
-          <button onClick={() => setAuthState('selection')} className="text-gray-400 hover:text-gray-600 font-medium text-sm">
-            ← Volver
-          </button>
-        </div>
-        <Login
-          onLogin={handleLogin}
-          onGoToRegister={() => setAuthState('register')}
-        />
-      </Layout>
-    );
-  }
-
-  // 3. Register Screen
-  if (authState === 'register') {
-    return (
-      <Layout>
-        <div className="absolute top-6 left-6 z-10">
-          <button onClick={() => setAuthState('selection')} className="text-gray-400 hover:text-gray-600 font-medium text-sm">
-            ← Volver
-          </button>
-        </div>
         <Register
+          kindeUser={{
+            email: user?.email || '',
+            name: `${user?.given_name || ''} ${user?.family_name || ''}`.trim()
+          }}
           onRegisterComplete={handleRegisterComplete}
-          onGoToLogin={() => setAuthState('login')}
         />
       </Layout>
     );
   }
 
-  // 4. Reset Password Screen
-  if (authState === 'reset-password') {
-    return (
-      <Layout>
-        <ResetPassword
-          onSuccess={() => {
-            // Limpiar token de la URL
-            window.history.replaceState({}, '', '/');
-            setAuthState('login');
-          }}
-          onCancel={() => {
-            // Limpiar token de la URL
-            window.history.replaceState({}, '', '/');
-            setAuthState('login');
-          }}
-        />
-      </Layout>
-    );
-  }
-
-  const handleLogout = () => {
-    // Limpiar datos de sesión
+  const handleLogout = async () => {
+    // Limpiar datos locales
     localStorage.removeItem('companyId');
     localStorage.removeItem('companyName');
     localStorage.removeItem('zones');
-    // Volver a la pantalla de selección
-    setAuthState('selection');
-    setIsAdminView(true);
+    // Salir de Kinde
+    await logout();
   };
 
-  // 4. Main Admin Interface (Authenticated)
+  // 3. Interfaz Principal de Administración (Autenticado y Onboarded)
   return (
     <Layout
       isAdmin={isAdminView}

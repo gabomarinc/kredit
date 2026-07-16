@@ -9,6 +9,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@kinde-oss/kinde-auth-react": "^5.12.1",
     "@neondatabase/serverless": "0.9.4",
     "browser-image-compression": "^2.0.2",
     "lucide-react": "0.344.0",

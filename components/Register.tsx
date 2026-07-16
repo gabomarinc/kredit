@@ -1,26 +1,22 @@
 import React, { useState, useEffect } from 'react';
 import {
-  User, Mail, Lock, Building, Image as ImageIcon, MapPin, ArrowRight, ChevronLeft, Check, Plus, X, Upload, Loader2, Cloud, AlertCircle
+  Building, MapPin, ArrowRight, Check, Plus, X, Upload, Loader2, Cloud, AlertCircle
 } from 'lucide-react';
 import { ZONES_PANAMA } from '../constants';
 import { saveCompanyToDB } from '../utils/db';
 import { NotificationModal, NotificationType } from './ui/NotificationModal';
 import { initiateGoogleDriveAuth } from '../utils/googleDrive';
 
-// Componente de registro de empresas - Vercel deploy test
-
 interface RegisterProps {
+  kindeUser: { email: string; name: string };
   onRegisterComplete: (data: { companyName: string; zones: string[] }) => void;
-  onGoToLogin: () => void;
 }
 
-export const Register: React.FC<RegisterProps> = ({ onRegisterComplete, onGoToLogin }) => {
+export const Register: React.FC<RegisterProps> = ({ kindeUser, onRegisterComplete }) => {
   const [step, setStep] = useState(1);
   const [formData, setFormData] = useState({
-    name: '',
-    email: '',
-    password: '',
-    confirmPassword: '',
+    name: kindeUser.name || '',
+    email: kindeUser.email || '',
     companyName: '',
     logo: null as File | null,
     zones: [...ZONES_PANAMA], // Start with default zones
@@ -31,7 +27,6 @@ export const Register: React.FC<RegisterProps> = ({ onRegisterComplete, onGoToLo
   });
   const [isGoogleDriveConnected, setIsGoogleDriveConnected] = useState(false);
   const [newZone, setNewZone] = useState('');
-  const [passwordError, setPasswordError] = useState('');
   const [notification, setNotification] = useState<{ isOpen: boolean; type: NotificationType; message: string; title?: string }>({
     isOpen: false,
     type: 'error',
@@ -77,8 +72,6 @@ export const Register: React.FC<RegisterProps> = ({ onRegisterComplete, onGoToLo
               ...prev,
               name: parsed.name || prev.name,
               email: parsed.email || prev.email,
-              password: parsed.password || prev.password,
-              confirmPassword: parsed.confirmPassword || prev.confirmPassword,
               companyName: parsed.companyName || prev.companyName,
               zones: parsed.zones || prev.zones,
               role: parsed.role || prev.role,
@@ -92,8 +85,8 @@ export const Register: React.FC<RegisterProps> = ({ onRegisterComplete, onGoToLo
           }
         }
 
-        // Ir al paso 3 (Google Drive) si no estamos ahí
-        setStep(3);
+        // Ir al paso 2 (Google Drive) si no estamos ahí
+        setStep(2);
 
         setNotification({
           isOpen: true,
@@ -147,19 +140,18 @@ export const Register: React.FC<RegisterProps> = ({ onRegisterComplete, onGoToLo
   };
 
   const handleFinish = async () => {
+    setIsLoading(true);
     try {
-      console.log('🔄 Iniciando registro...');
+      console.log('🔄 Iniciando onboarding...');
       console.log('📋 Datos del formulario:', {
         email: formData.email,
         name: formData.name,
         companyName: formData.companyName,
         zonesCount: formData.zones.length,
         zones: formData.zones,
-        zonesType: typeof formData.zones,
-        isArray: Array.isArray(formData.zones)
       });
 
-      // Validar que hay zonas
+      // Validar que hay zones
       if (!formData.zones || formData.zones.length === 0) {
         console.error('❌ ERROR: No hay zonas para guardar');
         setNotification({
@@ -183,14 +175,14 @@ export const Register: React.FC<RegisterProps> = ({ onRegisterComplete, onGoToLo
         }
       }
 
-      // Guardar en la base de datos
+      // Guardar en la base de datos (con contraseña dummy por compatibilidad de la base de datos)
       const companyId = await saveCompanyToDB({
         name: formData.name,
         email: formData.email,
-        password: formData.password,
+        password: formData.email + "_sso_kinde_secure_dummy_auth",
         companyName: formData.companyName || 'Tu Inmobiliaria',
-        logoUrl: logoBase64, // Guardar como base64 en lugar de blob URL
-        zones: formData.zones, // Asegurar que es un array
+        logoUrl: logoBase64,
+        zones: formData.zones,
         role: formData.role,
         googleDriveAccessToken: formData.googleDriveAccessToken || undefined,
         googleDriveRefreshToken: formData.googleDriveRefreshToken || undefined,
@@ -212,24 +204,15 @@ export const Register: React.FC<RegisterProps> = ({ onRegisterComplete, onGoToLo
           zones: formData.zones
         });
       } else {
-        console.error('❌ saveCompanyToDB retornó null o undefined');
-        console.error('Esto puede significar:');
-        console.error('1. El email ya está en uso');
-        console.error('2. Error de conexión a la base de datos');
-        console.error('3. Error al insertar los datos');
         setNotification({
           isOpen: true,
           type: 'error',
-          message: 'El email puede estar en uso o hay un problema de conexión. Intenta con otro email o verifica la consola para más detalles.',
-          title: 'Error al registrar'
+          message: 'Hubo un error al guardar la configuración en la base de datos. Intente nuevamente.',
+          title: 'Error al configurar'
         });
       }
     } catch (error) {
-      console.error('❌ Error en registro (catch):', error);
-      console.error('Error completo:', {
-        message: error instanceof Error ? error.message : String(error),
-        stack: error instanceof Error ? error.stack : undefined
-      });
+      console.error('❌ Error en onboarding:', error);
       setNotification({
         isOpen: true,
         type: 'error',
@@ -247,7 +230,7 @@ export const Register: React.FC<RegisterProps> = ({ onRegisterComplete, onGoToLo
 
         {/* Progress Dots */}
         <div className="flex gap-3 mb-10 justify-center">
-          {[1, 2, 3, 4].map((s) => (
+          {[1, 2, 3].map((s) => (
             <div
               key={s}
               className={`h-1.5 rounded-full transition-all duration-500 ${s <= step ? 'bg-primary-500' : 'bg-gray-200'
@@ -257,107 +240,12 @@ export const Register: React.FC<RegisterProps> = ({ onRegisterComplete, onGoToLo
           ))}
         </div>
 
-        {/* STEP 1: PERSONAL INFO */}
+        {/* STEP 1: IDENTITY & COMPANY */}
         {step === 1 && (
           <div className="animate-fade-in-up">
             <div className="text-center mb-10">
-              <h1 className="text-3xl font-bold text-gray-900 mb-2 tracking-tight">Crea tu cuenta</h1>
-              <p className="text-gray-500 font-light">Comienza a gestionar tus prospectos hoy mismo.</p>
-            </div>
-
-            <div className="space-y-4 mb-8">
-              <div className="relative group">
-                <User className="absolute left-4 top-3.5 text-gray-400 group-focus-within:text-indigo-500 transition-colors" size={20} />
-                <input
-                  type="text"
-                  placeholder="Nombre Completo"
-                  value={formData.name}
-                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                  className="w-full pl-12 pr-4 py-3.5 rounded-xl border border-gray-200 outline-none focus:border-indigo-500 focus:bg-indigo-50/10 transition-all text-gray-700 font-medium"
-                />
-              </div>
-              <div className="relative group">
-                <Mail className="absolute left-4 top-3.5 text-gray-400 group-focus-within:text-indigo-500 transition-colors" size={20} />
-                <input
-                  type="email"
-                  placeholder="Correo Profesional"
-                  value={formData.email}
-                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                  className="w-full pl-12 pr-4 py-3.5 rounded-xl border border-gray-200 outline-none focus:border-indigo-500 focus:bg-indigo-50/10 transition-all text-gray-700 font-medium"
-                />
-              </div>
-              <div className="relative group">
-                <Lock className="absolute left-4 top-3.5 text-gray-400 group-focus-within:text-indigo-500 transition-colors" size={20} />
-                <input
-                  type="password"
-                  placeholder="Crear Contraseña"
-                  value={formData.password}
-                  onChange={(e) => {
-                    setFormData({ ...formData, password: e.target.value });
-                    // Validar cuando cambia la contraseña
-                    if (formData.confirmPassword && e.target.value !== formData.confirmPassword) {
-                      setPasswordError('Las contraseñas no coinciden');
-                    } else {
-                      setPasswordError('');
-                    }
-                  }}
-                  className="w-full pl-12 pr-4 py-3.5 rounded-xl border border-gray-200 outline-none focus:border-indigo-500 focus:bg-indigo-50/10 transition-all text-gray-700 font-medium"
-                />
-              </div>
-              <div className="relative group">
-                <Lock className="absolute left-4 top-3.5 text-gray-400 group-focus-within:text-indigo-500 transition-colors" size={20} />
-                <input
-                  type="password"
-                  placeholder="Confirmar Contraseña"
-                  value={formData.confirmPassword}
-                  onChange={(e) => {
-                    setFormData({ ...formData, confirmPassword: e.target.value });
-                    // Validar cuando cambia la confirmación
-                    if (formData.password && e.target.value !== formData.password) {
-                      setPasswordError('Las contraseñas no coinciden');
-                    } else {
-                      setPasswordError('');
-                    }
-                  }}
-                  className={`w-full pl-12 pr-4 py-3.5 rounded-xl border outline-none transition-all text-gray-700 font-medium ${passwordError
-                    ? 'border-red-300 focus:border-red-500 focus:bg-red-50/10'
-                    : 'border-gray-200 focus:border-indigo-500 focus:bg-indigo-50/10'
-                    }`}
-                />
-              </div>
-              {passwordError && (
-                <div className="text-red-500 text-sm font-medium flex items-center gap-2 animate-fade-in-up">
-                  <X size={16} />
-                  {passwordError}
-                </div>
-              )}
-            </div>
-
-            <button
-              onClick={handleNext}
-              disabled={!formData.name || !formData.email || !formData.password || !formData.confirmPassword || passwordError !== '' || formData.password !== formData.confirmPassword}
-              className={`w-full py-4 rounded-xl font-bold transition-all flex justify-center items-center gap-2 ${!formData.name || !formData.email || !formData.password || !formData.confirmPassword || passwordError !== '' || formData.password !== formData.confirmPassword
-                ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                : 'bg-gray-900 text-white hover:bg-gray-800 shadow-lg shadow-gray-200'
-                }`}
-            >
-              Continuar <ArrowRight size={18} />
-            </button>
-
-            <div className="mt-6 text-center">
-              <button onClick={onGoToLogin} className="text-sm text-primary-600 font-medium hover:text-primary-800">
-                ¿Ya tienes cuenta? <span className="font-bold">Inicia sesión</span>
-              </button>
-            </div>
-          </div>
-        )}
-
-        {/* STEP 2: COMPANY INFO */}
-        {step === 2 && (
-          <div className="animate-fade-in-up">
-            <div className="text-center mb-10">
-              <h1 className="text-3xl font-bold text-gray-900 mb-2 tracking-tight">Tu Identidad</h1>
-              <p className="text-gray-500 font-light">Personaliza cómo te verán tus clientes.</p>
+              <h1 className="text-3xl font-bold text-gray-900 mb-2 tracking-tight">Configura tu espacio</h1>
+              <p className="text-gray-500 font-light">Completemos los detalles de tu negocio.</p>
             </div>
 
             <div className="space-y-6 mb-8">
@@ -394,9 +282,8 @@ export const Register: React.FC<RegisterProps> = ({ onRegisterComplete, onGoToLo
                 />
               </div>
 
-              {/* Rol: Promotora o Broker */}
               <div className="space-y-3">
-                <label className="text-sm font-semibold text-gray-700 block">Rol</label>
+                <label className="text-sm font-semibold text-gray-700 block">Tu Rol</label>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <button
                     type="button"
@@ -422,26 +309,21 @@ export const Register: React.FC<RegisterProps> = ({ onRegisterComplete, onGoToLo
               </div>
             </div>
 
-            <div className="flex gap-4">
-              <button onClick={handleBack} className="px-6 py-4 text-gray-400 hover:text-gray-600 font-medium">
-                Atrás
-              </button>
-              <button
-                onClick={handleNext}
-                disabled={!formData.companyName}
-                className={`flex-1 py-4 rounded-xl font-bold transition-all flex justify-center items-center gap-2 ${!formData.companyName
-                  ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                  : 'bg-gray-900 text-white hover:bg-gray-800 shadow-lg shadow-gray-200'
-                  }`}
-              >
-                Continuar <ArrowRight size={18} />
-              </button>
-            </div>
+            <button
+              onClick={handleNext}
+              disabled={!formData.companyName}
+              className={`w-full py-4 rounded-xl font-bold transition-all flex justify-center items-center gap-2 ${!formData.companyName
+                ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                : 'bg-gray-900 text-white hover:bg-gray-800 shadow-lg shadow-gray-200'
+                }`}
+            >
+              Continuar <ArrowRight size={18} />
+            </button>
           </div>
         )}
 
-        {/* STEP 3: GOOGLE DRIVE INTEGRATION */}
-        {step === 3 && (
+        {/* STEP 2: GOOGLE DRIVE CONNECTION */}
+        {step === 2 && (
           <div className="animate-fade-in-up">
             <div className="text-center mb-10">
               <div className="flex justify-center mb-4">
@@ -449,32 +331,19 @@ export const Register: React.FC<RegisterProps> = ({ onRegisterComplete, onGoToLo
                   <Cloud className="text-indigo-600" size={32} />
                 </div>
               </div>
-              <h1 className="text-3xl font-bold text-gray-900 mb-2 tracking-tight">Integración con Google Drive</h1>
-              <p className="text-gray-500 font-light">Conecta tu cuenta para organizar documentos automáticamente.</p>
+              <h1 className="text-3xl font-bold text-gray-900 mb-2 tracking-tight">Conecta Google Drive</h1>
+              <p className="text-gray-500 font-light">Para organizar y almacenar los expedientes automáticamente.</p>
             </div>
 
-            <div className="bg-amber-50 border border-amber-200 rounded-2xl p-6 mb-6">
+            <div className="bg-amber-50 border border-amber-200 rounded-2xl p-6 mb-6 text-left">
               <div className="flex gap-3">
                 <AlertCircle className="text-amber-600 flex-shrink-0 mt-0.5" size={20} />
                 <div>
-                  <h3 className="font-semibold text-amber-900 mb-2">¿Por qué es importante?</h3>
+                  <h3 className="font-semibold text-amber-900 mb-2">¿Cómo funciona?</h3>
                   <ul className="text-sm text-amber-800 space-y-1.5">
-                    <li className="flex items-start gap-2">
-                      <span className="text-amber-600 mt-1">•</span>
-                      <span><strong>Organización automática:</strong> Todos los documentos de tus prospectos se guardan automáticamente en carpetas organizadas por cliente.</span>
-                    </li>
-                    <li className="flex items-start gap-2">
-                      <span className="text-amber-600 mt-1">•</span>
-                      <span><strong>Acceso fácil:</strong> Puedes acceder a todos los documentos directamente desde Google Drive sin necesidad de la aplicación.</span>
-                    </li>
-                    <li className="flex items-start gap-2">
-                      <span className="text-amber-600 mt-1">•</span>
-                      <span><strong>Backup automático:</strong> Tus documentos estarán seguros en la nube de Google.</span>
-                    </li>
-                    <li className="flex items-start gap-2">
-                      <span className="text-amber-600 mt-1">•</span>
-                      <span><strong>Obligatorio:</strong> Esta integración es necesaria para que el sistema funcione correctamente.</span>
-                    </li>
+                    <li>• Crea carpetas automáticamente para cada prospecto.</li>
+                    <li>• Sube identificaciones y talonarios firmados directo a tu Drive.</li>
+                    <li>• Puedes acceder a ellos sin salir del hub de Konsul.</li>
                   </ul>
                 </div>
               </div>
@@ -484,21 +353,16 @@ export const Register: React.FC<RegisterProps> = ({ onRegisterComplete, onGoToLo
               {isGoogleDriveConnected ? (
                 <div className="bg-green-50 border border-green-200 rounded-xl p-6 text-center">
                   <Check className="text-green-600 mx-auto mb-3" size={32} />
-                  <p className="text-green-800 font-semibold mb-1">Google Drive conectado</p>
-                  <p className="text-green-700 text-sm">Tu cuenta está lista para guardar documentos automáticamente</p>
+                  <p className="text-green-800 font-semibold mb-1">Google Drive conectado exitosamente</p>
                 </div>
               ) : (
                 <button
                   onClick={() => {
                     try {
-                      // Guardar estado temporal en localStorage para recuperarlo después del OAuth
                       localStorage.setItem('registrationFormData', JSON.stringify({
                         name: formData.name,
                         email: formData.email,
-                        password: formData.password,
-                        confirmPassword: formData.confirmPassword,
                         companyName: formData.companyName,
-                        logo: formData.logo ? 'hasLogo' : null,
                         zones: formData.zones,
                         role: formData.role
                       }));
@@ -515,12 +379,6 @@ export const Register: React.FC<RegisterProps> = ({ onRegisterComplete, onGoToLo
                   }}
                   className="w-full py-4 px-6 bg-white border-2 border-gray-300 rounded-xl font-semibold text-gray-700 hover:border-indigo-500 hover:bg-indigo-50 transition-all flex items-center justify-center gap-3 shadow-sm"
                 >
-                  <svg className="w-5 h-5" viewBox="0 0 24 24">
-                    <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
-                    <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
-                    <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" />
-                    <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" />
-                  </svg>
                   Conectar con Google Drive
                 </button>
               )}
@@ -530,14 +388,11 @@ export const Register: React.FC<RegisterProps> = ({ onRegisterComplete, onGoToLo
               <button onClick={handleBack} className="px-6 py-4 text-gray-400 hover:text-gray-600 font-medium">
                 Atrás
               </button>
-
-
-
               <button
                 onClick={handleNext}
                 disabled={!isGoogleDriveConnected}
                 className={`flex-1 py-4 rounded-xl font-bold transition-all flex justify-center items-center gap-2 ${!isGoogleDriveConnected
-                  ? 'hidden' // Ocultar el botón principal si no está conectado, usar "Hacerlo más tarde"
+                  ? 'hidden'
                   : 'bg-green-600 text-white hover:bg-green-700 shadow-lg shadow-green-200'
                   }`}
               >
@@ -547,18 +402,17 @@ export const Register: React.FC<RegisterProps> = ({ onRegisterComplete, onGoToLo
           </div>
         )}
 
-        {/* STEP 4: ZONES */}
-        {step === 4 && (
+        {/* STEP 3: ZONES */}
+        {step === 3 && (
           <div className="animate-fade-in-up">
             <div className="text-center mb-8">
-              <h1 className="text-3xl font-bold text-gray-900 mb-2 tracking-tight">Tu Mercado</h1>
+              <h1 className="text-3xl font-bold text-gray-900 mb-2 tracking-tight">Zonas de Operación</h1>
               <p className="text-gray-500 font-light max-w-sm mx-auto">
-                Define las zonas donde operas. <br />
-                <span className="text-indigo-600 font-medium">Importante:</span> Estas serán las opciones que verán tus clientes en la calculadora.
+                Define las zonas disponibles para tus clientes en la calculadora.
               </p>
             </div>
 
-            <div className="bg-gray-50/50 rounded-2xl p-6 border border-gray-100 mb-8">
+            <div className="bg-gray-50/50 rounded-2xl p-6 border border-gray-100 mb-8 text-left">
               <div className="flex gap-2 mb-4">
                 <div className="relative flex-1">
                   <MapPin className="absolute left-4 top-3 text-gray-400" size={18} />
@@ -617,7 +471,7 @@ export const Register: React.FC<RegisterProps> = ({ onRegisterComplete, onGoToLo
                   </>
                 ) : (
                   <>
-                    Finalizar Registro <Check size={18} />
+                    Finalizar Configuración <Check size={18} />
                   </>
                 )}
               </button>

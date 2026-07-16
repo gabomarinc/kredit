@@ -1565,6 +1565,78 @@ export const verifyLogin = async (email: string, password: string): Promise<Comp
   }
 };
 
+// Obtener empresa por Email
+export const getCompanyByEmail = async (email: string): Promise<Company | null> => {
+  if (!pool) {
+    return null;
+  }
+
+  try {
+    const client = await pool.connect();
+
+    const companyResult = await client.query(
+      'SELECT * FROM companies WHERE email = $1',
+      [email]
+    );
+
+    if (companyResult.rows.length === 0) {
+      client.release();
+      return null;
+    }
+
+    const company = companyResult.rows[0];
+
+    // Obtener zonas
+    const zonesResult = await client.query(
+      'SELECT zone_name FROM company_zones WHERE company_id = $1 ORDER BY zone_name',
+      [company.id]
+    );
+
+    const zones = zonesResult.rows.map(row => row.zone_name);
+
+    client.release();
+
+    // Parsear requested_documents JSONB o usar valores por defecto
+    let requestedDocuments = {
+      idFile: true,
+      fichaFile: true,
+      talonarioFile: true,
+      signedAcpFile: true
+    };
+
+    if (company.requested_documents) {
+      try {
+        requestedDocuments = typeof company.requested_documents === 'string'
+          ? JSON.parse(company.requested_documents)
+          : company.requested_documents;
+      } catch (e) {
+        console.warn('⚠️ Error parseando requested_documents, usando valores por defecto:', e);
+      }
+    }
+
+    return {
+      id: company.id,
+      name: company.name,
+      email: company.email,
+      companyName: company.company_name || company.name,
+      logoUrl: company.logo_url,
+      zones: zones,
+      plan: (company.plan || 'Freshie') as 'Freshie' | 'Wolf of Wallstreet',
+      role: (company.role || 'Broker') as 'Promotora' | 'Broker',
+      googleDriveAccessToken: company.google_drive_access_token || undefined,
+      googleDriveRefreshToken: company.google_drive_refresh_token || undefined,
+      googleDriveFolderId: company.google_drive_folder_id || undefined,
+      requestedDocuments: requestedDocuments,
+      apcDocumentDriveId: company.apc_document_drive_id || undefined,
+      notificationEmail: company.notification_email || undefined,
+    };
+
+  } catch (error) {
+    console.error('❌ Error obteniendo empresa por email:', error);
+    return null;
+  }
+};
+
 // Obtener empresa por ID
 export const getCompanyById = async (companyId: string): Promise<Company | null> => {
   if (!pool) {
