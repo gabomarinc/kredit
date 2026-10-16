@@ -3545,23 +3545,41 @@ export const Dashboard: React.FC<DashboardProps> = ({ availableZones, onUpdateZo
                 </div>
                 <div>
                   <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Email para Notificaciones</label>
-                  <p className="text-xs text-gray-400 mb-2">Recibe una alerta cada vez que llegue un nuevo prospecto.</p>
+                  <p className="text-xs text-gray-400 mb-2">Recibe una alerta cada vez que llegue un nuevo prospecto. Puedes agregar hasta 6 correos separados por coma.</p>
                   <div className="flex gap-2">
                     <input
-                      type="email"
+                      type="text"
                       value={notificationEmail}
                       onChange={(e) => setNotificationEmail(e.target.value)}
                       className="flex-1 px-5 py-3 rounded-xl border border-gray-200 focus:border-primary-500 outline-none bg-gray-50 focus:bg-white transition-colors text-gray-900 font-medium"
-                      placeholder="notificaciones@ejemplo.com"
+                      placeholder="correo1@ejemplo.com, correo2@ejemplo.com"
                     />
                     <button
                       onClick={async () => {
                         const companyId = localStorage.getItem('companyId');
                         if (!companyId) return;
 
+                        const emails: string[] = Array.from(new Set<string>(
+                          notificationEmail.split(/[,;\s]+/).map(e => e.trim().toLowerCase()).filter(Boolean)
+                        ));
+                        const invalid = emails.filter(e => !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e));
+                        if (invalid.length > 0 || emails.length > 6) {
+                          setNotification({
+                            isOpen: true,
+                            type: 'error',
+                            message: invalid.length > 0
+                              ? `Correo(s) inválido(s): ${invalid.join(', ')}`
+                              : 'Máximo 6 correos de notificación.',
+                            title: 'Revisa los correos'
+                          });
+                          return;
+                        }
+                        const normalized = emails.join(', ');
+                        setNotificationEmail(normalized);
+
                         setIsSavingNotificationEmail(true);
                         try {
-                          const success = await updateCompanyNotificationEmail(companyId, notificationEmail);
+                          const success = await updateCompanyNotificationEmail(companyId, normalized);
                           if (success) {
                             setNotification({
                               isOpen: true,

@@ -2,6 +2,19 @@ import { Resend } from 'resend';
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
+const SIGNATURE_NAME = '2Ble Realty';
+const MAX_RECIPIENTS = 6;
+
+// Acepta un string separado por comas/punto y coma/espacios, o un array de correos
+const parseRecipients = (input: unknown): string[] => {
+  const raw = Array.isArray(input) ? input.join(',') : String(input || '');
+  const emails = raw
+    .split(/[,;\s]+/)
+    .map(e => e.trim().toLowerCase())
+    .filter(Boolean);
+  return Array.from(new Set(emails));
+};
+
 export default async function handler(req: any, res: any) {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
@@ -16,8 +29,12 @@ export default async function handler(req: any, res: any) {
 
     // Validar formato de email básico
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(recipientEmail)) {
+    const recipients = parseRecipients(recipientEmail).filter(e => emailRegex.test(e));
+    if (recipients.length === 0) {
       return res.status(400).json({ error: 'Email de destinatario inválido' });
+    }
+    if (recipients.length > MAX_RECIPIENTS) {
+      return res.status(400).json({ error: `Máximo ${MAX_RECIPIENTS} destinatarios permitidos` });
     }
 
     // Formatear datos para el email
@@ -142,10 +159,19 @@ export default async function handler(req: any, res: any) {
 
           </div>
           
+          <!-- Firma -->
+          <div style="padding: 0 32px 32px; background-color: #ffffff;">
+            <p style="margin: 0; font-size: 14px; color: #6B7280;">Atentamente,</p>
+            <p style="margin: 4px 0 0; font-size: 16px; font-weight: 700; color: #111827;">${SIGNATURE_NAME}</p>
+          </div>
+
           <!-- Footer -->
           <div style="background: #F9FAFB; padding: 24px; text-align: center; border-top: 1px solid #E5E7EB;">
+            <p style="font-size: 11px; color: #6B7280; margin: 0 0 12px; line-height: 1.5; text-align: justify;">
+              <strong>AVISO DE CONFIDENCIALIDAD:</strong> La información contenida en este correo es confidencial y de uso exclusivo de ${SIGNATURE_NAME} y de sus destinatarios autorizados. Queda estrictamente prohibido compartir, reenviar, divulgar o transferir total o parcialmente esta información a cualquier otro proveedor, plataforma o tercero sin autorización expresa y por escrito de ${SIGNATURE_NAME}. Si usted recibió este mensaje por error, notifique al remitente y elimínelo de inmediato.
+            </p>
             <p style="font-size: 12px; color: #9CA3AF; margin: 0;">
-              Enviado automáticamente por Krêdit
+              © ${new Date().getFullYear()} ${SIGNATURE_NAME}
             </p>
           </div>
         </div>
@@ -154,12 +180,20 @@ export default async function handler(req: any, res: any) {
     `;
 
     // Enviar email
-    const data = await resend.emails.send({
-      from: 'Krêdit <notificaciones@konsul.digital>', // Dominio verificado
-      to: recipientEmail,
-      subject: `Nuevo Prospecto: ${name} - Krêdit`,
-      html: htmlContent
-    });
+    // Un correo individual por destinatario para que no se vean entre sí
+    const { data, error } = await resend.batch.send(
+      recipients.map(to => ({
+        from: `${SIGNATURE_NAME} <notificaciones@konsul.digital>`, // Dominio verificado
+        to,
+        subject: `Nuevo Prospecto: ${name} - ${SIGNATURE_NAME}`,
+        html: htmlContent
+      }))
+    );
+
+    if (error) {
+      console.error('❌ Error de Resend enviando notificación:', error);
+      return res.status(502).json({ error: 'Error enviando correo' });
+    }
 
     return res.status(200).json({ success: true, data });
 
